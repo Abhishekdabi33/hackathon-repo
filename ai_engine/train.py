@@ -58,16 +58,16 @@ def main():
     args = parser.parse_args()
 
     device = get_device()
-    print(f"==================================================")
-    print(f"🚀 Starting AI Model Training Pipeline")
-    print(f"📍 Compute Device: {device} ({torch.cuda.get_device_name(0) if torch.cuda.is_available() else 'CPU'})")
+    print("==================================================")
+    print(">> Starting AI Model Training Pipeline")
+    print(f"[*] Compute Device: {device} ({torch.cuda.get_device_name(0) if torch.cuda.is_available() else 'CPU'})")
     if torch.cuda.is_available():
         vram_mb = torch.cuda.get_device_properties(0).total_memory / (1024 * 1024)
-        print(f"💾 Total VRAM: {vram_mb:.0f} MB")
-    print(f"==================================================")
+        print(f"[*] Total VRAM: {vram_mb:.0f} MB")
+    print("==================================================")
 
     # Generate synthetic benchmark dataset for quick hackathon verification
-    print("📦 Generating dataset samples...")
+    print("[*] Generating dataset samples...")
     num_samples = 1000
     x_data = torch.randn(num_samples, args.input_dim)
     y_data = torch.randint(0, args.num_classes, (num_samples,))
@@ -92,7 +92,7 @@ def main():
     os.makedirs(os.path.dirname(args.save_path) or ".", exist_ok=True)
     best_val_acc = 0.0
 
-    print(f"⚡ Training for {args.epochs} epochs...\n")
+    print(f"[*] Training for {args.epochs} epochs...\n")
     start_time = time.time()
 
     for epoch in range(1, args.epochs + 1):
@@ -115,12 +115,12 @@ def main():
                 "input_dim": args.input_dim,
                 "num_classes": args.num_classes
             }, args.save_path)
-            print(f"   ⭐ Saved best checkpoint to: {args.save_path}")
+            print(f"   [+] Saved best checkpoint to: {args.save_path}")
 
     total_time = time.time() - start_time
-    print(f"\n✅ Training completed in {total_time:.2f} seconds!")
-    print(f"🏆 Best Validation Accuracy: {best_val_acc*100:.2f}%")
-    print(f"📁 Checkpoint stored at: {os.path.abspath(args.save_path)}")
+    print(f"\n[OK] Training completed in {total_time:.2f} seconds!")
+    print(f"[OK] Best Validation Accuracy: {best_val_acc*100:.2f}%")
+    print(f"[OK] Checkpoint stored at: {os.path.abspath(args.save_path)}")
 
 if __name__ == "__main__":
     main()

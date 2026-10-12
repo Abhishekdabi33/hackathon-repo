@@ -29,9 +29,9 @@ class Predictor:
                 self.model.load_state_dict(checkpoint["model_state_dict"])
             else:
                 self.model.load_state_dict(checkpoint)
-            print(f"✅ Loaded checkpoint from {self.checkpoint_path} onto {self.device}")
+            print(f"[OK] Loaded checkpoint from {self.checkpoint_path} onto {self.device}")
         else:
-            print(f"⚠️ Checkpoint {self.checkpoint_path} not found. Running with initialized weights.")
+            print(f"[!] Checkpoint {self.checkpoint_path} not found. Running with initialized weights.")
 
         self.model.eval()
 
