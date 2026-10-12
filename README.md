@@ -1,36 +1,55 @@
-# 🚀 Hackathon Project
+# 🚀 Hackathon AI Platform: Gemma, Hermes Agent & Agent Skills
 
 [![CI Pipeline](https://github.com/Abhishekdabi33/hackathon-repo/actions/workflows/ci.yml/badge.svg)](https://github.com/Abhishekdabi33/hackathon-repo/actions)
-![Python 3.12](https://img.shields.io/badge/Python-3.12-blue?logo=python)
+![Google Gemma](https://img.shields.io/badge/Model-Google_Gemma-4285F4?logo=google)
+![Hermes Agent](https://img.shields.io/badge/Agent-Hermes_Harness-8A2BE2)
+![Agent Skills](https://img.shields.io/badge/Standard-SKILL.md_Open_Standard-FF6F00)
 ![FastAPI](https://img.shields.io/badge/Backend-FastAPI-009688?logo=fastapi)
-![PyTorch CUDA](https://img.shields.io/badge/AI-PyTorch_CUDA-EE4C2C?logo=pytorch)
 ![React 19](https://img.shields.io/badge/Frontend-React_19-61DAFB?logo=react)
-![TailwindCSS](https://img.shields.io/badge/Style-Tailwind_CSS-38B2AC?logo=tailwindcss)
+![PyTorch CUDA](https://img.shields.io/badge/CUDA-12.4_Accelerated-EE4C2C?logo=pytorch)
 
-> **High-Performance Full-Stack AI Platform built for Hackathons.**  
-> Features real-time GPU inference, modular FastAPI backend, modern React frontend, and reproducible cloud/local training pipelines.
+> **Autonomous Full-Stack AI Platform built for Hackathons.**  
+> Powered by **Google Gemma models**, **Nous Research Hermes Agent harness**, and the **Agent Skill Open Standard (`SKILL.md`)** with progressive disclosure.
 
 ---
 
-## 🏗️ System Architecture
+## 🎯 Tech Stack Alignment
+
+| Track / Pillar | Technology | Implementation in This Repo |
+| :--- | :--- | :--- |
+| **Open-Weight Models** | **Google Gemma (Gemma 2 / Gemma 4)** | [`ai_engine/gemma_client.py`](ai_engine/gemma_client.py) using official `google-genai` SDK |
+| **Agent Harness** | **Hermes Agent (Nous Research)** | [`agent_harness/hermes_agent.py`](agent_harness/hermes_agent.py) ReAct loop + persistent memory |
+| **Agent Skills** | **SKILL.md Open Standard** | [`skills/`](skills/) + [`skills_engine/skill_loader.py`](skills_engine/skill_loader.py) with progressive disclosure |
+| **Backend API** | **FastAPI + Uvicorn** | [`backend/app/main.py`](backend/app/main.py) with endpoints for Agent, Skills, and Gemma |
+| **Frontend UI** | **React 19 + Tailwind + Lucide** | [`frontend/`](frontend/) with interactive reasoning trace console & SKILL.md explorer |
+
+---
+
+## 🏗️ Repository Architecture
 
 ```
 hackathon-repo/
-├── .github/                      # CI/CD and Pull Request Templates
-│   ├── workflows/ci.yml          # Automated syntax and build verification
-│   └── pull_request_template.md  # Standardized PR checklist
-├── frontend/                     # Modern Web Application
-│   ├── src/                      # React 19 + Tailwind + Lucide Components
-│   ├── package.json              # Fast pnpm dependencies
-│   └── vite.config.js            # API proxy configuration
-├── backend/                      # Production-Ready REST API
-│   ├── app/main.py               # FastAPI application, CORS, Telemetry
-│   └── requirements.txt          # Lightweight backend dependencies
-├── ai_engine/                    # Deep Learning & AI Pipeline
+├── agent_harness/                # Autonomous Agent Framework
+│   ├── hermes_agent.py           # ReAct loop, tool calling, memory traces
+│   └── __init__.py
+├── skills/                       # Agent Skills Open Standard
+│   ├── data-analyst/SKILL.md     # Statistical analysis playbook
+│   ├── api-integrator/SKILL.md   # API payload & endpoint generation
+│   └── research-assistant/SKILL.md# Documentation synthesis
+├── skills_engine/                # Progressive Disclosure Engine
+│   └── skill_loader.py           # YAML frontmatter indexer & body loader
+├── ai_engine/                    # Model Clients & Training
+│   ├── gemma_client.py           # Google Gemma / Open-Weight LLM client
 │   ├── model.py                  # PyTorch neural architecture
-│   ├── train.py                  # Training pipeline with GPU telemetry
+│   ├── train.py                  # GPU model training pipeline
 │   ├── inference.py              # Low-latency inference wrapper
 │   └── train_colab_cloud.py      # Cloud GPU scaling guide (Colab/Kaggle)
+├── frontend/                     # Modern Web Application
+│   ├── src/App.jsx               # Agent console & SKILL.md explorer
+│   └── vite.config.js            # API proxy configuration
+├── backend/                      # Production-Ready REST API
+│   ├── app/main.py               # FastAPI endpoints for Agent & Skills
+│   └── requirements.txt
 ├── TEAM_WORKFLOW.md              # 4-Person team playbook and branch rules
 ├── run_dev.ps1                   # One-click Windows development launcher
 ├── .env.example                  # Environment configuration template
@@ -41,63 +60,44 @@ hackathon-repo/
 
 ## ⚡ Quickstart Guide
 
-### 1. Clone & Set Up Environment
+### 1. Set Up Environment
 ```bash
 git clone https://github.com/Abhishekdabi33/hackathon-repo.git
 cd hackathon-repo
 
-# Create Python environment using ultra-fast uv
+# Create Python environment
 uv venv --python 3.12 .venv
 .\.venv\Scripts\activate
 
-# Install backend dependencies
+# Install backend dependencies & Google GenAI SDK
 uv pip install -r backend/requirements.txt
+uv pip install google-genai pyyaml
 ```
 
-### 2. Install Frontend Dependencies
+### 2. Configure Environment Keys
+Copy `.env.example` to `.env`:
 ```bash
-cd frontend
-pnpm install
-cd ..
+cp .env.example .env
 ```
+Add your `GEMINI_API_KEY` (from [Google AI Studio](https://aistudio.google.com/)) to enable live Google Gemma calls.
 
 ### 3. Launch Development Stack
 Run the one-click launcher:
 ```powershell
 .\run_dev.ps1
 ```
-- **Web Application UI**: [http://localhost:5173](http://localhost:5173)
-- **Interactive Swagger Docs**: [http://localhost:8000/docs](http://localhost:8000/docs)
-- **Hardware & GPU Health Check**: [http://localhost:8000/api/health](http://localhost:8000/api/health)
-
----
-
-## 🤖 AI Model Training & Inference
-
-### Local Training (GPU / CPU)
-Train the model locally:
-```bash
-python ai_engine/train.py --epochs 10 --batch_size 32
-```
-Checkpoints will be saved automatically to `ai_engine/checkpoints/best_model.pt`.
-
-### Local Inference Test
-```bash
-python ai_engine/inference.py
-```
-
-### Cloud Scaling (Google Colab / Kaggle T4 & A100 GPUs)
-For large open-source LLMs (Llama 3 8B, Mistral 7B) that exceed local 4GB VRAM:
-Refer to `ai_engine/train_colab_cloud.py` for 4-bit QLoRA configuration.
+- **Web UI & Agent Console**: [http://localhost:5173](http://localhost:5173)
+- **API Swagger Docs**: [http://localhost:8000/docs](http://localhost:8000/docs)
+- **Discovered Agent Skills**: [http://localhost:8000/api/skills](http://localhost:8000/api/skills)
 
 ---
 
 ## 👥 4-Person Team Distribution
 
-- **Lead 1 (Frontend)**: React, UX/UI, Component Design, API Wiring
-- **Lead 2 (Backend)**: FastAPI, Schemas, Database, Error Handling, Deployment
-- **Lead 3 (AI / ML)**: Model architecture, data preprocessing, fine-tuning, latency
-- **Lead 4 (Product & Pitch)**: Problem definition, slides, 3-min demo video, QA
+- **Member 1 (Frontend Lead)**: React 19 UI, Agent reasoning visualization, SKILL.md inspector.
+- **Member 2 (Backend Lead)**: FastAPI routing, Agent session persistence, API error handling.
+- **Member 3 (AI / Agent Engineer)**: Gemma prompt tuning, Hermes tool definitions, new `SKILL.md` authoring.
+- **Member 4 (Product & Pitch Lead)**: Problem statement, 3-minute demo video, judging criteria alignment.
 
 ---
 

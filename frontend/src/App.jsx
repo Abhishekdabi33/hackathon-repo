@@ -10,17 +10,31 @@ import {
   Server, 
   Database,
   ArrowRight,
-  RefreshCw
+  RefreshCw,
+  BookOpen,
+  Bot,
+  Layers,
+  Wrench,
+  Code2,
+  FileCode
 } from 'lucide-react';
 
 export default function App() {
   const [health, setHealth] = useState(null);
   const [loadingHealth, setLoadingHealth] = useState(false);
-  const [inputText, setInputText] = useState('Hackathon prototype running on local GPU acceleration!');
-  const [prediction, setPrediction] = useState(null);
-  const [predicting, setPredicting] = useState(false);
-  const [activeTab, setActiveTab] = useState('demo');
+  const [activeTab, setActiveTab] = useState('agent');
+  
+  // Agent State
+  const [agentPrompt, setAgentPrompt] = useState('Analyze our database statistics and check GPU status.');
+  const [agentResponse, setAgentResponse] = useState(null);
+  const [runningAgent, setRunningAgent] = useState(false);
 
+  // Skills State
+  const [skills, setSkills] = useState([]);
+  const [selectedSkill, setSelectedSkill] = useState(null);
+  const [loadingSkills, setLoadingSkills] = useState(false);
+
+  // Fetch System Health
   const fetchHealth = async () => {
     setLoadingHealth(true);
     try {
@@ -38,57 +52,96 @@ export default function App() {
     }
   };
 
+  // Fetch Discovered Skills
+  const fetchSkills = async () => {
+    setLoadingSkills(true);
+    try {
+      const res = await fetch('/api/skills');
+      if (res.ok) {
+        const data = await res.json();
+        setSkills(data.skills || []);
+        if (data.skills?.length > 0 && !selectedSkill) {
+          fetchSkillDetail(data.skills[0].name);
+        }
+      }
+    } catch (err) {
+      console.error('Error fetching skills:', err);
+    } finally {
+      setLoadingSkills(false);
+    }
+  };
+
+  // Fetch Full SKILL.md Detail (Progressive Disclosure)
+  const fetchSkillDetail = async (skillName) => {
+    try {
+      const res = await fetch(`/api/skills/${skillName}`);
+      if (res.ok) {
+        const data = await res.json();
+        setSelectedSkill(data);
+      }
+    } catch (err) {
+      console.error('Error fetching skill detail:', err);
+    }
+  };
+
   useEffect(() => {
     fetchHealth();
+    fetchSkills();
   }, []);
 
-  const handlePredict = async (e) => {
+  // Run Hermes Agent
+  const handleRunAgent = async (e) => {
     e.preventDefault();
-    setPredicting(true);
-    setPrediction(null);
+    setRunningAgent(true);
+    setAgentResponse(null);
     try {
-      const res = await fetch('/api/predict', {
+      const res = await fetch('/api/agent/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ input_text: inputText })
+        body: JSON.stringify({ message: agentPrompt, max_steps: 3 })
       });
       const data = await res.json();
-      setPrediction(data);
+      setAgentResponse(data);
     } catch (err) {
-      setPrediction({ status: 'error', detail: err.message });
+      setAgentResponse({ status: 'error', detail: err.message });
     } finally {
-      setPredicting(false);
+      setRunningAgent(false);
     }
   };
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100">
+    <div className="min-h-screen bg-slate-950 text-slate-100 selection:bg-cyan-500 selection:text-white">
       {/* Header */}
       <header className="border-b border-slate-800 bg-slate-900/60 backdrop-blur-md sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
           <div className="flex items-center space-x-3">
             <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-cyan-500 to-blue-600 flex items-center justify-center shadow-lg shadow-cyan-500/20">
-              <Sparkles className="w-5 h-5 text-white" />
+              <Bot className="w-5 h-5 text-white" />
             </div>
             <div>
-              <h1 className="text-lg font-bold text-white tracking-tight">Hackathon AI Platform</h1>
-              <p className="text-xs text-slate-400">Team Collaboration & Full-Stack Deep Learning</p>
+              <h1 className="text-lg font-bold text-white tracking-tight flex items-center space-x-2">
+                <span>Gemma & Hermes Agent Platform</span>
+                <span className="text-[11px] font-mono px-2 py-0.5 rounded-full bg-cyan-500/20 text-cyan-300 border border-cyan-500/30">
+                  SKILL.md Standard
+                </span>
+              </h1>
+              <p className="text-xs text-slate-400">Open-Weight LLMs • Autonomous Harness • Progressive Disclosure</p>
             </div>
           </div>
 
           {/* System Status Pill */}
           <div className="flex items-center space-x-3">
             <button 
-              onClick={fetchHealth} 
+              onClick={() => { fetchHealth(); fetchSkills(); }} 
               disabled={loadingHealth}
               className="p-2 text-slate-400 hover:text-slate-200 transition-colors rounded-lg hover:bg-slate-800"
-              title="Refresh Health"
+              title="Refresh"
             >
               <RefreshCw className={`w-4 h-4 ${loadingHealth ? 'animate-spin' : ''}`} />
             </button>
             <div className="flex items-center space-x-2 px-3 py-1.5 rounded-full text-xs font-medium border border-slate-700 bg-slate-800/80">
               <span className={`w-2 h-2 rounded-full ${health?.status === 'healthy' ? 'bg-emerald-400 animate-pulse' : 'bg-amber-400'}`} />
-              <span>{health?.status === 'healthy' ? 'Backend Ready' : 'Connecting...'}</span>
+              <span>{health?.status === 'healthy' ? 'Backend Online' : 'Connecting...'}</span>
               {health?.cuda_available && (
                 <span className="bg-cyan-500/20 text-cyan-300 px-1.5 py-0.5 rounded text-[10px] font-semibold border border-cyan-500/30">
                   GPU ACCELERATED
@@ -103,63 +156,80 @@ export default function App() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-6">
         <div className="flex space-x-2 border-b border-slate-800 pb-2">
           <button
-            onClick={() => setActiveTab('demo')}
-            className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
-              activeTab === 'demo'
+            onClick={() => setActiveTab('agent')}
+            className={`px-4 py-2 rounded-lg text-sm font-medium transition-all flex items-center space-x-2 ${
+              activeTab === 'agent'
                 ? 'bg-blue-600/20 text-blue-400 border border-blue-500/30'
                 : 'text-slate-400 hover:text-slate-200 hover:bg-slate-900'
             }`}
           >
-            AI Inference Console
+            <Bot className="w-4 h-4" />
+            <span>Hermes Agent Console</span>
+          </button>
+          <button
+            onClick={() => setActiveTab('skills')}
+            className={`px-4 py-2 rounded-lg text-sm font-medium transition-all flex items-center space-x-2 ${
+              activeTab === 'skills'
+                ? 'bg-blue-600/20 text-blue-400 border border-blue-500/30'
+                : 'text-slate-400 hover:text-slate-200 hover:bg-slate-900'
+            }`}
+          >
+            <FileCode className="w-4 h-4" />
+            <span>Agent Skills Hub (SKILL.md)</span>
+            <span className="bg-slate-800 text-slate-300 text-[10px] px-1.5 py-0.5 rounded-full border border-slate-700">
+              {skills.length}
+            </span>
+          </button>
+          <button
+            onClick={() => setActiveTab('stack')}
+            className={`px-4 py-2 rounded-lg text-sm font-medium transition-all flex items-center space-x-2 ${
+              activeTab === 'stack'
+                ? 'bg-blue-600/20 text-blue-400 border border-blue-500/30'
+                : 'text-slate-400 hover:text-slate-200 hover:bg-slate-900'
+            }`}
+          >
+            <Layers className="w-4 h-4" />
+            <span>Hackathon Tech Stack</span>
           </button>
           <button
             onClick={() => setActiveTab('team')}
-            className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+            className={`px-4 py-2 rounded-lg text-sm font-medium transition-all flex items-center space-x-2 ${
               activeTab === 'team'
                 ? 'bg-blue-600/20 text-blue-400 border border-blue-500/30'
                 : 'text-slate-400 hover:text-slate-200 hover:bg-slate-900'
             }`}
           >
-            4-Person Team Roles & Milestones
-          </button>
-          <button
-            onClick={() => setActiveTab('architecture')}
-            className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
-              activeTab === 'architecture'
-                ? 'bg-blue-600/20 text-blue-400 border border-blue-500/30'
-                : 'text-slate-400 hover:text-slate-200 hover:bg-slate-900'
-            }`}
-          >
-            System Architecture
+            <Users className="w-4 h-4" />
+            <span>4-Person Team Roles</span>
           </button>
         </div>
       </div>
 
       {/* Main Content */}
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {activeTab === 'demo' && (
+        {/* TAB 1: HERMES AGENT CONSOLE */}
+        {activeTab === 'agent' && (
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            {/* Left 2 Cols: Inference Testing */}
             <div className="lg:col-span-2 space-y-6">
               <div className="bg-slate-900/50 border border-slate-800 rounded-2xl p-6 shadow-xl">
                 <h2 className="text-xl font-semibold text-white flex items-center space-x-2 mb-2">
-                  <Zap className="w-5 h-5 text-cyan-400" />
-                  <span>Real-Time Inference Playground</span>
+                  <Bot className="w-5 h-5 text-cyan-400" />
+                  <span>Hermes Autonomous Agent Execution Loop</span>
                 </h2>
                 <p className="text-sm text-slate-400 mb-6">
-                  Test backend AI predictions with low-latency GPU execution.
+                  Orchestrates multi-step reasoning, tool invocation, and on-demand Agent Skill execution.
                 </p>
 
-                <form onSubmit={handlePredict} className="space-y-4">
+                <form onSubmit={handleRunAgent} className="space-y-4">
                   <div>
                     <label className="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-2">
-                      Input Prompt / Data Payload
+                      Agent Goal / Query
                     </label>
                     <textarea
-                      rows={4}
-                      value={inputText}
-                      onChange={(e) => setInputText(e.target.value)}
-                      placeholder="Enter text to analyze..."
+                      rows={3}
+                      value={agentPrompt}
+                      onChange={(e) => setAgentPrompt(e.target.value)}
+                      placeholder="e.g. Check system GPU and use the data-analyst skill..."
                       className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-sm text-slate-100 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-transparent transition-all"
                     />
                   </div>
@@ -167,196 +237,321 @@ export default function App() {
                   <div className="flex items-center justify-between">
                     <button
                       type="submit"
-                      disabled={predicting}
+                      disabled={runningAgent}
                       className="inline-flex items-center space-x-2 bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-500 hover:to-cyan-500 text-white font-medium px-5 py-2.5 rounded-xl transition-all shadow-lg shadow-blue-500/25 disabled:opacity-50"
                     >
-                      {predicting ? (
+                      {runningAgent ? (
                         <>
                           <RefreshCw className="w-4 h-4 animate-spin" />
-                          <span>Processing on GPU...</span>
+                          <span>Agent Reasoning...</span>
                         </>
                       ) : (
                         <>
-                          <span>Execute Prediction</span>
+                          <span>Run Agent Loop</span>
                           <ArrowRight className="w-4 h-4" />
                         </>
                       )}
                     </button>
-                    <span className="text-xs text-slate-500">
-                      Endpoint: <code className="text-slate-400">POST /api/predict</code>
-                    </span>
+                    <div className="flex items-center space-x-2 text-xs text-slate-500">
+                      <span>Quick Test:</span>
+                      <button 
+                        type="button" 
+                        onClick={() => setAgentPrompt("Calculate 250 * 18.5 and check system telemetry")} 
+                        className="text-cyan-400 hover:underline"
+                      >
+                        Math + Telemetry
+                      </button>
+                      <span>•</span>
+                      <button 
+                        type="button" 
+                        onClick={() => setAgentPrompt("Use api-integrator skill to format an endpoint")} 
+                        className="text-cyan-400 hover:underline"
+                      >
+                        API Skill
+                      </button>
+                    </div>
                   </div>
                 </form>
 
-                {/* Prediction Output */}
-                {prediction && (
-                  <div className="mt-6 border-t border-slate-800/80 pt-6">
-                    <div className="flex items-center justify-between mb-3">
+                {/* Reasoning Trace Steps */}
+                {agentResponse && (
+                  <div className="mt-6 border-t border-slate-800/80 pt-6 space-y-4">
+                    <div className="flex items-center justify-between">
                       <span className="text-xs font-bold uppercase tracking-wider text-slate-400">
-                        Inference Output
+                        Reasoning Steps & Tool Traces
                       </span>
-                      <div className="flex items-center space-x-2 text-xs">
-                        <span className="text-slate-400">
-                          Latency: <strong className="text-emerald-400">{prediction.latency_ms || 0} ms</strong>
-                        </span>
-                        <span className="text-slate-600">|</span>
-                        <span className="text-slate-400">
-                          Device: <strong className="text-cyan-400">{prediction.device_used?.toUpperCase() || 'CPU'}</strong>
-                        </span>
-                      </div>
+                      <span className="text-xs text-emerald-400 font-mono">
+                        Latency: {agentResponse.duration_ms || 0} ms
+                      </span>
                     </div>
-                    <pre className="bg-slate-950 border border-slate-800 rounded-xl p-4 text-xs font-mono text-cyan-300 overflow-x-auto">
-                      {JSON.stringify(prediction, null, 2)}
-                    </pre>
+
+                    {agentResponse.steps?.map((s, idx) => (
+                      <div key={idx} className="bg-slate-950 border border-slate-800 rounded-xl p-4 text-xs space-y-2">
+                        <div className="flex items-center space-x-2 text-cyan-400 font-semibold">
+                          <Zap className="w-3.5 h-3.5" />
+                          <span>Thought: {s.thought}</span>
+                        </div>
+                        {s.action && (
+                          <div className="p-2 bg-slate-900 rounded-lg text-slate-300 font-mono flex items-center justify-between">
+                            <span>Action: <strong className="text-amber-400">{s.action}</strong></span>
+                            <span className="text-slate-500">Input: {s.action_input}</span>
+                          </div>
+                        )}
+                        {s.observation && (
+                          <div className="p-2.5 bg-slate-900/60 border border-slate-800 rounded-lg text-emerald-300 font-mono">
+                            <span className="text-slate-400 block text-[10px] uppercase font-bold mb-1">Observation:</span>
+                            {s.observation}
+                          </div>
+                        )}
+                      </div>
+                    ))}
+
+                    {/* Final Answer */}
+                    <div className="p-4 bg-gradient-to-br from-blue-950/40 to-slate-950 border border-blue-900/40 rounded-xl">
+                      <span className="text-xs font-bold uppercase tracking-wider text-blue-400 block mb-2">
+                        Final Agent Output (Gemma Engine)
+                      </span>
+                      <p className="text-sm text-slate-200 whitespace-pre-wrap leading-relaxed">
+                        {agentResponse.final_answer}
+                      </p>
+                    </div>
                   </div>
                 )}
               </div>
             </div>
 
-            {/* Right Col: Live Hardware & Telemetry */}
+            {/* Sidebar: Telemetry & Active Skills */}
             <div className="space-y-6">
               <div className="bg-slate-900/50 border border-slate-800 rounded-2xl p-6 shadow-xl">
                 <h3 className="text-base font-semibold text-white flex items-center space-x-2 mb-4">
                   <Cpu className="w-5 h-5 text-blue-400" />
-                  <span>Hardware Telemetry</span>
+                  <span>Hardware & GPU Status</span>
                 </h3>
-
-                <div className="space-y-4">
-                  <div className="p-3 bg-slate-950/70 border border-slate-800/60 rounded-xl">
-                    <span className="text-xs text-slate-400 block mb-1">NVIDIA GPU</span>
+                <div className="space-y-3">
+                  <div className="p-3 bg-slate-950 border border-slate-800/60 rounded-xl">
+                    <span className="text-xs text-slate-400 block mb-1">Device</span>
                     <p className="text-sm font-semibold text-white">
-                      {health?.gpu?.device_name || 'NVIDIA Quadro P2000 (Detected)'}
+                      {health?.gpu?.device_name || 'NVIDIA Quadro P2000'}
                     </p>
-                    <div className="mt-2 text-xs text-slate-400 flex justify-between">
-                      <span>VRAM Total:</span>
-                      <span className="text-slate-200">{health?.gpu?.max_vram_mb || '4096'} MB</span>
-                    </div>
+                    <span className="text-xs text-emerald-400">CUDA 12.4 Enabled</span>
                   </div>
-
-                  <div className="p-3 bg-slate-950/70 border border-slate-800/60 rounded-xl">
+                  <div className="p-3 bg-slate-950 border border-slate-800/60 rounded-xl">
                     <span className="text-xs text-slate-400 block mb-1">Compute Backend</span>
-                    <p className="text-sm font-semibold text-cyan-400">
-                      PyTorch CUDA 12.8 / 12.4
-                    </p>
-                    <div className="mt-2 text-xs text-slate-400 flex justify-between">
-                      <span>Python Version:</span>
-                      <span className="text-slate-200">{health?.python_version || '3.12 (uv)'}</span>
-                    </div>
+                    <p className="text-sm font-semibold text-cyan-400">PyTorch 2.6.0+cu124</p>
                   </div>
+                </div>
+              </div>
 
-                  <div className="p-3 bg-slate-950/70 border border-slate-800/60 rounded-xl">
-                    <span className="text-xs text-slate-400 block mb-1">Local Server</span>
-                    <p className="text-sm font-semibold text-emerald-400">FastAPI + Uvicorn</p>
-                    <div className="mt-2 text-xs text-slate-400 flex justify-between">
-                      <span>Port:</span>
-                      <span className="text-slate-200">8000</span>
+              <div className="bg-slate-900/50 border border-slate-800 rounded-2xl p-6 shadow-xl">
+                <h3 className="text-base font-semibold text-white flex items-center space-x-2 mb-4">
+                  <Wrench className="w-5 h-5 text-purple-400" />
+                  <span>Loaded Agent Skills</span>
+                </h3>
+                <div className="space-y-2">
+                  {skills.map((s) => (
+                    <div 
+                      key={s.name}
+                      onClick={() => { setSelectedSkill(s); fetchSkillDetail(s.name); setActiveTab('skills'); }}
+                      className="p-2.5 bg-slate-950 hover:bg-slate-900 border border-slate-800/60 rounded-xl cursor-pointer transition-colors flex items-center justify-between text-xs"
+                    >
+                      <span className="font-mono text-cyan-300">{s.name}</span>
+                      <span className="text-[10px] text-slate-500">v{s.version}</span>
                     </div>
-                  </div>
+                  ))}
                 </div>
               </div>
             </div>
           </div>
         )}
 
-        {activeTab === 'team' && (
-          <div className="space-y-6">
-            <div className="bg-slate-900/50 border border-slate-800 rounded-2xl p-6">
-              <h2 className="text-xl font-bold text-white flex items-center space-x-2 mb-2">
-                <Users className="w-5 h-5 text-cyan-400" />
-                <span>4-Person Hackathon Team Division</span>
-              </h2>
-              <p className="text-sm text-slate-400 mb-6">
-                Optimal role division to maximize output and win judging criteria.
+        {/* TAB 2: AGENT SKILLS HUB (SKILL.md) */}
+        {activeTab === 'skills' && (
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <div className="space-y-4">
+              <h3 className="text-base font-semibold text-white flex items-center space-x-2">
+                <FileCode className="w-5 h-5 text-cyan-400" />
+                <span>Discovered Skills ({skills.length})</span>
+              </h3>
+              <p className="text-xs text-slate-400">
+                Adhering to the Agent Skill Open Standard. Metadata is indexed at startup; operational instructions load on-demand.
               </p>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                <div className="p-5 bg-slate-950/70 border border-blue-500/30 rounded-xl">
-                  <div className="w-8 h-8 rounded-lg bg-blue-500/20 text-blue-400 flex items-center justify-center font-bold mb-3">
-                    01
+              <div className="space-y-3">
+                {skills.map((s) => (
+                  <div
+                    key={s.name}
+                    onClick={() => fetchSkillDetail(s.name)}
+                    className={`p-4 rounded-xl border cursor-pointer transition-all ${
+                      selectedSkill?.name === s.name
+                        ? 'bg-blue-600/10 border-blue-500/50 shadow-lg shadow-blue-500/10'
+                        : 'bg-slate-900/50 border-slate-800 hover:border-slate-700'
+                    }`}
+                  >
+                    <div className="flex items-center justify-between mb-1">
+                      <h4 className="text-sm font-semibold text-white font-mono">{s.name}</h4>
+                      <span className="text-[10px] bg-slate-800 px-2 py-0.5 rounded text-slate-400 font-mono">
+                        v{s.version}
+                      </span>
+                    </div>
+                    <p className="text-xs text-slate-400 line-clamp-2">{s.description}</p>
+                    <div className="mt-3 flex flex-wrap gap-1">
+                      {s.tags?.map((tag) => (
+                        <span key={tag} className="text-[10px] bg-slate-950 text-cyan-400 px-2 py-0.5 rounded-full border border-slate-800">
+                          #{tag}
+                        </span>
+                      ))}
+                    </div>
                   </div>
-                  <h3 className="font-semibold text-white">Frontend Lead</h3>
-                  <p className="text-xs text-cyan-400 font-mono mt-0.5 mb-3">Branch: feature/frontend</p>
-                  <ul className="text-xs text-slate-400 space-y-1.5 list-disc list-inside">
-                    <li>Build sleek UI in React + Tailwind</li>
-                    <li>Connect API endpoints</li>
-                    <li>Responsive mobile / desktop views</li>
-                    <li>Polish UX and visual wow factor</li>
-                  </ul>
-                </div>
+                ))}
+              </div>
+            </div>
 
-                <div className="p-5 bg-slate-950/70 border border-emerald-500/30 rounded-xl">
-                  <div className="w-8 h-8 rounded-lg bg-emerald-500/20 text-emerald-400 flex items-center justify-center font-bold mb-3">
-                    02
+            {/* Right 2 cols: Inspect SKILL.md */}
+            <div className="lg:col-span-2">
+              {selectedSkill ? (
+                <div className="bg-slate-900/50 border border-slate-800 rounded-2xl p-6 shadow-xl space-y-6">
+                  <div className="flex items-center justify-between border-b border-slate-800 pb-4">
+                    <div>
+                      <h3 className="text-lg font-bold text-white font-mono flex items-center space-x-2">
+                        <span>{selectedSkill.name}</span>
+                        <span className="text-xs text-slate-400 font-normal">/ SKILL.md</span>
+                      </h3>
+                      <p className="text-xs text-slate-400 mt-1">{selectedSkill.description}</p>
+                    </div>
+                    <button
+                      onClick={() => {
+                        setAgentPrompt(`Please use the ${selectedSkill.name} skill for our task.`);
+                        setActiveTab('agent');
+                      }}
+                      className="px-3.5 py-2 rounded-xl text-xs font-semibold bg-cyan-600/20 text-cyan-300 border border-cyan-500/30 hover:bg-cyan-600/30 transition-all flex items-center space-x-1.5"
+                    >
+                      <Zap className="w-3.5 h-3.5" />
+                      <span>Test in Agent</span>
+                    </button>
                   </div>
-                  <h3 className="font-semibold text-white">Backend & API Lead</h3>
-                  <p className="text-xs text-emerald-400 font-mono mt-0.5 mb-3">Branch: feature/backend</p>
-                  <ul className="text-xs text-slate-400 space-y-1.5 list-disc list-inside">
-                    <li>FastAPI routing & schemas</li>
-                    <li>Database / state management</li>
-                    <li>Authentication & error handling</li>
-                    <li>Dockerization & deployment</li>
-                  </ul>
-                </div>
 
-                <div className="p-5 bg-slate-950/70 border border-purple-500/30 rounded-xl">
-                  <div className="w-8 h-8 rounded-lg bg-purple-500/20 text-purple-400 flex items-center justify-center font-bold mb-3">
-                    03
+                  <div>
+                    <h4 className="text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">
+                      Operational Instructions Body (Markdown)
+                    </h4>
+                    <pre className="bg-slate-950 border border-slate-800 rounded-xl p-5 text-xs font-mono text-slate-300 whitespace-pre-wrap leading-relaxed max-h-[450px] overflow-y-auto">
+                      {selectedSkill.instructions || 'Loading instructions...'}
+                    </pre>
                   </div>
-                  <h3 className="font-semibold text-white">AI / ML Engineer</h3>
-                  <p className="text-xs text-purple-400 font-mono mt-0.5 mb-3">Branch: feature/ai-model</p>
-                  <ul className="text-xs text-slate-400 space-y-1.5 list-disc list-inside">
-                    <li>Dataset preparation & cleaning</li>
-                    <li>PyTorch training / fine-tuning</li>
-                    <li>Cloud GPU scale (Colab / Kaggle)</li>
-                    <li>Inference latency optimization</li>
-                  </ul>
                 </div>
+              ) : (
+                <div className="bg-slate-900/30 border border-dashed border-slate-800 rounded-2xl p-12 text-center text-slate-500 text-sm">
+                  Select a skill on the left to inspect its operational instructions.
+                </div>
+              )}
+            </div>
+          </div>
+        )}
 
-                <div className="p-5 bg-slate-950/70 border border-amber-500/30 rounded-xl">
-                  <div className="w-8 h-8 rounded-lg bg-amber-500/20 text-amber-400 flex items-center justify-center font-bold mb-3">
-                    04
-                  </div>
-                  <h3 className="font-semibold text-white">Product & Pitch Lead</h3>
-                  <p className="text-xs text-amber-400 font-mono mt-0.5 mb-3">Branch: feature/docs-demo</p>
-                  <ul className="text-xs text-slate-400 space-y-1.5 list-disc list-inside">
-                    <li>Pitch deck & problem statement</li>
-                    <li>3-minute demo video / live script</li>
-                    <li>End-to-end testing with judges' mindset</li>
-                    <li>README documentation & slides</li>
-                  </ul>
+        {/* TAB 3: HACKATHON TECH STACK OVERVIEW */}
+        {activeTab === 'stack' && (
+          <div className="bg-slate-900/50 border border-slate-800 rounded-2xl p-6 shadow-xl space-y-8">
+            <div>
+              <h2 className="text-xl font-bold text-white flex items-center space-x-2">
+                <Layers className="w-5 h-5 text-blue-400" />
+                <span>Hackathon Core Architecture & Resources</span>
+              </h2>
+              <p className="text-sm text-slate-400 mt-1">
+                Integrated workflow matching the hackathon tracks (Google Gemma, Hermes Agent & Agent Skills).
+              </p>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+              <div className="p-5 bg-slate-950 border border-blue-500/30 rounded-xl">
+                <div className="w-8 h-8 rounded-lg bg-blue-500/20 text-blue-400 flex items-center justify-center font-bold mb-3">
+                  01
                 </div>
+                <h3 className="font-semibold text-white">Google Gemma Models</h3>
+                <p className="text-xs text-slate-400 mt-2">
+                  Official Google open-weight models (Gemma 2, Gemma 4) accessed via Google AI Studio, Gemini API, or open-weight inference endpoints.
+                </p>
+              </div>
+
+              <div className="p-5 bg-slate-950 border border-purple-500/30 rounded-xl">
+                <div className="w-8 h-8 rounded-lg bg-purple-500/20 text-purple-400 flex items-center justify-center font-bold mb-3">
+                  02
+                </div>
+                <h3 className="font-semibold text-white">Hermes Agent Harness</h3>
+                <p className="text-xs text-slate-400 mt-2">
+                  Autonomous agent harness developed by Nous Research for long-running workflows, tool invocation, and persistent memory loops.
+                </p>
+              </div>
+
+              <div className="p-5 bg-slate-950 border border-cyan-500/30 rounded-xl">
+                <div className="w-8 h-8 rounded-lg bg-cyan-500/20 text-cyan-400 flex items-center justify-center font-bold mb-3">
+                  03
+                </div>
+                <h3 className="font-semibold text-white">Agent Skills (SKILL.md)</h3>
+                <p className="text-xs text-slate-400 mt-2">
+                  Open standard format using YAML frontmatter and progressive disclosure to provide procedural operational playbooks without context bloat.
+                </p>
+              </div>
+
+              <div className="p-5 bg-slate-950 border border-emerald-500/30 rounded-xl">
+                <div className="w-8 h-8 rounded-lg bg-emerald-500/20 text-emerald-400 flex items-center justify-center font-bold mb-3">
+                  04
+                </div>
+                <h3 className="font-semibold text-white">GPU Hardware Stack</h3>
+                <p className="text-xs text-slate-400 mt-2">
+                  NVIDIA Quadro P2000 (CUDA 12.4) running local inference + cloud Colab T4/A100 scaling for training larger open-weight models.
+                </p>
               </div>
             </div>
           </div>
         )}
 
-        {activeTab === 'architecture' && (
-          <div className="bg-slate-900/50 border border-slate-800 rounded-2xl p-6">
-            <h2 className="text-xl font-bold text-white flex items-center space-x-2 mb-4">
-              <Server className="w-5 h-5 text-blue-400" />
-              <span>Full-Stack Architecture & Repository Layout</span>
+        {/* TAB 4: 4-PERSON TEAM ROLES */}
+        {activeTab === 'team' && (
+          <div className="bg-slate-900/50 border border-slate-800 rounded-2xl p-6 shadow-xl space-y-6">
+            <h2 className="text-xl font-bold text-white flex items-center space-x-2">
+              <Users className="w-5 h-5 text-cyan-400" />
+              <span>4-Person Hackathon Team Division</span>
             </h2>
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              <div className="p-4 bg-slate-950 rounded-xl border border-slate-800">
-                <h4 className="text-sm font-semibold text-blue-400 mb-2">Frontend (`/frontend`)</h4>
-                <p className="text-xs text-slate-400">
-                  React 19 + Vite + Tailwind CSS + Lucide Icons. Proxies requests seamlessly to backend on port 8000.
-                </p>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+              <div className="p-5 bg-slate-950 border border-blue-500/30 rounded-xl">
+                <h3 className="font-semibold text-white">Frontend Lead</h3>
+                <p className="text-xs text-cyan-400 font-mono mt-0.5 mb-3">Branch: feature/frontend</p>
+                <ul className="text-xs text-slate-400 space-y-1.5 list-disc list-inside">
+                  <li>React 19 + Tailwind dashboard</li>
+                  <li>Agent reasoning UI components</li>
+                  <li>SKILL.md visual inspector</li>
+                </ul>
               </div>
 
-              <div className="p-4 bg-slate-950 rounded-xl border border-slate-800">
-                <h4 className="text-sm font-semibold text-emerald-400 mb-2">Backend (`/backend`)</h4>
-                <p className="text-xs text-slate-400">
-                  FastAPI + Pydantic v2. Auto-generated Swagger docs at <code className="text-slate-300">/docs</code>. Health checks & CUDA telemetry.
-                </p>
+              <div className="p-5 bg-slate-950 border border-emerald-500/30 rounded-xl">
+                <h3 className="font-semibold text-white">Backend Lead</h3>
+                <p className="text-xs text-emerald-400 font-mono mt-0.5 mb-3">Branch: feature/backend</p>
+                <ul className="text-xs text-slate-400 space-y-1.5 list-disc list-inside">
+                  <li>FastAPI routing & schemas</li>
+                  <li>Hermes Agent endpoint wiring</li>
+                  <li>SKILL.md progressive loader</li>
+                </ul>
               </div>
 
-              <div className="p-4 bg-slate-950 rounded-xl border border-slate-800">
-                <h4 className="text-sm font-semibold text-purple-400 mb-2">AI Engine (`/ai_engine`)</h4>
-                <p className="text-xs text-slate-400">
-                  PyTorch training pipeline (`train.py`), inference engine (`inference.py`), and Google Colab cloud GPU runner.
-                </p>
+              <div className="p-5 bg-slate-950 border border-purple-500/30 rounded-xl">
+                <h3 className="font-semibold text-white">AI / Agent Engineer</h3>
+                <p className="text-xs text-purple-400 font-mono mt-0.5 mb-3">Branch: feature/ai-model</p>
+                <ul className="text-xs text-slate-400 space-y-1.5 list-disc list-inside">
+                  <li>Gemma API client & prompt tuning</li>
+                  <li>Authoring custom SKILL.md playbooks</li>
+                  <li>Hermes Agent tool integration</li>
+                </ul>
+              </div>
+
+              <div className="p-5 bg-slate-950 border border-amber-500/30 rounded-xl">
+                <h3 className="font-semibold text-white">Pitch & Demo Lead</h3>
+                <p className="text-xs text-amber-400 font-mono mt-0.5 mb-3">Branch: feature/pitch-demo</p>
+                <ul className="text-xs text-slate-400 space-y-1.5 list-disc list-inside">
+                  <li>Problem statement & slides</li>
+                  <li>3-minute demo recording</li>
+                  <li>Judging criteria alignment</li>
+                </ul>
               </div>
             </div>
           </div>
