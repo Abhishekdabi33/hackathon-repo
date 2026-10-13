@@ -6,12 +6,12 @@ Welcome team! This playbook is designed to help our 4-person team move with maxi
 
 ## 👥 1. Role Division & Ownership
 
-| Member | Primary Role | Core Responsibilities | Working Directory / Git Branch |
+| Member / GitHub Handle | Primary Role | Core Responsibilities | Working Directory / Git Branch |
 | :--- | :--- | :--- | :--- |
-| **Member 1** | **Frontend & UX Lead** | React UI, dashboard components, animations, responsive layout, API integration | `frontend/` on `feature/frontend` |
-| **Member 2** | **Backend & Architecture Lead** | FastAPI endpoints, data models, error handling, CORS, deployment / Docker | `backend/` on `feature/backend` |
-| **Member 3** | **AI / Machine Learning Engineer** | Model training, inference pipeline, prompt engineering / fine-tuning, latency | `ai_engine/` on `feature/ai-model` |
-| **Member 4** | **Product, Demo & Presentation Lead** | Pitch deck, 3-min demo video script, value proposition, testing end-to-end user journeys | `docs/` on `feature/pitch-demo` |
+| **@gunwantjawle-ux** | **Frontend & UI/UX Lead** | React 19 UI, Tailwind styling, Agent reasoning trace visuals, SKILL.md explorer, responsive layout | `frontend/` on `feature/frontend` |
+| **@sarthakchambhare16-wdym** | **Backend & API Systems Lead** | FastAPI endpoints, data models, error handling, CORS, session state, server deployment | `backend/` on `feature/backend` |
+| **@vedxnt-b** | **AI Engine & Agent Skills Lead** | Hermes Agent tools, Gemma API client tuning, authoring new `SKILL.md` files, model inference | `agent_harness/`, `skills/`, `ai_engine/` on `feature/ai-agent` |
+| **@Abhishekdabi33** | **Team Lead, Architecture & Pitch Demo** | System architecture integration, GitHub management, pitch deck, 3-min demo video, judge alignment | `README.md`, `docs/` on `feature/pitch-demo` |
 
 ---
 

@@ -515,42 +515,46 @@ export default function App() {
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
               <div className="p-5 bg-slate-950 border border-blue-500/30 rounded-xl">
-                <h3 className="font-semibold text-white">Frontend Lead</h3>
+                <span className="text-[11px] font-mono bg-blue-500/10 text-blue-400 px-2 py-0.5 rounded border border-blue-500/20">@gunwantjawle-ux</span>
+                <h3 className="font-semibold text-white mt-2">Frontend & UI/UX Lead</h3>
                 <p className="text-xs text-cyan-400 font-mono mt-0.5 mb-3">Branch: feature/frontend</p>
                 <ul className="text-xs text-slate-400 space-y-1.5 list-disc list-inside">
                   <li>React 19 + Tailwind dashboard</li>
                   <li>Agent reasoning UI components</li>
-                  <li>SKILL.md visual inspector</li>
+                  <li>SKILL.md visual inspector & polish</li>
                 </ul>
               </div>
 
               <div className="p-5 bg-slate-950 border border-emerald-500/30 rounded-xl">
-                <h3 className="font-semibold text-white">Backend Lead</h3>
+                <span className="text-[11px] font-mono bg-emerald-500/10 text-emerald-400 px-2 py-0.5 rounded border border-emerald-500/20">@sarthakchambhare16-wdym</span>
+                <h3 className="font-semibold text-white mt-2">Backend & API Systems Lead</h3>
                 <p className="text-xs text-emerald-400 font-mono mt-0.5 mb-3">Branch: feature/backend</p>
                 <ul className="text-xs text-slate-400 space-y-1.5 list-disc list-inside">
                   <li>FastAPI routing & schemas</li>
                   <li>Hermes Agent endpoint wiring</li>
-                  <li>SKILL.md progressive loader</li>
+                  <li>SKILL.md progressive loader & API</li>
                 </ul>
               </div>
 
               <div className="p-5 bg-slate-950 border border-purple-500/30 rounded-xl">
-                <h3 className="font-semibold text-white">AI / Agent Engineer</h3>
-                <p className="text-xs text-purple-400 font-mono mt-0.5 mb-3">Branch: feature/ai-model</p>
+                <span className="text-[11px] font-mono bg-purple-500/10 text-purple-400 px-2 py-0.5 rounded border border-purple-500/20">@vedxnt-b</span>
+                <h3 className="font-semibold text-white mt-2">AI Engine & Agent Skills Lead</h3>
+                <p className="text-xs text-purple-400 font-mono mt-0.5 mb-3">Branch: feature/ai-agent</p>
                 <ul className="text-xs text-slate-400 space-y-1.5 list-disc list-inside">
                   <li>Gemma API client & prompt tuning</li>
                   <li>Authoring custom SKILL.md playbooks</li>
-                  <li>Hermes Agent tool integration</li>
+                  <li>Hermes Agent tool integration & logic</li>
                 </ul>
               </div>
 
               <div className="p-5 bg-slate-950 border border-amber-500/30 rounded-xl">
-                <h3 className="font-semibold text-white">Pitch & Demo Lead</h3>
+                <span className="text-[11px] font-mono bg-amber-500/10 text-amber-400 px-2 py-0.5 rounded border border-amber-500/20">@Abhishekdabi33</span>
+                <h3 className="font-semibold text-white mt-2">Team Lead, Architecture & Demo</h3>
                 <p className="text-xs text-amber-400 font-mono mt-0.5 mb-3">Branch: feature/pitch-demo</p>
                 <ul className="text-xs text-slate-400 space-y-1.5 list-disc list-inside">
-                  <li>Problem statement & slides</li>
-                  <li>3-minute demo recording</li>
-                  <li>Judging criteria alignment</li>
+                  <li>End-to-end architecture & GitHub sync</li>
+                  <li>Pitch deck & problem statement</li>
+                  <li>3-minute demo recording & QA</li>
                 </ul>
               </div>
             </div>
