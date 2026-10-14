@@ -15,12 +15,15 @@ class GemmaClient:
     """
     def __init__(self, api_key: Optional[str] = None, model: str = "gemini-2.5-flash"):
         self.api_key = api_key or os.getenv("GEMINI_API_KEY") or os.getenv("GOOGLE_API_KEY")
+        self.cloud_gpu_url = os.getenv("CLOUD_GPU_URL", "").rstrip("/")
         self.model = model
         self.client = None
         self._init_client()
 
     def _init_client(self):
-        if self.api_key:
+        if self.cloud_gpu_url:
+            print(f"[OK] GemmaClient configured to route to Cloud GPU at: {self.cloud_gpu_url}")
+        elif self.api_key:
             try:
                 from google import genai
                 self.client = genai.Client(api_key=self.api_key)
@@ -29,10 +32,31 @@ class GemmaClient:
                 print(f"[!] Warning initializing google-genai client: {e}")
                 self.client = None
         else:
-            print("[*] No GEMINI_API_KEY set. GemmaClient running in demonstration/mock mode.")
+            print("[*] Running in mock/simulation mode. Set GEMINI_API_KEY (Google AI Studio) or CLOUD_GPU_URL (Kaggle/Colab) in .env for live AI.")
 
     def generate(self, prompt: str, system_instruction: Optional[str] = None, temperature: float = 0.7) -> Dict[str, Any]:
-        """Generates text using Gemma or fallback demonstration engine."""
+        """Generates text using Cloud GPU (Kaggle), Google GenAI SDK, or fallback simulation."""
+        # 1. Check if Cloud GPU URL (Kaggle / Colab) is active
+        if self.cloud_gpu_url:
+            try:
+                import httpx
+                resp = httpx.post(
+                    f"{self.cloud_gpu_url}/api/predict",
+                    json={"prompt": prompt, "max_tokens": 200},
+                    timeout=30.0
+                )
+                if resp.status_code == 200:
+                    data = resp.json()
+                    return {
+                        "text": data.get("result", ""),
+                        "model": "gemma-kaggle-t4-cloud",
+                        "provider": "kaggle-cloud-gpu",
+                        "status": "success"
+                    }
+            except Exception as e:
+                print(f"[!] Cloud GPU request failed: {e}. Falling back to API/simulation.")
+
+        # 2. Check if Google GenAI API is active
         if self.client:
             try:
                 config = {}
@@ -55,7 +79,7 @@ class GemmaClient:
             except Exception as e:
                 print(f"[!] API call failed: {e}. Falling back to simulation.")
 
-        # Demonstration mode (reproducible offline response for hackathons)
+        # 3. Demonstration mode (reproducible offline response for hackathons)
         return {
             "text": f"[Gemma Simulation Response]\nBased on your query: '{prompt[:100]}...', "
                     f"the Gemma reasoning engine has analyzed the context and prepared the output.",
