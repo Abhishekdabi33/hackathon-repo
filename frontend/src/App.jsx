@@ -505,57 +505,80 @@ export default function App() {
           </div>
         )}
 
-        {/* TAB 4: 4-PERSON TEAM ROLES */}
+        {/* TAB 4: 4-PERSON TEAM ROLES & SQUADS */}
         {activeTab === 'team' && (
           <div className="bg-slate-900/50 border border-slate-800 rounded-2xl p-6 shadow-xl space-y-6">
-            <h2 className="text-xl font-bold text-white flex items-center space-x-2">
-              <Users className="w-5 h-5 text-cyan-400" />
-              <span>4-Person Hackathon Team Division</span>
-            </h2>
+            <div>
+              <h2 className="text-xl font-bold text-white flex items-center space-x-2">
+                <Users className="w-5 h-5 text-cyan-400" />
+                <span>Team Engineering Squads & Ownership</span>
+              </h2>
+              <p className="text-sm text-slate-400 mt-1">
+                Divided into two focused cross-functional pairs: Frontend Squad and Backend & AI Engine Squad.
+              </p>
+            </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-              <div className="p-5 bg-slate-950 border border-blue-500/30 rounded-xl">
-                <span className="text-[11px] font-mono bg-blue-500/10 text-blue-400 px-2 py-0.5 rounded border border-blue-500/20">@gunwantjawle-ux</span>
-                <h3 className="font-semibold text-white mt-2">Frontend & UI/UX Lead</h3>
-                <p className="text-xs text-cyan-400 font-mono mt-0.5 mb-3">Branch: feature/frontend</p>
-                <ul className="text-xs text-slate-400 space-y-1.5 list-disc list-inside">
-                  <li>React 19 + Tailwind dashboard</li>
-                  <li>Agent reasoning UI components</li>
-                  <li>SKILL.md visual inspector & polish</li>
-                </ul>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {/* SQUAD 1: FRONTEND POD */}
+              <div className="p-6 bg-slate-950 border border-blue-500/30 rounded-2xl space-y-4">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-bold uppercase tracking-wider text-blue-400">Pod 1 • Frontend & UI/UX</span>
+                  <span className="text-[10px] font-mono bg-blue-500/10 text-cyan-300 px-2.5 py-0.5 rounded-full border border-blue-500/20">
+                    Branch: feature/frontend
+                  </span>
+                </div>
+                <h3 className="text-lg font-bold text-white">Frontend Engineering Squad</h3>
+                
+                <div className="flex flex-wrap gap-2 pt-1">
+                  <span className="text-xs font-mono bg-slate-900 text-blue-400 px-2.5 py-1 rounded-lg border border-slate-800">
+                    @vedxnt-b (Frontend Lead)
+                  </span>
+                  <span className="text-xs font-mono bg-slate-900 text-blue-400 px-2.5 py-1 rounded-lg border border-slate-800">
+                    @piyushmatodepatil (UI/UX Lead)
+                  </span>
+                </div>
+
+                <div className="pt-2 text-xs text-slate-400 space-y-2">
+                  <p className="font-semibold text-slate-300">Deliverables & Responsibilities:</p>
+                  <ul className="space-y-1.5 list-disc list-inside">
+                    <li>Build interactive React 19 + Tailwind CSS user interface</li>
+                    <li>Real-time reasoning trace visualization (Thought ➔ Action ➔ Observation)</li>
+                    <li>SKILL.md visual inspector with live raw YAML/Markdown view</li>
+                    <li>Wire frontend API calls to backend (<code className="text-slate-300">/api/agent/chat</code>, <code className="text-slate-300">/api/skills</code>)</li>
+                    <li>Ensure dark-mode responsiveness & high-impact visual design for judges</li>
+                  </ul>
+                </div>
               </div>
 
-              <div className="p-5 bg-slate-950 border border-emerald-500/30 rounded-xl">
-                <span className="text-[11px] font-mono bg-emerald-500/10 text-emerald-400 px-2 py-0.5 rounded border border-emerald-500/20">@piyushmatodepatil</span>
-                <h3 className="font-semibold text-white mt-2">Backend & API Systems Lead</h3>
-                <p className="text-xs text-emerald-400 font-mono mt-0.5 mb-3">Branch: feature/backend</p>
-                <ul className="text-xs text-slate-400 space-y-1.5 list-disc list-inside">
-                  <li>FastAPI routing & schemas</li>
-                  <li>Hermes Agent endpoint wiring</li>
-                  <li>SKILL.md progressive loader & API</li>
-                </ul>
-              </div>
+              {/* SQUAD 2: BACKEND & AI ENGINE POD */}
+              <div className="p-6 bg-slate-950 border border-purple-500/30 rounded-2xl space-y-4">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-bold uppercase tracking-wider text-purple-400">Pod 2 • Backend & AI Engine</span>
+                  <span className="text-[10px] font-mono bg-purple-500/10 text-purple-300 px-2.5 py-0.5 rounded-full border border-purple-500/20">
+                    Branch: feature/backend-ai
+                  </span>
+                </div>
+                <h3 className="text-lg font-bold text-white">Backend & AI Engine Squad</h3>
 
-              <div className="p-5 bg-slate-950 border border-purple-500/30 rounded-xl">
-                <span className="text-[11px] font-mono bg-purple-500/10 text-purple-400 px-2 py-0.5 rounded border border-purple-500/20">@vedxnt-b</span>
-                <h3 className="font-semibold text-white mt-2">AI Engine & Agent Skills Lead</h3>
-                <p className="text-xs text-purple-400 font-mono mt-0.5 mb-3">Branch: feature/ai-agent</p>
-                <ul className="text-xs text-slate-400 space-y-1.5 list-disc list-inside">
-                  <li>Gemma API client & prompt tuning</li>
-                  <li>Authoring custom SKILL.md playbooks</li>
-                  <li>Hermes Agent tool integration & logic</li>
-                </ul>
-              </div>
+                <div className="flex flex-wrap gap-2 pt-1">
+                  <span className="text-xs font-mono bg-slate-900 text-purple-400 px-2.5 py-1 rounded-lg border border-slate-800">
+                    @gunwantjawle-ux (Backend Systems Lead)
+                  </span>
+                  <span className="text-xs font-mono bg-slate-900 text-purple-400 px-2.5 py-1 rounded-lg border border-slate-800">
+                    @Abhishekdabi33 (AI Engine & Project Lead)
+                  </span>
+                </div>
 
-              <div className="p-5 bg-slate-950 border border-amber-500/30 rounded-xl">
-                <span className="text-[11px] font-mono bg-amber-500/10 text-amber-400 px-2 py-0.5 rounded border border-amber-500/20">@Abhishekdabi33</span>
-                <h3 className="font-semibold text-white mt-2">Team Lead, Architecture & Demo</h3>
-                <p className="text-xs text-amber-400 font-mono mt-0.5 mb-3">Branch: feature/pitch-demo</p>
-                <ul className="text-xs text-slate-400 space-y-1.5 list-disc list-inside">
-                  <li>End-to-end architecture & GitHub sync</li>
-                  <li>Pitch deck & problem statement</li>
-                  <li>3-minute demo recording & QA</li>
-                </ul>
+                <div className="pt-2 text-xs text-slate-400 space-y-2">
+                  <p className="font-semibold text-slate-300">Deliverables & Responsibilities:</p>
+                  <ul className="space-y-1.5 list-disc list-inside">
+                    <li>Maintain FastAPI REST server routing, schemas & CORS</li>
+                    <li>Autonomous Hermes Agent ReAct loop & tool execution engine</li>
+                    <li>Google Gemma integration (Google AI Studio API + Kaggle 2x T4 GPUs)</li>
+                    <li>Author domain-specific operational <code className="text-slate-300">SKILL.md</code> playbooks in <code className="text-slate-300">skills/</code></li>
+                    <li>Overall repository sync, pitch deck & 3-minute demo video recording</li>
+                  </ul>
+                </div>
               </div>
             </div>
           </div>

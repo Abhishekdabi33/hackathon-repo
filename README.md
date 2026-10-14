@@ -13,14 +13,35 @@
 
 ---
 
-## 👥 Official Team Roster & Role Assignments
+## 👥 Official Team Pods & Engineering Squads
 
-| Collaborator Handle | Official Role | Dedicated Git Branch | Primary Focus & Deliverables |
+We are working in two focused, cross-functional engineering pairs:
+
+### 🎨 Pod 1: Frontend Engineering & UI/UX
+| Collaborators | Role | Git Branch | Working Directory |
 | :--- | :--- | :--- | :--- |
-| **[@Abhishekdabi33](https://github.com/Abhishekdabi33)** | **Project Lead & Architecture Coordinator** | `feature/pitch-demo` | • Repository administration, authentication & code integrity<br>• End-to-end integration across frontend, backend & AI<br>• Pitch deck, value proposition & 3-minute backup demo video |
-| **[@gunwantjawle-ux](https://github.com/gunwantjawle-ux)** | **Frontend & UI/UX Lead** | `feature/frontend` | • Modern React 19 + Tailwind CSS user interface in [`frontend/`](frontend/)<br>• Visualizing agent reasoning traces (`Thought ➔ Action ➔ Observation`)<br>• Interactive SKILL.md inspector, mobile responsiveness & demo polish |
-| **[@piyushmatodepatil](https://github.com/piyushmatodepatil)** | **Backend & Systems Lead** | `feature/backend` | • FastAPI server routing, REST schemas & error handling in [`backend/`](backend/)<br>• Managing `/api/agent/chat`, `/api/skills`, and `/api/health` endpoints<br>• Session persistence, CORS configuration & production server readiness |
-| **[@vedxnt-b](https://github.com/vedxnt-b)** | **AI Engine & Agent Skills Lead** | `feature/ai-agent` | • Prompt engineering & Gemma client tuning in [`ai_engine/`](ai_engine/)<br>• Authoring new operational playbooks in [`skills/`](skills/) using `SKILL.md`<br>• Hermes Agent tool integration & Kaggle Cloud GPU runner |
+| **[@vedxnt-b](https://github.com/vedxnt-b)** & **[@piyushmatodepatil](https://github.com/piyushmatodepatil)** | **Frontend & UI/UX Leads** | `feature/frontend` | [`frontend/`](frontend/) |
+
+**What to Do & Key Deliverables:**
+- Build and polish the **React 19 + Tailwind CSS** interactive web dashboard.
+- Create real-time **agent reasoning trace cards** (`Thought ➔ Action ➔ Observation`).
+- Build an interactive **SKILL.md visual inspector** showing raw YAML metadata and operational markdown.
+- Wire frontend HTTP calls to backend REST routes (`/api/agent/chat`, `/api/skills`, `/api/health`).
+- Deliver responsive dark-mode styling, clean animations, and a demo-ready presentation.
+
+---
+
+### ⚙️ Pod 2: Backend Architecture & AI Engine
+| Collaborators | Role | Git Branch | Working Directory |
+| :--- | :--- | :--- | :--- |
+| **[@gunwantjawle-ux](https://github.com/gunwantjawle-ux)** & **[@Abhishekdabi33](https://github.com/Abhishekdabi33)** | **Backend Systems & AI Leads** | `feature/backend-ai` | [`backend/`](backend/), [`ai_engine/`](ai_engine/), [`agent_harness/`](agent_harness/), [`skills/`](skills/) |
+
+**What to Do & Key Deliverables:**
+- Maintain high-performance **FastAPI server routing**, schemas with Pydantic, CORS, and error handling.
+- Expand the **Hermes Agent ReAct harness** (`agent_harness/hermes_agent.py`) with custom tool calling.
+- Manage **Google Gemma model integration** via official `google-genai` SDK and Kaggle 2x Tesla T4 GPUs (`CLOUD_GPU_URL`).
+- Author domain-specific **`SKILL.md` operational playbooks** in `skills/` following the Agent Skill open standard.
+- Coordinate GitHub code merges, write pitch documentation, and record a 3-minute demo video.
 
 ---
 
@@ -49,20 +70,14 @@ git clone https://github.com/Abhishekdabi33/hackathon-repo.git
 cd hackathon-repo
 ```
 
-### 4. Create & Work on Your Dedicated Feature Branch
-**Never commit directly to `main`!** Everyone works on their assigned feature branch:
+### 4. Create & Work on Your Assigned Pod Branch
+**Never commit directly to `main`!** Everyone works on their assigned pod branch:
 ```bash
-# @gunwantjawle-ux:
+# For Frontend Squad (@vedxnt-b & @piyushmatodepatil):
 git checkout -b feature/frontend
 
-# @piyushmatodepatil:
-git checkout -b feature/backend
-
-# @vedxnt-b:
-git checkout -b feature/ai-agent
-
-# @Abhishekdabi33:
-git checkout -b feature/pitch-demo
+# For Backend & AI Engine Squad (@gunwantjawle-ux & @Abhishekdabi33):
+git checkout -b feature/backend-ai
 ```
 
 ### 5. Push Your Work & Open a Pull Request
@@ -79,21 +94,21 @@ Go to [GitHub Pull Requests](https://github.com/Abhishekdabi33/hackathon-repo/pu
 
 ```
 ┌────────────────────────────────────────────────────────────────────────┐
-│                   React 19 Frontend (@gunwantjawle-ux)                 │
+│             React 19 Frontend (@vedxnt-b & @piyushmatodepatil)         │
 │         Vite dev server running on http://localhost:5173               │
 │         Proxies all API calls through /api                             │
 └───────────────────────────────────┬────────────────────────────────────┘
                                     │ HTTP / JSON
                                     ▼
 ┌────────────────────────────────────────────────────────────────────────┐
-│                   FastAPI Backend (@piyushmatodepatil)                 │
+│             FastAPI Backend (@gunwantjawle-ux & @Abhishekdabi33)       │
 │         Uvicorn server running on http://localhost:8000                │
 │         API Docs available at http://localhost:8000/docs               │
 └──────────────────┬─────────────────────────────────┬───────────────────┘
                    │                                 │
                    ▼                                 ▼
 ┌──────────────────────────────────────┐  ┌──────────────────────────────┐
-│  Hermes Agent Harness (@vedxnt-b)    │  │  Agent Skills Engine         │
+│  Hermes Agent Harness                │  │  Agent Skills Engine         │
 │  Autonomous ReAct Loop               │◄─┤  SKILL.md Open Standard      │
 │  (Thought ➔ Tool ➔ Observation)      │  │  (Progressive Disclosure)    │
 └──────────────────┬───────────────────┘  └──────────────────────────────┘

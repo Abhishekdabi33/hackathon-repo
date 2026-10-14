@@ -4,14 +4,33 @@ Welcome team! This playbook is designed to help our 4-person team move with maxi
 
 ---
 
-## 👥 1. Role Division & Ownership
+## 👥 1. Role Division & 2-Person Squads
 
-| Member / GitHub Handle | Primary Role | Core Responsibilities | Working Directory / Git Branch |
-| :--- | :--- | :--- | :--- |
-| **@gunwantjawle-ux** | **Frontend & UI/UX Lead** | React 19 UI, Tailwind styling, Agent reasoning trace visuals, SKILL.md explorer, responsive layout | `frontend/` on `feature/frontend` |
-| **@piyushmatodepatil** | **Backend & API Systems Lead** | FastAPI endpoints, data models, error handling, CORS, session state, server deployment | `backend/` on `feature/backend` |
-| **@vedxnt-b** | **AI Engine & Agent Skills Lead** | Hermes Agent tools, Gemma API client tuning, authoring new `SKILL.md` files, model inference | `agent_harness/`, `skills/`, `ai_engine/` on `feature/ai-agent` |
-| **@Abhishekdabi33** | **Team Lead, Architecture & Pitch Demo** | System architecture integration, GitHub management, pitch deck, 3-min demo video, judge alignment | `README.md`, `docs/` on `feature/pitch-demo` |
+We are working in two focused, cross-functional engineering pairs:
+
+### 🎨 Pod 1: Frontend Engineering & UI/UX
+- **Team Members**: **@vedxnt-b** (Frontend Lead) & **@piyushmatodepatil** (UI/UX & Components Lead)
+- **Primary Directory**: `frontend/`
+- **Git Branch**: `feature/frontend`
+- **Responsibilities & What to Do**:
+  1. **UI Components & Layout**: Build and polish the React 19 + Tailwind CSS interactive dashboard.
+  2. **Agent Reasoning Traces**: Create real-time step cards visualizing Hermes Agent thoughts, tool calls, and observations.
+  3. **SKILL.md Explorer**: Build an intuitive drawer/viewer to let judges inspect the raw YAML frontmatter and operational markdown instructions of any loaded skill.
+  4. **API Integration**: Connect frontend state to backend REST routes (`/api/agent/chat`, `/api/skills`, `/api/health`).
+  5. **Demo Polish & Responsiveness**: Ensure instant loading, mobile/desktop responsiveness, and clean dark-mode presentation.
+
+---
+
+### ⚙️ Pod 2: Backend Architecture & AI Engine
+- **Team Members**: **@gunwantjawle-ux** (Backend Systems Lead) & **@Abhishekdabi33** (AI Engine & Project Lead)
+- **Primary Directories**: `backend/`, `ai_engine/`, `agent_harness/`, `skills/`, `notebooks/`
+- **Git Branch**: `feature/backend-ai`
+- **Responsibilities & What to Do**:
+  1. **FastAPI Endpoints & Routing**: Maintain high-speed endpoints with Pydantic schemas, error handling, and CORS.
+  2. **Hermes Agent Loop**: Implement and expand autonomous tool-use in `agent_harness/hermes_agent.py` (Thought ➔ Action ➔ Observation).
+  3. **Google Gemma & Cloud GPU Integration**: Wire `GemmaClient` to Google AI Studio API and connect to Kaggle 2x Tesla T4 GPUs via `CLOUD_GPU_URL`.
+  4. **Authoring Domain SKILL.md Playbooks**: Create new operational skills in `skills/` using the Agent Skill open standard.
+  5. **Project Leadership & Pitch Demo**: Coordinate repo merges, write pitch slides, and record a 3-minute demo video.
 
 ---
 
@@ -21,10 +40,8 @@ Welcome team! This playbook is designed to help our 4-person team move with maxi
 1. **Never commit directly to `main`!**
    - `main` is always production-ready and demo-ready.
    - All development happens on feature branches:
-     - `git checkout -b feature/frontend`
-     - `git checkout -b feature/backend`
-     - `git checkout -b feature/ai-model`
-     - `git checkout -b feature/pitch-demo`
+     - `git checkout -b feature/frontend` (Vedant & Piyush)
+     - `git checkout -b feature/backend-ai` (Gunwant & Abhishek)
 2. **Never commit model weights or dataset dumps to Git!**
    - Checkpoints (`*.pt`, `*.bin`, `*.safetensors`) and datasets (`*.csv`, `*.parquet`) are in `.gitignore`.
    - Store large assets in Google Drive or Hugging Face Hub and link them in README.
