@@ -1,105 +1,213 @@
-# 🚀 Hackathon AI Platform: Gemma, Hermes Agent & Agent Skills
+# 🚀 Hackathon Autonomous AI Platform
+### Built with Google Gemma, Hermes Agent Harness & the SKILL.md Open Standard
 
-[![CI Pipeline](https://github.com/Abhishekdabi33/hackathon-repo/actions/workflows/ci.yml/badge.svg)](https://github.com/Abhishekdabi33/hackathon-repo/actions)
-![Google Gemma](https://img.shields.io/badge/Model-Google_Gemma-4285F4?logo=google)
-![Hermes Agent](https://img.shields.io/badge/Agent-Hermes_Harness-8A2BE2)
-![Agent Skills](https://img.shields.io/badge/Standard-SKILL.md_Open_Standard-FF6F00)
-![FastAPI](https://img.shields.io/badge/Backend-FastAPI-009688?logo=fastapi)
-![React 19](https://img.shields.io/badge/Frontend-React_19-61DAFB?logo=react)
-![PyTorch CUDA](https://img.shields.io/badge/CUDA-12.4_Accelerated-EE4C2C?logo=pytorch)
+[![GitHub Repo](https://img.shields.io/badge/GitHub-hackathon--repo-181717?logo=github)](https://github.com/Abhishekdabi33/hackathon-repo)
+[![Google Gemma](https://img.shields.io/badge/Model-Google_Gemma-4285F4?logo=google)](https://ai.google.dev/gemma)
+[![Hermes Agent](https://img.shields.io/badge/Harness-Hermes_Autonomous_Agent-8A2BE2)](https://hermes-agent.nousresearch.com/)
+[![Agent Skills](https://img.shields.io/badge/Standard-SKILL.md_Open_Standard-FF6F00)](https://agentskills.io/)
+[![FastAPI](https://img.shields.io/badge/Backend-FastAPI-009688?logo=fastapi)](https://fastapi.tiangolo.com/)
+[![React 19](https://img.shields.io/badge/Frontend-React_19-61DAFB?logo=react)](https://react.dev/)
 
-> **Autonomous Full-Stack AI Platform built for Hackathons.**  
-> Powered by **Google Gemma models**, **Nous Research Hermes Agent harness**, and the **Agent Skill Open Standard (`SKILL.md`)** with progressive disclosure.
-
----
-
-## 🎯 Tech Stack Alignment
-
-| Track / Pillar | Technology | Implementation in This Repo |
-| :--- | :--- | :--- |
-| **Open-Weight Models** | **Google Gemma (Gemma 2 / Gemma 4)** | [`ai_engine/gemma_client.py`](ai_engine/gemma_client.py) using official `google-genai` SDK |
-| **Agent Harness** | **Hermes Agent (Nous Research)** | [`agent_harness/hermes_agent.py`](agent_harness/hermes_agent.py) ReAct loop + persistent memory |
-| **Agent Skills** | **SKILL.md Open Standard** | [`skills/`](skills/) + [`skills_engine/skill_loader.py`](skills_engine/skill_loader.py) with progressive disclosure |
-| **Backend API** | **FastAPI + Uvicorn** | [`backend/app/main.py`](backend/app/main.py) with endpoints for Agent, Skills, and Gemma |
-| **Frontend UI** | **React 19 + Tailwind + Lucide** | [`frontend/`](frontend/) with interactive reasoning trace console & SKILL.md explorer |
+> **A production-ready full-stack AI platform built for the hackathon.**  
+> Solves the context-bloat and GPU bottleneck problems by combining **Google Gemma open-weight models**, an autonomous **Hermes Agent ReAct harness**, and modular **Agent Skills (`SKILL.md`)** with progressive disclosure.
 
 ---
 
-## 🏗️ Repository Architecture
+## 👥 Official Team Roster & Role Assignments
+
+| Collaborator Handle | Official Role | Dedicated Git Branch | Primary Focus & Deliverables |
+| :--- | :--- | :--- | :--- |
+| **[@Abhishekdabi33](https://github.com/Abhishekdabi33)** | **Project Lead & Architecture Coordinator** | `feature/pitch-demo` | • Repository administration, authentication & code integrity<br>• End-to-end integration across frontend, backend & AI<br>• Pitch deck, value proposition & 3-minute backup demo video |
+| **[@gunwantjawle-ux](https://github.com/gunwantjawle-ux)** | **Frontend & UI/UX Lead** | `feature/frontend` | • Modern React 19 + Tailwind CSS user interface in [`frontend/`](frontend/)<br>• Visualizing agent reasoning traces (`Thought ➔ Action ➔ Observation`)<br>• Interactive SKILL.md inspector, mobile responsiveness & demo polish |
+| **[@piyushmatodepatil](https://github.com/piyushmatodepatil)** | **Backend & Systems Lead** | `feature/backend` | • FastAPI server routing, REST schemas & error handling in [`backend/`](backend/)<br>• Managing `/api/agent/chat`, `/api/skills`, and `/api/health` endpoints<br>• Session persistence, CORS configuration & production server readiness |
+| **[@vedxnt-b](https://github.com/vedxnt-b)** | **AI Engine & Agent Skills Lead** | `feature/ai-agent` | • Prompt engineering & Gemma client tuning in [`ai_engine/`](ai_engine/)<br>• Authoring new operational playbooks in [`skills/`](skills/) using `SKILL.md`<br>• Hermes Agent tool integration & Kaggle Cloud GPU runner |
+
+---
+
+## 🔗 How Teammates Connect to This Repository (Step-by-Step)
+
+### 1. Authenticate with GitHub
+Ensure you have authenticated Git with your GitHub account:
+```bash
+# Verify authentication
+gh auth status
+
+# If not authenticated, login with your GitHub handle:
+gh auth login
+```
+
+### 2. Configure Your Git Identity
+Set your local git name to match your GitHub handle:
+```bash
+git config --global user.name "your-github-username"
+git config --global user.email "your-email@example.com"
+```
+
+### 3. Clone the Project
+```bash
+git clone https://github.com/Abhishekdabi33/hackathon-repo.git
+cd hackathon-repo
+```
+
+### 4. Create & Work on Your Dedicated Feature Branch
+**Never commit directly to `main`!** Everyone works on their assigned feature branch:
+```bash
+# @gunwantjawle-ux:
+git checkout -b feature/frontend
+
+# @piyushmatodepatil:
+git checkout -b feature/backend
+
+# @vedxnt-b:
+git checkout -b feature/ai-agent
+
+# @Abhishekdabi33:
+git checkout -b feature/pitch-demo
+```
+
+### 5. Push Your Work & Open a Pull Request
+```bash
+git add .
+git commit -m "feat(scope): describe what you built"
+git push -u origin <your-branch-name>
+```
+Go to [GitHub Pull Requests](https://github.com/Abhishekdabi33/hackathon-repo/pulls) and open a PR into `main`. The team lead reviews and merges cleanly!
+
+---
+
+## 🧩 How the System Components Connect to Each Other
 
 ```
-hackathon-repo/
-├── agent_harness/                # Autonomous Agent Framework
-│   ├── hermes_agent.py           # ReAct loop, tool calling, memory traces
-│   └── __init__.py
-├── skills/                       # Agent Skills Open Standard
-│   ├── data-analyst/SKILL.md     # Statistical analysis playbook
-│   ├── api-integrator/SKILL.md   # API payload & endpoint generation
-│   └── research-assistant/SKILL.md# Documentation synthesis
-├── skills_engine/                # Progressive Disclosure Engine
-│   └── skill_loader.py           # YAML frontmatter indexer & body loader
-├── ai_engine/                    # Model Clients & Training
-│   ├── gemma_client.py           # Google Gemma / Open-Weight LLM client
-│   ├── model.py                  # PyTorch neural architecture
-│   ├── train.py                  # GPU model training pipeline
-│   ├── inference.py              # Low-latency inference wrapper
-│   └── train_colab_cloud.py      # Cloud GPU scaling guide (Colab/Kaggle)
-├── frontend/                     # Modern Web Application
-│   ├── src/App.jsx               # Agent console & SKILL.md explorer
-│   └── vite.config.js            # API proxy configuration
-├── backend/                      # Production-Ready REST API
-│   ├── app/main.py               # FastAPI endpoints for Agent & Skills
-│   └── requirements.txt
-├── TEAM_WORKFLOW.md              # 4-Person team playbook and branch rules
-├── run_dev.ps1                   # One-click Windows development launcher
-├── .env.example                  # Environment configuration template
-└── .gitignore                    # Prevents leaking model weights & secrets
+┌────────────────────────────────────────────────────────────────────────┐
+│                   React 19 Frontend (@gunwantjawle-ux)                 │
+│         Vite dev server running on http://localhost:5173               │
+│         Proxies all API calls through /api                             │
+└───────────────────────────────────┬────────────────────────────────────┘
+                                    │ HTTP / JSON
+                                    ▼
+┌────────────────────────────────────────────────────────────────────────┐
+│                   FastAPI Backend (@piyushmatodepatil)                 │
+│         Uvicorn server running on http://localhost:8000                │
+│         API Docs available at http://localhost:8000/docs               │
+└──────────────────┬─────────────────────────────────┬───────────────────┘
+                   │                                 │
+                   ▼                                 ▼
+┌──────────────────────────────────────┐  ┌──────────────────────────────┐
+│  Hermes Agent Harness (@vedxnt-b)    │  │  Agent Skills Engine         │
+│  Autonomous ReAct Loop               │◄─┤  SKILL.md Open Standard      │
+│  (Thought ➔ Tool ➔ Observation)      │  │  (Progressive Disclosure)    │
+└──────────────────┬───────────────────┘  └──────────────────────────────┘
+                   │
+                   ▼
+┌────────────────────────────────────────────────────────────────────────┐
+│                   Model Inference Layer (@vedxnt-b)                    │
+│  Option A: Google AI Studio API (Free Gemma / Gemini, 0 GPU needed)   │
+│  Option B: Kaggle Cloud 2x Tesla T4 GPUs (32GB VRAM via ngrok tunnel) │
+│  Option C: Local CUDA acceleration (PyTorch 2.6.0+cu124)               │
+└────────────────────────────────────────────────────────────────────────┘
 ```
 
 ---
 
 ## ⚡ Quickstart Guide
 
-### 1. Set Up Environment
+### 1. Set Up Python Virtual Environment
 ```bash
-git clone https://github.com/Abhishekdabi33/hackathon-repo.git
-cd hackathon-repo
-
-# Create Python environment
+# Using ultra-fast uv (or standard python -m venv)
 uv venv --python 3.12 .venv
-.\.venv\Scripts\activate
+.\.venv\Scripts\activate      # Windows PowerShell
+# source .venv/bin/activate   # Mac / Linux
 
-# Install backend dependencies & Google GenAI SDK
+# Install backend & AI dependencies
 uv pip install -r backend/requirements.txt
-uv pip install google-genai pyyaml
+uv pip install google-genai pyyaml torch torchvision --index-url https://download.pytorch.org/whl/cu124
 ```
 
-### 2. Configure Environment Keys
-Copy `.env.example` to `.env`:
+### 2. Set Up Frontend
+```bash
+cd frontend
+pnpm install     # or npm install
+cd ..
+```
+
+### 3. Configure Keys (`.env`)
+Copy the environment template:
 ```bash
 cp .env.example .env
 ```
-Add your `GEMINI_API_KEY` (from [Google AI Studio](https://aistudio.google.com/)) to enable live Google Gemma calls.
+Add your free Google AI Studio key:
+```env
+GEMINI_API_KEY=your_free_google_ai_studio_key
+```
 
-### 3. Launch Development Stack
-Run the one-click launcher:
+### 4. One-Click Launch (Windows)
 ```powershell
 .\run_dev.ps1
 ```
-- **Web UI & Agent Console**: [http://localhost:5173](http://localhost:5173)
-- **API Swagger Docs**: [http://localhost:8000/docs](http://localhost:8000/docs)
-- **Discovered Agent Skills**: [http://localhost:8000/api/skills](http://localhost:8000/api/skills)
+- **Web App UI**: [http://localhost:5173](http://localhost:5173)
+- **Interactive Swagger Docs**: [http://localhost:8000/docs](http://localhost:8000/docs)
+- **Discovered Skills API**: [http://localhost:8000/api/skills](http://localhost:8000/api/skills)
+- **System Health & GPU Telemetry**: [http://localhost:8000/api/health](http://localhost:8000/api/health)
 
 ---
 
-## 👥 4-Person Team Distribution
+## ☁️ No High-End GPU? Use Kaggle Free 2x Tesla T4 GPUs (32 GB VRAM)
 
-- **Member 1 (Frontend Lead)**: React 19 UI, Agent reasoning visualization, SKILL.md inspector.
-- **Member 2 (Backend Lead)**: FastAPI routing, Agent session persistence, API error handling.
-- **Member 3 (AI / Agent Engineer)**: Gemma prompt tuning, Hermes tool definitions, new `SKILL.md` authoring.
-- **Member 4 (Product & Pitch Lead)**: Problem statement, 3-minute demo video, judging criteria alignment.
+Your team does **not** need expensive local hardware. We included a ready-to-run notebook:
+📂 **[`notebooks/kaggle_gemma_gpu_runner.ipynb`](notebooks/kaggle_gemma_gpu_runner.ipynb)**
+
+1. Go to [kaggle.com/code](https://www.kaggle.com/code) ➔ **New Notebook** ➔ **File ➔ Upload Notebook**.
+2. Select `kaggle_gemma_gpu_runner.ipynb`.
+3. Under **Settings**, select **Accelerator: GPU T4 x2** (30 free hours/week).
+4. Run the notebook to fine-tune Gemma or serve inference through an `ngrok` tunnel directly to your local web app!
+
+---
+
+## 📁 Repository Directory Structure
+
+```
+hackathon-repo/
+├── agent_harness/                # Autonomous Agent Framework
+│   ├── hermes_agent.py           # ReAct loop, tool calling, execution traces
+│   └── __init__.py
+├── skills/                       # Agent Skills Open Standard
+│   ├── data-analyst/SKILL.md     # Statistical & EDA analysis playbook
+│   ├── api-integrator/SKILL.md   # API payload formatting & SDK generation
+│   └── research-assistant/SKILL.md# Documentation synthesis playbook
+├── skills_engine/                # Progressive Disclosure Engine
+│   └── skill_loader.py           # YAML frontmatter indexer & markdown loader
+├── ai_engine/                    # Model Integration & Training
+│   ├── gemma_client.py           # Google Gemma / Cloud GPU inference client
+│   ├── model.py                  # PyTorch neural architecture
+│   ├── train.py                  # Local GPU training test script
+│   └── inference.py              # Lightweight inference wrapper
+├── notebooks/                    # Cloud GPU Acceleration
+│   └── kaggle_gemma_gpu_runner.ipynb # 1-Click Kaggle 2x T4 GPU notebook
+├── frontend/                     # Modern Web Application
+│   ├── src/App.jsx               # Agent console, SKILL.md explorer, team tab
+│   ├── package.json              # React 19 + Tailwind dependencies
+│   └── vite.config.js            # API proxy configuration
+├── backend/                      # Production REST API
+│   ├── app/main.py               # FastAPI endpoints for Agent & Skills
+│   └── requirements.txt          # Backend dependencies
+├── TEAM_WORKFLOW.md              # 4-Person team strategy & rules
+├── run_dev.ps1                   # One-click Windows dev launcher
+├── .env.example                  # Environment configuration template
+└── .gitignore                    # Protects secrets & large model weights
+```
+
+---
+
+## 🏆 Hackathon Winning Strategy Checklist
+
+- [x] **Code Authentication & Repo Leadership**: Connected to GitHub as project owner [@Abhishekdabi33](https://github.com/Abhishekdabi33).
+- [x] **Clean 4-Way Role Division**: Clear branch ownership with zero collision.
+- [x] **Track Requirements Met**: Official Google Gemma SDK, Hermes Agent loop, and Agent Skills `SKILL.md` standard implemented.
+- [x] **Live Interactive Demo**: Real-time agent console showing thoughts, tool calls, and answers.
+- [x] **Low-Hardware Resilience**: Google AI Studio API fallback + Kaggle 2x T4 GPU cloud notebook.
+- [ ] **Pitch Presentation**: Prepare 5-slide deck + 3-minute pre-recorded backup video.
 
 ---
 
 ## 📄 License
-MIT License - Developed for Hackathon 2026.
+MIT License - Created for Hackathon 2026.

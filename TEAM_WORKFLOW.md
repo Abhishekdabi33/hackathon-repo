@@ -9,7 +9,7 @@ Welcome team! This playbook is designed to help our 4-person team move with maxi
 | Member / GitHub Handle | Primary Role | Core Responsibilities | Working Directory / Git Branch |
 | :--- | :--- | :--- | :--- |
 | **@gunwantjawle-ux** | **Frontend & UI/UX Lead** | React 19 UI, Tailwind styling, Agent reasoning trace visuals, SKILL.md explorer, responsive layout | `frontend/` on `feature/frontend` |
-| **@sarthakchambhare16-wdym** | **Backend & API Systems Lead** | FastAPI endpoints, data models, error handling, CORS, session state, server deployment | `backend/` on `feature/backend` |
+| **@piyushmatodepatil** | **Backend & API Systems Lead** | FastAPI endpoints, data models, error handling, CORS, session state, server deployment | `backend/` on `feature/backend` |
 | **@vedxnt-b** | **AI Engine & Agent Skills Lead** | Hermes Agent tools, Gemma API client tuning, authoring new `SKILL.md` files, model inference | `agent_harness/`, `skills/`, `ai_engine/` on `feature/ai-agent` |
 | **@Abhishekdabi33** | **Team Lead, Architecture & Pitch Demo** | System architecture integration, GitHub management, pitch deck, 3-min demo video, judge alignment | `README.md`, `docs/` on `feature/pitch-demo` |
 

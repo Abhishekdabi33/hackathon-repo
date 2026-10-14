@@ -526,7 +526,7 @@ export default function App() {
               </div>
 
               <div className="p-5 bg-slate-950 border border-emerald-500/30 rounded-xl">
-                <span className="text-[11px] font-mono bg-emerald-500/10 text-emerald-400 px-2 py-0.5 rounded border border-emerald-500/20">@sarthakchambhare16-wdym</span>
+                <span className="text-[11px] font-mono bg-emerald-500/10 text-emerald-400 px-2 py-0.5 rounded border border-emerald-500/20">@piyushmatodepatil</span>
                 <h3 className="font-semibold text-white mt-2">Backend & API Systems Lead</h3>
                 <p className="text-xs text-emerald-400 font-mono mt-0.5 mb-3">Branch: feature/backend</p>
                 <ul className="text-xs text-slate-400 space-y-1.5 list-disc list-inside">
