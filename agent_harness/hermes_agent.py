@@ -58,7 +58,7 @@ class HermesAgent:
         gpu_name = torch.cuda.get_device_name(0) if cuda_ok else "N/A"
         return f"Telemetry: CUDA Available: {cuda_ok}, GPU: {gpu_name}, PyTorch Version: {torch.__version__}"
 
-    def run(self, user_prompt: str, max_steps: int = 3) -> Dict[str, Any]:
+    def run(self, user_prompt: str, max_steps: int = 3, file_content: Optional[str] = None, file_name: Optional[str] = None) -> Dict[str, Any]:
         """
         Executes autonomous agent reasoning loop.
         Traces each Thought, Action, and Observation step.
@@ -74,8 +74,22 @@ class HermesAgent:
             "Format your thought process as: Thought -> Action -> Observation -> Final Answer."
         )
 
+        # Context augmentation if file is attached
+        effective_prompt = user_prompt
+        if file_content:
+            file_snippet = file_content[:1500] if len(file_content) > 1500 else file_content
+            effective_prompt = (
+                f"Attached File: {file_name or 'data_file'}\n"
+                f"File Content Preview:\n```\n{file_snippet}\n```\n\n"
+                f"User Instructions: {user_prompt}"
+            )
+
         # Step 1: Analyze user request and detect appropriate skill or tool
-        thought = f"Analyzing request: '{user_prompt}'. Checking if an Agent Skill or tool is required."
+        thought = f"Analyzing request: '{user_prompt}'."
+        if file_name:
+            thought += f" Ingested file attachment: '{file_name}'."
+        thought += " Checking if an Agent Skill or tool is required."
+
         action = None
         action_input = None
         observation = None
@@ -114,7 +128,7 @@ class HermesAgent:
 
         # Step 2: Final Synthesis using Gemma Client
         final_prompt = (
-            f"User Query: {user_prompt}\n"
+            f"User Query & Context:\n{effective_prompt}\n\n"
             f"Tool Executed: {action} with input '{action_input}'\n"
             f"Observation: {observation}\n"
             "Provide the final comprehensive response to the user."

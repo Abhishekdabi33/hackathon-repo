@@ -9,7 +9,7 @@ ROOT_DIR = Path(__file__).resolve().parent.parent.parent
 if str(ROOT_DIR) not in sys.path:
     sys.path.insert(0, str(ROOT_DIR))
 
-from fastapi import FastAPI, HTTPException, status
+from fastapi import FastAPI, HTTPException, status, UploadFile, File
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
 import torch
@@ -58,7 +58,16 @@ class PredictionResponse(BaseModel):
 
 class AgentChatRequest(BaseModel):
     message: str = Field(..., description="User message or prompt for Hermes Agent")
+    file_name: Optional[str] = Field(None, description="Optional attached file name")
+    file_content: Optional[str] = Field(None, description="Optional attached text / data content")
     max_steps: Optional[int] = Field(3, description="Max reasoning steps in agent loop")
+
+
+class CreateSkillRequest(BaseModel):
+    name: str = Field(..., description="Unique skill directory name, e.g. code-auditor")
+    description: str = Field(..., description="Short single-line description for agent discovery")
+    instructions: str = Field(..., description="Full operational instructions body in markdown")
+    tags: Optional[List[str]] = Field(default_factory=list, description="Categorization tags")
 
 
 class GemmaGenerateRequest(BaseModel):
@@ -133,6 +142,66 @@ def get_skill_detail(skill_name: str):
     return skill
 
 
+@app.post("/api/skills/create")
+def create_skill(payload: CreateSkillRequest):
+    """
+    Dynamically authors a new Agent Skill following the SKILL.md open standard.
+    Enables instant hackathon customization without code deployment!
+    """
+    clean_name = payload.name.strip().lower().replace(" ", "-")
+    skill_dir = ROOT_DIR / "skills" / clean_name
+    skill_dir.mkdir(parents=True, exist_ok=True)
+    
+    skill_file = skill_dir / "SKILL.md"
+    tags_formatted = "\n".join([f"  - {t.strip()}" for t in payload.tags if t.strip()])
+    
+    file_content = (
+        f"---\n"
+        f"name: {clean_name}\n"
+        f"description: {payload.description.strip()}\n"
+        f"version: 1.0.0\n"
+        f"tags:\n{tags_formatted if tags_formatted else '  - custom'}\n"
+        f"---\n\n"
+        f"{payload.instructions.strip()}\n"
+    )
+    
+    with open(skill_file, "w", encoding="utf-8") as f:
+        f.write(file_content)
+        
+    # Re-index skills in memory
+    skills_manager.discover_skills()
+    return {
+        "status": "success",
+        "message": f"Skill '{clean_name}' successfully created and indexed!",
+        "skill": skills_manager.get_skill(clean_name)
+    }
+
+
+# ==============================================================================
+# UNIVERSAL FILE UPLOAD ENDPOINT
+# ==============================================================================
+@app.post("/api/upload")
+async def upload_file(file: UploadFile = File(...)):
+    """
+    Universal File Ingestion endpoint for CSV, JSON, TXT, Code, and Log files.
+    Prepares data for Hermes Agent reasoning.
+    """
+    try:
+        content_bytes = await file.read()
+        # Decode as UTF-8 text (support up to 2MB)
+        text_content = content_bytes.decode("utf-8", errors="replace")
+        return {
+            "status": "success",
+            "filename": file.filename,
+            "size_bytes": len(content_bytes),
+            "line_count": len(text_content.splitlines()),
+            "preview": text_content[:500],
+            "content": text_content
+        }
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=f"Failed to read file: {e}")
+
+
 # ==============================================================================
 # HERMES AGENT & GEMMA ORCHESTRATION ENDPOINTS
 # ==============================================================================
@@ -141,8 +210,14 @@ def agent_chat(payload: AgentChatRequest):
     """
     Executes the autonomous Hermes Agent loop:
     Thought -> Action / Tool Call -> Observation -> Final Answer.
+    Supports attached file payloads for real-time data/code analysis.
     """
-    result = hermes_agent.run(payload.message, max_steps=payload.max_steps or 3)
+    result = hermes_agent.run(
+        user_prompt=payload.message,
+        max_steps=payload.max_steps or 3,
+        file_content=payload.file_content,
+        file_name=payload.file_name
+    )
     return result
 
 

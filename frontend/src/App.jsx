@@ -16,7 +16,15 @@ import {
   Layers,
   Wrench,
   Code2,
-  FileCode
+  FileCode,
+  Upload,
+  FileText,
+  Download,
+  Copy,
+  Check,
+  Plus,
+  X,
+  FileUp
 } from 'lucide-react';
 
 export default function App() {
@@ -28,11 +36,20 @@ export default function App() {
   const [agentPrompt, setAgentPrompt] = useState('Analyze our database statistics and check GPU status.');
   const [agentResponse, setAgentResponse] = useState(null);
   const [runningAgent, setRunningAgent] = useState(false);
+  const [attachedFile, setAttachedFile] = useState(null);
+  const [copied, setCopied] = useState(false);
 
   // Skills State
   const [skills, setSkills] = useState([]);
   const [selectedSkill, setSelectedSkill] = useState(null);
   const [loadingSkills, setLoadingSkills] = useState(false);
+
+  // Custom Skill Modal State
+  const [showSkillModal, setShowSkillModal] = useState(false);
+  const [newSkillName, setNewSkillName] = useState('');
+  const [newSkillDesc, setNewSkillDesc] = useState('');
+  const [newSkillInstructions, setNewSkillInstructions] = useState('');
+  const [creatingSkill, setCreatingSkill] = useState(false);
 
   // Fetch System Health
   const fetchHealth = async () => {
@@ -89,6 +106,23 @@ export default function App() {
     fetchSkills();
   }, []);
 
+  // Handle File Upload
+  const handleFileChange = (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const content = event.target?.result;
+      setAttachedFile({
+        name: file.name,
+        size: file.size,
+        content: content
+      });
+    };
+    reader.readAsText(file);
+  };
+
   // Run Hermes Agent
   const handleRunAgent = async (e) => {
     e.preventDefault();
@@ -98,7 +132,12 @@ export default function App() {
       const res = await fetch('/api/agent/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ message: agentPrompt, max_steps: 3 })
+        body: JSON.stringify({ 
+          message: agentPrompt, 
+          max_steps: 3,
+          file_name: attachedFile?.name,
+          file_content: attachedFile?.content
+        })
       });
       const data = await res.json();
       setAgentResponse(data);
@@ -106,6 +145,58 @@ export default function App() {
       setAgentResponse({ status: 'error', detail: err.message });
     } finally {
       setRunningAgent(false);
+    }
+  };
+
+  // Copy to Clipboard
+  const handleCopyAnswer = () => {
+    if (!agentResponse?.final_answer) return;
+    navigator.clipboard.writeText(agentResponse.final_answer);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
+
+  // Download Markdown Report
+  const handleDownloadReport = () => {
+    if (!agentResponse) return;
+    const report = `# Hackathon AI Agent Report\n\n**Query:** ${agentResponse.query}\n**Model:** ${agentResponse.model_engine}\n**Execution Time:** ${agentResponse.duration_ms} ms\n\n## Agent Steps\n${agentResponse.steps?.map(s => `- **Thought:** ${s.thought}\n  - **Action:** ${s.action} (${s.action_input})\n  - **Observation:** ${s.observation}`).join('\n')}\n\n## Final Synthesis\n${agentResponse.final_answer}\n`;
+    
+    const blob = new Blob([report], { type: 'text/markdown' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `agent_report_${Date.now()}.md`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
+  // Create Custom Skill on the Fly
+  const handleCreateSkillSubmit = async (e) => {
+    e.preventDefault();
+    if (!newSkillName || !newSkillDesc || !newSkillInstructions) return;
+    setCreatingSkill(true);
+    try {
+      const res = await fetch('/api/skills/create', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: newSkillName,
+          description: newSkillDesc,
+          instructions: newSkillInstructions,
+          tags: ['hackathon-custom']
+        })
+      });
+      if (res.ok) {
+        await fetchSkills();
+        setShowSkillModal(false);
+        setNewSkillName('');
+        setNewSkillDesc('');
+        setNewSkillInstructions('');
+      }
+    } catch (err) {
+      console.error('Error creating skill:', err);
+    } finally {
+      setCreatingSkill(false);
     }
   };
 
@@ -122,10 +213,10 @@ export default function App() {
               <h1 className="text-lg font-bold text-white tracking-tight flex items-center space-x-2">
                 <span>Gemma & Hermes Agent Platform</span>
                 <span className="text-[11px] font-mono px-2 py-0.5 rounded-full bg-cyan-500/20 text-cyan-300 border border-cyan-500/30">
-                  SKILL.md Standard
+                  Universal Hackathon Engine
                 </span>
               </h1>
-              <p className="text-xs text-slate-400">Open-Weight LLMs • Autonomous Harness • Progressive Disclosure</p>
+              <p className="text-xs text-slate-400">Google Gemma • Nous Hermes Agent • SKILL.md Standard</p>
             </div>
           </div>
 
@@ -200,7 +291,7 @@ export default function App() {
             }`}
           >
             <Users className="w-4 h-4" />
-            <span>4-Person Team Roles</span>
+            <span>Team Pods & Roles</span>
           </button>
         </div>
       </div>
@@ -212,26 +303,61 @@ export default function App() {
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
             <div className="lg:col-span-2 space-y-6">
               <div className="bg-slate-900/50 border border-slate-800 rounded-2xl p-6 shadow-xl">
-                <h2 className="text-xl font-semibold text-white flex items-center space-x-2 mb-2">
-                  <Bot className="w-5 h-5 text-cyan-400" />
-                  <span>Hermes Autonomous Agent Execution Loop</span>
-                </h2>
+                <div className="flex items-center justify-between mb-2">
+                  <h2 className="text-xl font-semibold text-white flex items-center space-x-2">
+                    <Bot className="w-5 h-5 text-cyan-400" />
+                    <span>Hermes Autonomous Agent Execution Loop</span>
+                  </h2>
+                </div>
                 <p className="text-sm text-slate-400 mb-6">
-                  Orchestrates multi-step reasoning, tool invocation, and on-demand Agent Skill execution.
+                  Universal multi-modal agent loop. Upload documents, datasets, or code to reason with Google Gemma.
                 </p>
 
                 <form onSubmit={handleRunAgent} className="space-y-4">
                   <div>
-                    <label className="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-2">
-                      Agent Goal / Query
-                    </label>
+                    <div className="flex items-center justify-between mb-2">
+                      <label className="text-xs font-semibold uppercase tracking-wider text-slate-400">
+                        Agent Goal / Instructions
+                      </label>
+                      {/* File Upload Trigger */}
+                      <label className="cursor-pointer text-xs flex items-center space-x-1.5 text-cyan-400 hover:text-cyan-300 transition-colors">
+                        <Upload className="w-3.5 h-3.5" />
+                        <span>Attach File (CSV, JSON, Code, Docs)</span>
+                        <input
+                          type="file"
+                          accept=".csv,.json,.txt,.py,.js,.jsx,.md,.sql,.log"
+                          onChange={handleFileChange}
+                          className="hidden"
+                        />
+                      </label>
+                    </div>
+
                     <textarea
                       rows={3}
                       value={agentPrompt}
                       onChange={(e) => setAgentPrompt(e.target.value)}
-                      placeholder="e.g. Check system GPU and use the data-analyst skill..."
+                      placeholder="e.g. Ingest the attached file and use our data-analyst skill to summarize outliers..."
                       className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-sm text-slate-100 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-transparent transition-all"
                     />
+
+                    {/* Attached File Preview Badge */}
+                    {attachedFile && (
+                      <div className="mt-2.5 flex items-center justify-between p-2.5 bg-cyan-950/30 border border-cyan-800/40 rounded-xl text-xs text-cyan-300">
+                        <div className="flex items-center space-x-2 truncate">
+                          <FileText className="w-4 h-4 text-cyan-400 shrink-0" />
+                          <span className="font-mono font-medium truncate">{attachedFile.name}</span>
+                          <span className="text-[10px] text-slate-500 font-mono">({Math.round(attachedFile.size / 1024)} KB)</span>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => setAttachedFile(null)}
+                          className="text-slate-400 hover:text-red-400 p-1 transition-colors"
+                          title="Remove file"
+                        >
+                          <X className="w-4 h-4" />
+                        </button>
+                      </div>
+                    )}
                   </div>
 
                   <div className="flex items-center justify-between">
@@ -306,11 +432,29 @@ export default function App() {
                       </div>
                     ))}
 
-                    {/* Final Answer */}
-                    <div className="p-4 bg-gradient-to-br from-blue-950/40 to-slate-950 border border-blue-900/40 rounded-xl">
-                      <span className="text-xs font-bold uppercase tracking-wider text-blue-400 block mb-2">
-                        Final Agent Output (Gemma Engine)
-                      </span>
+                    {/* Final Answer Card with Export Controls */}
+                    <div className="p-5 bg-gradient-to-br from-blue-950/40 to-slate-950 border border-blue-900/40 rounded-xl space-y-3">
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs font-bold uppercase tracking-wider text-blue-400">
+                          Final Agent Output (Gemma Engine)
+                        </span>
+                        <div className="flex items-center space-x-2">
+                          <button
+                            onClick={handleCopyAnswer}
+                            className="px-2.5 py-1 text-xs rounded-lg bg-slate-900 hover:bg-slate-800 text-slate-300 border border-slate-800 flex items-center space-x-1.5 transition-colors"
+                          >
+                            {copied ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5 text-slate-400" />}
+                            <span>{copied ? 'Copied!' : 'Copy'}</span>
+                          </button>
+                          <button
+                            onClick={handleDownloadReport}
+                            className="px-2.5 py-1 text-xs rounded-lg bg-slate-900 hover:bg-slate-800 text-slate-300 border border-slate-800 flex items-center space-x-1.5 transition-colors"
+                          >
+                            <Download className="w-3.5 h-3.5 text-slate-400" />
+                            <span>Export .md</span>
+                          </button>
+                        </div>
+                      </div>
                       <p className="text-sm text-slate-200 whitespace-pre-wrap leading-relaxed">
                         {agentResponse.final_answer}
                       </p>
@@ -329,24 +473,34 @@ export default function App() {
                 </h3>
                 <div className="space-y-3">
                   <div className="p-3 bg-slate-950 border border-slate-800/60 rounded-xl">
-                    <span className="text-xs text-slate-400 block mb-1">Device</span>
+                    <span className="text-xs text-slate-400 block mb-1">Local Device</span>
                     <p className="text-sm font-semibold text-white">
                       {health?.gpu?.device_name || 'NVIDIA Quadro P2000'}
                     </p>
-                    <span className="text-xs text-emerald-400">CUDA 12.4 Enabled</span>
+                    <span className="text-xs text-emerald-400">CUDA 12.4 Acceleration</span>
                   </div>
                   <div className="p-3 bg-slate-950 border border-slate-800/60 rounded-xl">
-                    <span className="text-xs text-slate-400 block mb-1">Compute Backend</span>
-                    <p className="text-sm font-semibold text-cyan-400">PyTorch 2.6.0+cu124</p>
+                    <span className="text-xs text-slate-400 block mb-1">Cloud GPU Engine</span>
+                    <p className="text-sm font-semibold text-cyan-400">Kaggle 2x Tesla T4 (32GB)</p>
                   </div>
                 </div>
               </div>
 
               <div className="bg-slate-900/50 border border-slate-800 rounded-2xl p-6 shadow-xl">
-                <h3 className="text-base font-semibold text-white flex items-center space-x-2 mb-4">
-                  <Wrench className="w-5 h-5 text-purple-400" />
-                  <span>Loaded Agent Skills</span>
-                </h3>
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="text-base font-semibold text-white flex items-center space-x-2">
+                    <Wrench className="w-5 h-5 text-purple-400" />
+                    <span>Active Skills ({skills.length})</span>
+                  </h3>
+                  <button
+                    onClick={() => setShowSkillModal(true)}
+                    className="p-1 rounded-lg bg-purple-500/20 text-purple-300 hover:bg-purple-500/30 transition-colors"
+                    title="Add Custom Skill"
+                  >
+                    <Plus className="w-4 h-4" />
+                  </button>
+                </div>
+
                 <div className="space-y-2">
                   {skills.map((s) => (
                     <div 
@@ -368,10 +522,19 @@ export default function App() {
         {activeTab === 'skills' && (
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
             <div className="space-y-4">
-              <h3 className="text-base font-semibold text-white flex items-center space-x-2">
-                <FileCode className="w-5 h-5 text-cyan-400" />
-                <span>Discovered Skills ({skills.length})</span>
-              </h3>
+              <div className="flex items-center justify-between">
+                <h3 className="text-base font-semibold text-white flex items-center space-x-2">
+                  <FileCode className="w-5 h-5 text-cyan-400" />
+                  <span>Discovered Skills ({skills.length})</span>
+                </h3>
+                <button
+                  onClick={() => setShowSkillModal(true)}
+                  className="px-3 py-1.5 rounded-xl text-xs font-medium bg-purple-600/20 text-purple-300 border border-purple-500/30 hover:bg-purple-600/30 transition-all flex items-center space-x-1"
+                >
+                  <Plus className="w-3.5 h-3.5" />
+                  <span>New Skill</span>
+                </button>
+              </div>
               <p className="text-xs text-slate-400">
                 Adhering to the Agent Skill Open Standard. Metadata is indexed at startup; operational instructions load on-demand.
               </p>
@@ -496,9 +659,9 @@ export default function App() {
                 <div className="w-8 h-8 rounded-lg bg-emerald-500/20 text-emerald-400 flex items-center justify-center font-bold mb-3">
                   04
                 </div>
-                <h3 className="font-semibold text-white">GPU Hardware Stack</h3>
+                <h3 className="font-semibold text-white">Cloud GPU Acceleration</h3>
                 <p className="text-xs text-slate-400 mt-2">
-                  NVIDIA Quadro P2000 (CUDA 12.4) running local inference + cloud Colab T4/A100 scaling for training larger open-weight models.
+                  Kaggle 2x Tesla T4 GPUs (32 GB VRAM) for cloud execution + local CUDA 12.4 acceleration.
                 </p>
               </div>
             </div>
@@ -584,6 +747,82 @@ export default function App() {
           </div>
         )}
       </main>
+
+      {/* CREATE CUSTOM SKILL MODAL (Instant Hackathon Adaptation) */}
+      {showSkillModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 backdrop-blur-sm p-4">
+          <div className="bg-slate-900 border border-slate-800 rounded-2xl max-w-lg w-full p-6 shadow-2xl space-y-4">
+            <div className="flex items-center justify-between border-b border-slate-800 pb-3">
+              <div className="flex items-center space-x-2">
+                <FileCode className="w-5 h-5 text-purple-400" />
+                <h3 className="font-bold text-white text-base">Create Custom SKILL.md Playbook</h3>
+              </div>
+              <button 
+                onClick={() => setShowSkillModal(false)}
+                className="text-slate-400 hover:text-white p-1"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <form onSubmit={handleCreateSkillSubmit} className="space-y-4">
+              <div>
+                <label className="block text-xs font-semibold text-slate-400 mb-1">Skill Identifier Name</label>
+                <input
+                  type="text"
+                  placeholder="e.g. hackathon-advisor"
+                  value={newSkillName}
+                  onChange={(e) => setNewSkillName(e.target.value)}
+                  className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-slate-200 focus:outline-none focus:ring-1 focus:ring-purple-500 font-mono"
+                  required
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-slate-400 mb-1">Short Description (For Discovery)</label>
+                <input
+                  type="text"
+                  placeholder="e.g. Specialized playbook for auditing Hackathon problem requirements."
+                  value={newSkillDesc}
+                  onChange={(e) => setNewSkillDesc(e.target.value)}
+                  className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-slate-200 focus:outline-none focus:ring-1 focus:ring-purple-500"
+                  required
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-slate-400 mb-1">Operational Instructions (Markdown Body)</label>
+                <textarea
+                  rows={6}
+                  placeholder="# Operational Instructions&#10;1. Step one...&#10;2. Step two..."
+                  value={newSkillInstructions}
+                  onChange={(e) => setNewSkillInstructions(e.target.value)}
+                  className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-slate-200 focus:outline-none focus:ring-1 focus:ring-purple-500 font-mono"
+                  required
+                />
+              </div>
+
+              <div className="flex justify-end space-x-2 pt-2">
+                <button
+                  type="button"
+                  onClick={() => setShowSkillModal(false)}
+                  className="px-4 py-2 rounded-xl text-xs font-medium text-slate-400 hover:bg-slate-800 transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={creatingSkill}
+                  className="px-4 py-2 rounded-xl text-xs font-medium bg-purple-600 hover:bg-purple-500 text-white transition-colors disabled:opacity-50 flex items-center space-x-1.5"
+                >
+                  {creatingSkill ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : <Plus className="w-3.5 h-3.5" />}
+                  <span>Save & Index Skill</span>
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
