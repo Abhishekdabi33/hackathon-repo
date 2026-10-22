@@ -364,6 +364,95 @@
   background: radial-gradient(circle at 50% 15%, rgba(99, 102, 241, 0.12) 0%, rgba(139, 92, 246, 0.06) 35%, transparent 70%);
 }
 
+/* ========================================================================= */
+/* HERMES LIVE AI CHARACTER ANIMATIONS                                       */
+/* ========================================================================= */
+
+@keyframes hermesFloat {
+  0%, 100% {
+    transform: translateY(0px) rotate(0deg);
+  }
+  50% {
+    transform: translateY(-8px) rotate(0.4deg);
+  }
+}
+
+@keyframes hermesShadow {
+  0%, 100% {
+    transform: scale(1);
+    opacity: 0.6;
+  }
+  50% {
+    transform: scale(0.82);
+    opacity: 0.32;
+  }
+}
+
+@keyframes hermesOrbit {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes hermesOrbitReverse {
+  from {
+    transform: rotate(360deg);
+  }
+  to {
+    transform: rotate(0deg);
+  }
+}
+
+@keyframes hermesPulseAura {
+  0%, 100% {
+    opacity: 0.45;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.85;
+    transform: scale(1.08);
+  }
+}
+
+.animate-hermes-float {
+  animation: hermesFloat 4s cubic-bezier(0.45, 0.05, 0.55, 0.95) infinite;
+}
+
+.animate-hermes-shadow {
+  animation: hermesShadow 4s cubic-bezier(0.45, 0.05, 0.55, 0.95) infinite;
+}
+
+.animate-hermes-pulse {
+  animation: hermesPulseAura 3.2s ease-in-out infinite;
+}
+
+.animate-hermes-orbit-slow {
+  animation: hermesOrbit 12s linear infinite;
+}
+
+.animate-hermes-orbit-fast {
+  animation: hermesOrbit 3.8s linear infinite;
+}
+
+.animate-hermes-orbit-rev {
+  animation: hermesOrbitReverse 5.2s linear infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-hermes-float,
+  .animate-hermes-shadow,
+  .animate-hermes-pulse,
+  .animate-hermes-orbit-slow,
+  .animate-hermes-orbit-fast,
+  .animate-hermes-orbit-rev {
+    animation: none !important;
+  }
+}
+
+
 
 
 

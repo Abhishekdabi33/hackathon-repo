@@ -28,8 +28,11 @@ import {
   RotateCcw,
   Code2,
   CheckCircle2,
-  CircleDot
+  CircleDot,
+  Volume2,
+  VolumeX
 } from 'lucide-react';
+import HermesCharacter from './components/HermesCharacter';
 
 export default function App() {
   // Navigation & Workspace State
@@ -44,6 +47,23 @@ export default function App() {
   const [liveExecutionStage, setLiveExecutionStage] = useState(0);
   const [expandedTraceId, setExpandedTraceId] = useState(null);
   const [copiedId, setCopiedId] = useState(null);
+  const [isInputFocused, setIsInputFocused] = useState(false);
+  const [isSpeaking, setIsSpeaking] = useState(false);
+  const [speakingMessageId, setSpeakingMessageId] = useState(null);
+  const speakingTimeoutRef = useRef(null);
+
+  // Dynamic Living Hermes AI State (idle | listening | thinking | tool | speaking)
+  const getHermesState = () => {
+    if (isSpeaking) return 'speaking';
+    if (runningAgent) {
+      if (liveExecutionStage === 1 || liveExecutionStage === 2) return 'thinking';
+      if (liveExecutionStage === 3) return 'tool';
+      if (liveExecutionStage === 4) return 'speaking';
+      return 'thinking';
+    }
+    if (promptInput.trim().length > 0 || isInputFocused) return 'listening';
+    return 'idle';
+  };
 
   // Backend Telemetry & Skills State
   const [health, setHealth] = useState(null);
@@ -56,6 +76,41 @@ export default function App() {
 
   const messagesEndRef = useRef(null);
   const textareaRef = useRef(null);
+
+  // Speech read-aloud functionality
+  const handleSpeakMessage = (msgId, text) => {
+    if (!('speechSynthesis' in window)) return;
+    
+    if (speakingMessageId === msgId && isSpeaking) {
+      window.speechSynthesis.cancel();
+      setIsSpeaking(false);
+      setSpeakingMessageId(null);
+      return;
+    }
+    
+    window.speechSynthesis.cancel();
+    const utterance = new SpeechSynthesisUtterance(text);
+    utterance.rate = 1.0;
+    utterance.pitch = 1.05;
+    
+    utterance.onstart = () => {
+      setIsSpeaking(true);
+      setSpeakingMessageId(msgId);
+    };
+    
+    utterance.onend = () => {
+      setIsSpeaking(false);
+      setSpeakingMessageId(null);
+    };
+    
+    utterance.onerror = () => {
+      setIsSpeaking(false);
+      setSpeakingMessageId(null);
+    };
+    
+    window.speechSynthesis.speak(utterance);
+  };
+
 
   // Smooth live execution stages when agent is running
   useEffect(() => {
@@ -184,6 +239,15 @@ export default function App() {
       };
 
       setMessages((prev) => [...prev, newAssistantMsg]);
+
+      // Connect character animation: Switch Hermes to Speaking state
+      setSpeakingMessageId(assistantMsgId);
+      setIsSpeaking(true);
+      if (speakingTimeoutRef.current) clearTimeout(speakingTimeoutRef.current);
+      speakingTimeoutRef.current = setTimeout(() => {
+        setIsSpeaking(false);
+        setSpeakingMessageId(null);
+      }, 3500);
     } catch (err) {
       const errorMsg = {
         id: (Date.now() + 1).toString(),
@@ -415,8 +479,21 @@ export default function App() {
               <Menu className="w-4 h-4" />
             </button>
 
+            {/* Hermes Live AI Identity Pill */}
+            <div className="flex items-center space-x-2 px-2.5 py-1 rounded-full bg-white/[0.025] border border-white/[0.06] shadow-sm">
+              <HermesCharacter size="sm" state={getHermesState()} interactive={false} />
+              <div className="flex flex-col text-left">
+                <span className="text-[11px] font-semibold text-white tracking-tight leading-none">
+                  Hermes
+                </span>
+                <span className="text-[9px] font-mono text-indigo-400 capitalize leading-none pt-0.5">
+                  {getHermesState()}
+                </span>
+              </div>
+            </div>
+
             {/* Model Identity Pill */}
-            <div className="flex items-center space-x-2 px-3 py-1 rounded-full bg-white/[0.025] border border-white/[0.06] shadow-sm">
+            <div className="hidden md:flex items-center space-x-2 px-3 py-1 rounded-full bg-white/[0.025] border border-white/[0.06] shadow-sm">
               <div className="w-1.5 h-1.5 rounded-full bg-indigo-400" />
               <span className="text-xs font-medium text-white tracking-tight">
                 Google Gemma 2
@@ -463,14 +540,14 @@ export default function App() {
             {messages.length === 0 && (
               <div className="animate-ios-fade-in flex flex-col items-center justify-center pt-12 pb-14 text-center space-y-8">
                 
-                {/* Hermes AI Brand Emblem with Indigo/Violet Ambient Aura */}
-                <div className="relative group">
-                  <div className="w-20 h-20 rounded-3xl bg-gradient-to-tr from-indigo-500 via-indigo-600 to-violet-600 p-0.5 shadow-[0_0_50px_rgba(99,102,241,0.35)] transition-transform duration-500 group-hover:scale-105">
-                    <div className="w-full h-full rounded-[22px] bg-[#080a12] flex items-center justify-center">
-                      <Sparkles className="w-10 h-10 text-indigo-400 drop-shadow-[0_0_14px_rgba(99,102,241,0.7)]" />
-                    </div>
-                  </div>
-                  <div className="absolute -inset-2 rounded-3xl bg-indigo-500/20 blur-2xl group-hover:opacity-75 transition-opacity" />
+                {/* THE LIVING HERMES AI CHARACTER (Primary Identity) */}
+                <div className="flex flex-col items-center justify-center pt-2">
+                  <HermesCharacter
+                    size="hero"
+                    state={getHermesState()}
+                    interactive={true}
+                    showStatusPill={true}
+                  />
                 </div>
 
                 {/* Hero Greeting Typography */}
@@ -528,8 +605,12 @@ export default function App() {
                         </>
                       ) : (
                         <>
-                          <div className="w-4 h-4 rounded-full bg-gradient-to-tr from-indigo-500 to-violet-600 flex items-center justify-center shadow-sm">
-                            <Bot className="w-2.5 h-2.5 text-white" />
+                          <div className="w-5 h-5 flex items-center justify-center shrink-0">
+                            <HermesCharacter 
+                              size="sm" 
+                              state={speakingMessageId === msg.id ? 'speaking' : 'idle'} 
+                              interactive={false} 
+                            />
                           </div>
                           <span className="text-zinc-200 font-semibold">Hermes Agent</span>
                           <span>•</span>
@@ -638,6 +719,29 @@ export default function App() {
                             </span>
                             
                             <div className="flex items-center space-x-1.5">
+                              {/* Voice Read Aloud Toggle */}
+                              <button
+                                onClick={() => handleSpeakMessage(msg.id, msg.content)}
+                                className={`button-spring px-2 py-1 rounded-lg border flex items-center space-x-1 text-[11px] transition-colors ${
+                                  speakingMessageId === msg.id && isSpeaking
+                                    ? 'bg-indigo-600/25 text-indigo-300 border-indigo-500/40 shadow-[0_0_12px_rgba(99,102,241,0.3)]'
+                                    : 'bg-white/[0.03] hover:bg-white/[0.06] text-[#94a3b8] hover:text-white border-white/[0.05]'
+                                }`}
+                                title={speakingMessageId === msg.id && isSpeaking ? "Stop Voice" : "Hear Hermes Speak"}
+                              >
+                                {speakingMessageId === msg.id && isSpeaking ? (
+                                  <>
+                                    <VolumeX className="w-3 h-3 text-indigo-400" />
+                                    <span>Mute</span>
+                                  </>
+                                ) : (
+                                  <>
+                                    <Volume2 className="w-3 h-3 text-indigo-400" />
+                                    <span>Speak</span>
+                                  </>
+                                )}
+                              </button>
+
                               <button
                                 onClick={() => handleCopy(msg.id, msg.content)}
                                 className="button-spring px-2.5 py-1 rounded-lg bg-white/[0.03] hover:bg-white/[0.06] text-[#94a3b8] hover:text-white border border-white/[0.05] flex items-center space-x-1.5 text-[11px]"
@@ -675,9 +779,14 @@ export default function App() {
 
                 {/* VISUAL LIVE AGENT WORKFLOW IN PROGRESS (USER PROMPT ↓ HERMES WORKING) */}
                 {runningAgent && (
-                  <div className="animate-ios-fade-in flex items-start space-x-3.5 max-w-xl pt-2">
-                    <div className="w-8 h-8 rounded-2xl bg-gradient-to-tr from-indigo-500 to-violet-600 flex items-center justify-center shrink-0 mt-0.5 shadow-[0_0_20px_rgba(99,102,241,0.4)]">
-                      <Bot className="w-4.5 h-4.5 text-white animate-spin" />
+                  <div className="animate-ios-fade-in flex items-start space-x-4 max-w-xl pt-2">
+                    {/* Live Reactive Hermes Character (MD size) */}
+                    <div className="shrink-0 -mt-1">
+                      <HermesCharacter
+                        size="md"
+                        state={getHermesState()}
+                        interactive={false}
+                      />
                     </div>
                     
                     {/* Progressive Agent Activity Stepper */}
@@ -753,6 +862,8 @@ export default function App() {
               rows={2}
               value={promptInput}
               onChange={(e) => setPromptInput(e.target.value)}
+              onFocus={() => setIsInputFocused(true)}
+              onBlur={() => setIsInputFocused(false)}
               onKeyDown={handleKeyDown}
               placeholder="Ask Hermes anything, run tools, or execute skills... (Enter to send)"
               className="w-full bg-transparent text-sm text-[#f8fafc] placeholder-[#64748b] focus:outline-none resize-none leading-relaxed font-normal px-2 pt-1"
