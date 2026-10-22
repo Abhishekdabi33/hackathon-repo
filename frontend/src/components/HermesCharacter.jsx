@@ -1,19 +1,21 @@
 import React, { useState, useEffect, useRef } from 'react';
 
 /**
- * HermesCharacter - The Interactive Living AI Avatar for Hermes
+ * HermesCharacter - A Living, Premium AI Agent Companion for Hermes
+ * 
+ * Visual Philosophy:
+ * - Refined, minimal, futuristic entity matching the dark midnight/indigo/violet UI.
+ * - Continuous organic transitions across all states (no abrupt sprite/geometry swaps).
+ * - Prioritized Speaking State: Visually communicates live speech through conversational
+ *   body nodding/cadence, organic eye micro-modulation, harmonic acoustic vocalizer waveform,
+ *   and synchronized resonance glow.
  * 
  * States:
- * - 'idle'       : Gentle floating, soft breathing aura, natural eye blinking, subtle gaze wander.
- * - 'listening'  : Attentive wide eyes, brightened ambient cyan glow, receptive posture.
- * - 'thinking'   : Inquisitive eye gaze, orbital particle ring rotating, gentle pulsing.
- * - 'tool'       : Energetic status, high-tech scanning line, rapid particle flux.
- * - 'speaking'   : Expressive happy crescent eyes, animated multi-bar vocalizer soundwave, voice pulse waves.
- * 
- * Sizes:
- * - 'hero' (empty state, ~180px)
- * - 'md'   (live activity stepper / banner, ~80px)
- * - 'sm'   (header / message avatar, ~36px)
+ * - 'idle'       : Peaceful spring float, serene resting gaze, natural blink cycle, soft aura.
+ * - 'listening'  : Alert posture (+1.5px toward user), attentive eye dilation, electric cyan bloom.
+ * - 'thinking'   : Inquisitive upward gaze glide, contemplative sway, luminous orbital halo.
+ * - 'tool'       : Razor-sharp focus, high-energy telemetry ray, data flux.
+ * - 'speaking'   : Conversational body cadence, warm eye engagement, undulating acoustic vocalizer ribbon, voice resonance ripples.
  */
 export default function HermesCharacter({
   state = 'idle',
@@ -27,19 +29,19 @@ export default function HermesCharacter({
   const [mouseOffset, setMouseOffset] = useState({ x: 0, y: 0 });
   const containerRef = useRef(null);
 
-  // Natural Blinking Timer (every 3.2 to 5 seconds)
+  // Natural Blinking Cycle (every 3.8 to 5.5 seconds)
   useEffect(() => {
     let blinkTimer;
     let unblinkTimer;
 
     const scheduleBlink = () => {
-      const delay = Math.random() * 2000 + 3000;
+      const delay = Math.random() * 2000 + 3800;
       blinkTimer = setTimeout(() => {
         setIsBlinking(true);
         unblinkTimer = setTimeout(() => {
           setIsBlinking(false);
           scheduleBlink();
-        }, 160);
+        }, 150);
       }, delay);
     };
 
@@ -50,16 +52,16 @@ export default function HermesCharacter({
     };
   }, []);
 
-  // Subtle Mouse Tracking on Hero Size
+  // Subtle Gaze Tracking on Desktop Hero Size
   const handleMouseMove = (e) => {
     if (!interactive || size !== 'hero' || !containerRef.current) return;
     const rect = containerRef.current.getBoundingClientRect();
     const centerX = rect.left + rect.width / 2;
     const centerY = rect.top + rect.height / 2;
     
-    // Max 4px gaze offset
-    const dx = Math.max(-4, Math.min(4, (e.clientX - centerX) / 25));
-    const dy = Math.max(-3, Math.min(3, (e.clientY - centerY) / 25));
+    // Smooth, restrained max 3px gaze offset
+    const dx = Math.max(-3, Math.min(3, (e.clientX - centerX) / 30));
+    const dy = Math.max(-2.5, Math.min(2.5, (e.clientY - centerY) / 30));
     setMouseOffset({ x: dx, y: dy });
   };
 
@@ -67,73 +69,92 @@ export default function HermesCharacter({
     setMouseOffset({ x: 0, y: 0 });
   };
 
-  // Click / Poke interaction: Hermes winks and bounces
+  // Click/Poke Interaction: Hermes acknowledges with a gentle bounce & speaking pulse
   const handlePoke = () => {
     if (!interactive) return;
     setIsPoked(true);
-    setTimeout(() => setIsPoked(false), 900);
+    setTimeout(() => setIsPoked(false), 1200);
   };
 
-  // State configurations
-  const currentState = isPoked ? 'speaking' : state;
+  // Effective State
+  const activeState = isPoked ? 'speaking' : state;
 
-  // Status text for optional floating pill
+  // Status Labels for Optional Floating Pill
   const statusLabels = {
     idle: 'Hermes Online',
     listening: 'Listening...',
-    thinking: 'Thinking & Planning...',
-    tool: 'Executing Agent Tool...',
+    thinking: 'Reasoning & Planning...',
+    tool: 'Invoking Agent Tools...',
     speaking: 'Speaking...'
   };
 
-  // State theme colors
+  // State Theme Configurations (Seamlessly Cohesive with Midnight/Indigo/Violet UI)
   const stateThemes = {
     idle: {
       aura: 'from-indigo-600/25 via-violet-600/15 to-transparent',
       led: '#38bdf8',
-      eyes: 'url(#eyeGradCyan)',
+      eyeGrad: 'url(#eyeGradCyan)',
       filterGlow: 'url(#cyanGlow)',
-      statusBadge: 'text-indigo-300 border-indigo-500/20 bg-indigo-500/10'
+      statusBadge: 'text-indigo-300 border-indigo-500/20 bg-indigo-500/10',
+      gazeX: mouseOffset.x,
+      gazeY: mouseOffset.y,
+      eyeScale: 'scale(1)',
+      bodyAnim: 'animate-hermes-float'
     },
     listening: {
       aura: 'from-cyan-500/30 via-indigo-600/20 to-transparent',
       led: '#22d3ee',
-      eyes: 'url(#eyeGradCyan)',
+      eyeGrad: 'url(#eyeGradCyan)',
       filterGlow: 'url(#cyanGlow)',
-      statusBadge: 'text-cyan-300 border-cyan-500/25 bg-cyan-500/10'
+      statusBadge: 'text-cyan-300 border-cyan-500/25 bg-cyan-500/10',
+      gazeX: 0,
+      gazeY: 1,
+      eyeScale: 'scale(1.08)',
+      bodyAnim: 'animate-hermes-float'
     },
     thinking: {
       aura: 'from-violet-500/35 via-indigo-600/25 to-transparent',
       led: '#c084fc',
-      eyes: 'url(#eyeGradViolet)',
+      eyeGrad: 'url(#eyeGradViolet)',
       filterGlow: 'url(#violetGlow)',
-      statusBadge: 'text-violet-300 border-violet-500/25 bg-violet-500/10'
+      statusBadge: 'text-violet-300 border-violet-500/25 bg-violet-500/10',
+      gazeX: 2.5,
+      gazeY: -3,
+      eyeScale: 'scale(0.98)',
+      bodyAnim: 'animate-hermes-thinking-body'
     },
     tool: {
       aura: 'from-amber-500/30 via-indigo-600/25 to-transparent',
       led: '#fbbf24',
-      eyes: 'url(#eyeGradAmber)',
+      eyeGrad: 'url(#eyeGradAmber)',
       filterGlow: 'url(#amberGlow)',
-      statusBadge: 'text-amber-300 border-amber-500/25 bg-amber-500/10'
+      statusBadge: 'text-amber-300 border-amber-500/25 bg-amber-500/10',
+      gazeX: 0,
+      gazeY: 0,
+      eyeScale: 'scaleX(1.04) scaleY(0.93)',
+      bodyAnim: 'animate-hermes-float'
     },
     speaking: {
       aura: 'from-indigo-500/40 via-sky-500/30 to-violet-500/20',
       led: '#38bdf8',
-      eyes: 'url(#eyeGradCyan)',
+      eyeGrad: 'url(#eyeGradCyan)',
       filterGlow: 'url(#cyanGlow)',
-      statusBadge: 'text-sky-300 border-sky-500/30 bg-sky-500/15'
+      statusBadge: 'text-sky-300 border-sky-500/30 bg-sky-500/15',
+      gazeX: 0,
+      gazeY: 0.5,
+      eyeScale: 'scale(1.03)',
+      bodyAnim: 'animate-hermes-speech-body'
     }
   };
 
-  const theme = stateThemes[currentState] || stateThemes.idle;
+  const theme = stateThemes[activeState] || stateThemes.idle;
 
-  // Sizing styles
+  // Sizing Styles
   const sizeStyles = {
     hero: {
       container: 'w-44 h-48 sm:w-48 sm:h-52',
       svgWidth: 190,
       svgHeight: 210,
-      floatClass: 'animate-hermes-float',
       showAura: true,
       showShadow: true,
       showOrbits: true
@@ -142,7 +163,6 @@ export default function HermesCharacter({
       container: 'w-20 h-22 sm:w-22 sm:h-24',
       svgWidth: 90,
       svgHeight: 100,
-      floatClass: 'animate-hermes-float',
       showAura: true,
       showShadow: false,
       showOrbits: false
@@ -151,7 +171,6 @@ export default function HermesCharacter({
       container: 'w-9 h-9',
       svgWidth: 38,
       svgHeight: 40,
-      floatClass: '',
       showAura: false,
       showShadow: false,
       showOrbits: false
@@ -160,18 +179,6 @@ export default function HermesCharacter({
 
   const cfg = sizeStyles[size] || sizeStyles.hero;
 
-  // Eye gaze coordinates based on state & mouse tracking
-  let gazeX = mouseOffset.x;
-  let gazeY = mouseOffset.y;
-
-  if (currentState === 'thinking') {
-    gazeX = 4;
-    gazeY = -4;
-  } else if (currentState === 'listening') {
-    gazeX = 0;
-    gazeY = 1;
-  }
-
   return (
     <div 
       ref={containerRef}
@@ -179,45 +186,59 @@ export default function HermesCharacter({
       onMouseLeave={handleMouseLeave}
       onClick={handlePoke}
       className={`relative inline-flex flex-col items-center justify-center select-none ${cfg.container} ${interactive ? 'cursor-pointer' : ''} ${className}`}
-      title={interactive ? "Hermes AI - Click to interact" : "Hermes AI"}
+      title={interactive ? "Hermes AI Companion - Click to interact" : "Hermes AI"}
     >
-      {/* 1. Ambient Background Aura (Soft 3D Light) */}
+      {/* 1. Ambient Dynamic Lighting Halo */}
       {cfg.showAura && (
         <div 
-          className={`absolute -inset-4 sm:-inset-6 rounded-full bg-gradient-to-tr ${theme.aura} blur-2xl transition-all duration-700 pointer-events-none opacity-80 ${currentState !== 'idle' ? 'animate-hermes-pulse' : ''}`} 
+          className={`absolute -inset-4 sm:-inset-6 rounded-full bg-gradient-to-tr ${theme.aura} blur-2xl transition-all duration-700 pointer-events-none opacity-80 ${activeState === 'speaking' ? 'animate-hermes-pulse' : ''}`} 
         />
       )}
 
-      {/* 2. Character SVG Model Container (with Apple-style spring float) */}
-      <div className={`relative w-full h-full flex items-center justify-center ${cfg.floatClass} transition-transform duration-300 ${isPoked ? 'scale-110 -translate-y-2' : ''}`}>
+      {/* 2. Character Model Body with Conversational Body Cadence */}
+      <div 
+        className={`relative w-full h-full flex items-center justify-center transition-all duration-500 ${theme.bodyAnim} ${isPoked ? 'scale-105 -translate-y-1' : ''}`}
+      >
         
-        {/* Orbital Ring 1: Thinking & Tool States */}
-        {cfg.showOrbits && (currentState === 'thinking' || currentState === 'tool') && (
-          <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-            <div className={`w-[130%] h-[60%] rounded-full border border-indigo-400/30 ${currentState === 'tool' ? 'animate-hermes-orbit-fast border-amber-400/40' : 'animate-hermes-orbit-slow'}`} style={{ transform: 'rotateX(70deg)' }}>
-              <div className="w-2.5 h-2.5 rounded-full bg-cyan-400 shadow-[0_0_8px_#22d3ee] -top-1 left-1/4 absolute" />
-              {currentState === 'tool' && (
-                <div className="w-2 h-2 rounded-full bg-amber-400 shadow-[0_0_8px_#fbbf24] -bottom-1 right-1/4 absolute" />
-              )}
+        {/* Luminous Orbital Ring: Thinking State */}
+        {cfg.showOrbits && activeState === 'thinking' && (
+          <div className="absolute inset-0 flex items-center justify-center pointer-events-none transition-opacity duration-500">
+            <div 
+              className="w-[125%] h-[58%] rounded-full border border-violet-400/30 animate-hermes-orbit-slow" 
+              style={{ transform: 'rotateX(70deg)' }}
+            >
+              <div className="w-2 h-2 rounded-full bg-violet-400 shadow-[0_0_8px_#c084fc] -top-1 left-1/4 absolute" />
             </div>
           </div>
         )}
 
-        {/* Orbital Ring 2: Tool Execution Counter-Rotation */}
-        {cfg.showOrbits && currentState === 'tool' && (
-          <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-            <div className="w-[115%] h-[55%] rounded-full border border-cyan-400/25 animate-hermes-orbit-rev" style={{ transform: 'rotateX(75deg) rotateY(25deg)' }}>
+        {/* Counter-Rotating Dual Data Rings: Tool Execution */}
+        {cfg.showOrbits && activeState === 'tool' && (
+          <div className="absolute inset-0 flex items-center justify-center pointer-events-none transition-opacity duration-500">
+            <div 
+              className="w-[128%] h-[60%] rounded-full border border-amber-400/35 animate-hermes-orbit-fast" 
+              style={{ transform: 'rotateX(68deg)' }}
+            >
+              <div className="w-2.5 h-2.5 rounded-full bg-amber-400 shadow-[0_0_8px_#fbbf24] -top-1 left-1/3 absolute" />
+            </div>
+            <div 
+              className="w-[114%] h-[54%] rounded-full border border-cyan-400/25 animate-hermes-orbit-rev" 
+              style={{ transform: 'rotateX(74deg) rotateY(20deg)' }}
+            >
               <div className="w-2 h-2 rounded-full bg-emerald-400 shadow-[0_0_8px_#34d399] top-1/2 -right-1 absolute" />
             </div>
           </div>
         )}
 
-        {/* Speaking Voice Ripple Waves */}
-        {cfg.showAura && currentState === 'speaking' && (
-          <div className="absolute inset-2 rounded-full border-2 border-indigo-400/25 animate-ping pointer-events-none" style={{ animationDuration: '2.2s' }} />
+        {/* Voice Resonance Waves in Speaking State */}
+        {cfg.showAura && activeState === 'speaking' && (
+          <div 
+            className="absolute inset-3 rounded-full border border-indigo-400/20 animate-ping pointer-events-none" 
+            style={{ animationDuration: '2.4s' }} 
+          />
         )}
 
-        {/* 3. The Vector Character Model (ViewBox 0 0 200 220) */}
+        {/* 3. High-Fidelity Vector AI Companion (ViewBox 0 0 200 220) */}
         <svg
           viewBox="0 0 200 220"
           className="w-full h-full drop-shadow-[0_12px_28px_rgba(0,0,0,0.7)]"
@@ -225,34 +246,33 @@ export default function HermesCharacter({
           xmlns="http://www.w3.org/2000/svg"
         >
           <defs>
-            {/* Shell Body Gradient: Futuristic dark midnight glass/ceramic */}
+            {/* Shell Body Gradient: Premium Dark Metallic Obsidian/Indigo */}
             <linearGradient id="hermesShellGrad" x1="20%" y1="0%" x2="80%" y2="100%">
               <stop offset="0%" stopColor="#1e2444" />
               <stop offset="45%" stopColor="#11162b" />
               <stop offset="100%" stopColor="#080a15" />
             </linearGradient>
 
-            {/* Shell Outer Border Highlight */}
+            {/* Shell Specular Rim */}
             <linearGradient id="hermesShellStroke" x1="0%" y1="0%" x2="100%" y2="100%">
-              <stop offset="0%" stopColor="rgba(199, 210, 254, 0.45)" />
+              <stop offset="0%" stopColor="rgba(199, 210, 254, 0.4)" />
               <stop offset="50%" stopColor="rgba(99, 102, 241, 0.2)" />
               <stop offset="100%" stopColor="rgba(255, 255, 255, 0.08)" />
             </linearGradient>
 
-            {/* Visor Glass Gradient: Deep obsidian with interior light bounce */}
+            {/* Visor Glass: Deep obsidian with interior bounce illumination */}
             <radialGradient id="hermesVisorGrad" cx="50%" cy="38%" r="65%">
               <stop offset="0%" stopColor="#0e1226" />
               <stop offset="65%" stopColor="#070914" />
               <stop offset="100%" stopColor="#030408" />
             </radialGradient>
 
-            {/* Visor Bevel Highlight */}
             <linearGradient id="visorRimGrad" x1="0%" y1="0%" x2="0%" y2="100%">
               <stop offset="0%" stopColor="rgba(255, 255, 255, 0.22)" />
               <stop offset="100%" stopColor="rgba(99, 102, 241, 0.12)" />
             </linearGradient>
 
-            {/* Cyan Eye Gradient */}
+            {/* Cyan Eye Gradient (Resting & Speaking) */}
             <linearGradient id="eyeGradCyan" x1="0%" y1="0%" x2="0%" y2="100%">
               <stop offset="0%" stopColor="#67e8f9" />
               <stop offset="50%" stopColor="#38bdf8" />
@@ -273,9 +293,9 @@ export default function HermesCharacter({
               <stop offset="100%" stopColor="#f59e0b" />
             </linearGradient>
 
-            {/* Eye Glow Filters */}
+            {/* Neon Glow Filters */}
             <filter id="cyanGlow" x="-50%" y="-50%" width="200%" height="200%">
-              <feGaussianBlur in="SourceGraphic" stdDeviation="3.5" result="blur" />
+              <feGaussianBlur in="SourceGraphic" stdDeviation="3.2" result="blur" />
               <feMerge>
                 <feMergeNode in="blur" />
                 <feMergeNode in="SourceGraphic" />
@@ -283,7 +303,7 @@ export default function HermesCharacter({
             </filter>
 
             <filter id="violetGlow" x="-50%" y="-50%" width="200%" height="200%">
-              <feGaussianBlur in="SourceGraphic" stdDeviation="4" result="blur" />
+              <feGaussianBlur in="SourceGraphic" stdDeviation="3.5" result="blur" />
               <feMerge>
                 <feMergeNode in="blur" />
                 <feMergeNode in="SourceGraphic" />
@@ -291,7 +311,7 @@ export default function HermesCharacter({
             </filter>
 
             <filter id="amberGlow" x="-50%" y="-50%" width="200%" height="200%">
-              <feGaussianBlur in="SourceGraphic" stdDeviation="3.5" result="blur" />
+              <feGaussianBlur in="SourceGraphic" stdDeviation="3.2" result="blur" />
               <feMerge>
                 <feMergeNode in="blur" />
                 <feMergeNode in="SourceGraphic" />
@@ -299,8 +319,7 @@ export default function HermesCharacter({
             </filter>
           </defs>
 
-          {/* A. SIDE SENSOR EAR PODS (Cute Aerodynamic Audio Nodes) */}
-          {/* Left Ear */}
+          {/* A. SIDE SENSOR EAR NODES */}
           <rect 
             x="20" 
             y="88" 
@@ -320,7 +339,6 @@ export default function HermesCharacter({
             filter="url(#cyanGlow)" 
           />
 
-          {/* Right Ear */}
           <rect 
             x="166" 
             y="88" 
@@ -340,7 +358,7 @@ export default function HermesCharacter({
             filter="url(#cyanGlow)" 
           />
 
-          {/* B. MAIN OUTER POD HELMET (Capsule shape inspired by the reference) */}
+          {/* B. MAIN OUTER POD HELMET */}
           <rect
             x="30"
             y="28"
@@ -353,14 +371,14 @@ export default function HermesCharacter({
             strokeWidth="2.2"
           />
 
-          {/* Top Specular Arc Highlight (Apple-like 3D curved glass reflection) */}
+          {/* Top Curved Specular Arc (Apple Glass Polish) */}
           <path
             d="M 58 44 Q 100 32 142 44 Q 100 38 58 44 Z"
             fill="white"
-            fillOpacity="0.28"
+            fillOpacity="0.26"
           />
 
-          {/* C. VISOR FACEPLATE (Oval/capsule window with depth) */}
+          {/* C. VISOR FACEPLATE */}
           <rect
             x="46"
             y="50"
@@ -380,180 +398,204 @@ export default function HermesCharacter({
             fillOpacity="0.1"
           />
 
-          {/* Tool Execution: Futuristic Scanning Laser Ray */}
-          {currentState === 'tool' && (
-            <line
-              x1="52"
-              y1="102"
-              x2="148"
-              y2="102"
-              stroke="#fbbf24"
-              strokeWidth="1.5"
-              strokeOpacity="0.8"
-              strokeDasharray="4 2"
-              className="animate-pulse"
-              filter="url(#amberGlow)"
-            />
-          )}
+          {/* Tool Execution: High-Precision Scanning Ray */}
+          <line
+            x1="52"
+            y1="102"
+            x2="148"
+            y2="102"
+            stroke="#fbbf24"
+            strokeWidth="1.5"
+            strokeOpacity={activeState === 'tool' ? "0.85" : "0"}
+            strokeDasharray="4 2"
+            className="transition-opacity duration-300 animate-pulse"
+            filter="url(#amberGlow)"
+          />
 
-          {/* D. EXPRESSIVE EYES (Inspired by reference pill-eye simplicity, upgraded to AI) */}
-          <g transform={`translate(${gazeX}, ${gazeY})`} className="transition-transform duration-200">
-            
-            {/* 1. SPEAKING STATE: Cheerful Happy Curved Eyes (^ ^) */}
-            {currentState === 'speaking' ? (
-              <g className="transition-all duration-300">
-                {/* Left Happy Crescent Eye */}
-                <path
-                  d="M 68 98 Q 78 85 88 98"
-                  stroke={theme.eyes}
-                  strokeWidth="4.5"
-                  strokeLinecap="round"
-                  fill="none"
-                  filter={theme.filterGlow}
-                />
-                {/* Right Happy Crescent Eye */}
-                <path
-                  d="M 112 98 Q 122 85 132 98"
-                  stroke={theme.eyes}
-                  strokeWidth="4.5"
-                  strokeLinecap="round"
-                  fill="none"
-                  filter={theme.filterGlow}
-                />
-              </g>
-            ) : (
-              /* 2. IDLE / LISTENING / THINKING / TOOL: Expressive Pill Eyes */
-              <g className={`transition-transform duration-150 ${isBlinking ? 'scale-y-[0.08]' : 'scale-y-100'}`} style={{ transformOrigin: '100px 98px' }}>
-                
-                {/* Left Eye Pill */}
+          {/* D. EXPRESSIVE LIVING EYES (Continuous Geometry, Alive Across All States) */}
+          <g 
+            transform={`translate(${theme.gazeX}, ${theme.gazeY})`} 
+            className="transition-transform duration-400 ease-out"
+          >
+            {/* Blinking & Gaze Modulator */}
+            <g 
+              className={`transition-transform duration-200 ${isBlinking ? 'scale-y-[0.08]' : ''} ${activeState === 'speaking' ? 'animate-hermes-speech-eyes' : ''}`}
+              style={{ transformOrigin: '100px 98px' }}
+            >
+              
+              {/* Left Eye */}
+              <g 
+                className="transition-transform duration-400"
+                style={{ transformOrigin: '78px 97px', transform: theme.eyeScale }}
+              >
                 <rect
                   x="71"
-                  y={currentState === 'listening' ? "83" : "85"}
+                  y="85"
                   width="14"
-                  height={currentState === 'listening' ? "28" : "25"}
+                  height="25"
                   rx="7"
-                  fill={theme.eyes}
+                  fill={theme.eyeGrad}
                   filter={theme.filterGlow}
+                  className="transition-all duration-500"
                 />
                 {/* Left Pupil Specular Catchlight */}
                 <circle
                   cx="79"
-                  cy={currentState === 'listening' ? "88" : "90"}
+                  cy="90"
                   r="2"
                   fill="white"
                   fillOpacity="0.9"
+                  className="transition-opacity duration-300"
                 />
+              </g>
 
-                {/* Right Eye Pill */}
+              {/* Right Eye */}
+              <g 
+                className="transition-transform duration-400"
+                style={{ transformOrigin: '122px 97px', transform: theme.eyeScale }}
+              >
                 <rect
                   x="115"
-                  y={currentState === 'listening' ? "83" : "85"}
+                  y="85"
                   width="14"
-                  height={currentState === 'listening' ? "28" : "25"}
+                  height="25"
                   rx="7"
-                  fill={theme.eyes}
+                  fill={theme.eyeGrad}
                   filter={theme.filterGlow}
+                  className="transition-all duration-500"
                 />
                 {/* Right Pupil Specular Catchlight */}
                 <circle
                   cx="123"
-                  cy={currentState === 'listening' ? "88" : "90"}
+                  cy="90"
                   r="2"
                   fill="white"
                   fillOpacity="0.9"
+                  className="transition-opacity duration-300"
+                />
+              </g>
+
+            </g>
+          </g>
+
+          {/* E. ACOUSTIC VOCALIZER & MOUTH (Sophisticated AI Vocal Expression) */}
+          <g className="transition-all duration-400">
+            
+            {/* 1. SPEAKING STATE: Fluid Harmonic Acoustic Vocalizer Wave */}
+            {activeState === 'speaking' && (
+              <g className="transition-opacity duration-300">
+                {/* Acoustic Vocal Glow Aperture */}
+                <ellipse
+                  cx="100"
+                  cy="127"
+                  rx="22"
+                  ry="8"
+                  fill="#38bdf8"
+                  fillOpacity="0.16"
+                  className="animate-hermes-vocal-glow"
+                  filter="url(#cyanGlow)"
                 />
 
+                {/* Secondary Harmonic Wave */}
+                <path
+                  d="M 85 127 C 91 129.5, 96 124.5, 100 127 C 104 129.5, 109 124.5, 115 127"
+                  stroke="rgba(129, 140, 248, 0.75)"
+                  strokeWidth="1.8"
+                  strokeLinecap="round"
+                  fill="none"
+                  className="animate-hermes-vocal-harmonic"
+                />
+
+                {/* Primary Voice Waveform Ribbon */}
+                <path
+                  d="M 81 127 C 87 123, 93 131, 100 127 C 107 123, 113 131, 119 127"
+                  stroke="#38bdf8"
+                  strokeWidth="2.5"
+                  strokeLinecap="round"
+                  fill="none"
+                  className="animate-hermes-vocal-primary"
+                  filter="url(#cyanGlow)"
+                />
+
+                {/* Symmetrical Acoustic Resonance Ticks */}
+                <circle cx="76" cy="127" r="1.5" fill="#38bdf8" fillOpacity="0.6" className="animate-pulse" />
+                <circle cx="124" cy="127" r="1.5" fill="#38bdf8" fillOpacity="0.6" className="animate-pulse" />
               </g>
             )}
 
-          </g>
+            {/* 2. THINKING STATE: 3 Meditative Luminous Data Dots */}
+            {activeState === 'thinking' && (
+              <g className="transition-opacity duration-300" filter="url(#violetGlow)">
+                <circle cx="92" cy="127" r="2" fill="#c084fc">
+                  <animate attributeName="opacity" values="0.3;1;0.3" dur="1.2s" repeatCount="indefinite" />
+                </circle>
+                <circle cx="100" cy="127" r="2.2" fill="#c084fc">
+                  <animate attributeName="opacity" values="0.3;1;0.3" dur="1.2s" begin="0.25s" repeatCount="indefinite" />
+                </circle>
+                <circle cx="108" cy="127" r="2" fill="#c084fc">
+                  <animate attributeName="opacity" values="0.3;1;0.3" dur="1.2s" begin="0.5s" repeatCount="indefinite" />
+                </circle>
+              </g>
+            )}
 
-          {/* E. VOCALIZER / MOUTH AREA */}
-          <g className="transition-all duration-300">
-            {currentState === 'speaking' ? (
-              /* SPEAKING: Lively Digital Vocalizer Soundwave Bars */
-              <g filter="url(#cyanGlow)">
-                {/* Bar 1 */}
-                <rect x="84" y="123" width="3" height="12" rx="1.5" fill="#38bdf8">
-                  <animate attributeName="height" values="6;16;8;14;6" dur="0.45s" repeatCount="indefinite" />
-                  <animate attributeName="y" values="126;121;125;122;126" dur="0.45s" repeatCount="indefinite" />
-                </rect>
-                {/* Bar 2 */}
-                <rect x="91" y="120" width="3.2" height="18" rx="1.6" fill="#60a5fa">
-                  <animate attributeName="height" values="8;22;10;20;8" dur="0.38s" repeatCount="indefinite" />
-                  <animate attributeName="y" values="125;118;124;119;125" dur="0.38s" repeatCount="indefinite" />
-                </rect>
-                {/* Bar 3 (Center Peak) */}
-                <rect x="98.5" y="117" width="3.5" height="24" rx="1.75" fill="#38bdf8">
-                  <animate attributeName="height" values="12;26;14;24;12" dur="0.32s" repeatCount="indefinite" />
-                  <animate attributeName="y" values="123;116;122;117;123" dur="0.32s" repeatCount="indefinite" />
-                </rect>
-                {/* Bar 4 */}
-                <rect x="106" y="120" width="3.2" height="18" rx="1.6" fill="#60a5fa">
-                  <animate attributeName="height" values="7;20;12;18;7" dur="0.4s" repeatCount="indefinite" />
-                  <animate attributeName="y" values="125;119;123;120;125" dur="0.4s" repeatCount="indefinite" />
-                </rect>
-                {/* Bar 5 */}
-                <rect x="113" y="123" width="3" height="12" rx="1.5" fill="#38bdf8">
-                  <animate attributeName="height" values="5;14;8;12;5" dur="0.48s" repeatCount="indefinite" />
-                  <animate attributeName="y" values="126;122;125;123;126" dur="0.48s" repeatCount="indefinite" />
-                </rect>
+            {/* 3. TOOL EXECUTION: Data Activity Telemetry Thread */}
+            {activeState === 'tool' && (
+              <g className="transition-opacity duration-300" filter="url(#amberGlow)">
+                <line 
+                  x1="86" 
+                  y1="127" 
+                  x2="114" 
+                  y2="127" 
+                  stroke="#fbbf24" 
+                  strokeWidth="2.2" 
+                  strokeLinecap="round" 
+                  className="animate-pulse" 
+                />
               </g>
-            ) : currentState === 'thinking' ? (
-              /* THINKING: 3 Pulsing Digital Thought Dots */
-              <g className="animate-pulse" filter="url(#violetGlow)">
-                <circle cx="92" cy="128" r="2" fill="#c084fc">
-                  <animate attributeName="opacity" values="0.3;1;0.3" dur="1s" repeatCount="indefinite" />
-                </circle>
-                <circle cx="100" cy="128" r="2.2" fill="#c084fc">
-                  <animate attributeName="opacity" values="0.3;1;0.3" dur="1s" begin="0.2s" repeatCount="indefinite" />
-                </circle>
-                <circle cx="108" cy="128" r="2" fill="#c084fc">
-                  <animate attributeName="opacity" values="0.3;1;0.3" dur="1s" begin="0.4s" repeatCount="indefinite" />
-                </circle>
-              </g>
-            ) : currentState === 'tool' ? (
-              /* TOOL EXECUTION: Data Activity Dash */
-              <g filter="url(#amberGlow)">
-                <line x1="88" y1="128" x2="112" y2="128" stroke="#fbbf24" strokeWidth="2.5" strokeLinecap="round" className="animate-pulse" />
-              </g>
-            ) : currentState === 'listening' ? (
-              /* LISTENING: Friendly Attentive Smile */
+            )}
+
+            {/* 4. LISTENING STATE: Receptive Attentive Curve */}
+            {activeState === 'listening' && (
               <path
-                d="M 92 126 Q 100 133 108 126"
+                d="M 91 126 Q 100 131 109 126"
                 stroke="#38bdf8"
-                strokeWidth="2.5"
+                strokeWidth="2.2"
                 strokeLinecap="round"
                 fill="none"
                 filter="url(#cyanGlow)"
-              />
-            ) : (
-              /* IDLE: Cute Minimal Smile */
-              <path
-                d="M 94 126 Q 100 130 106 126"
-                stroke="rgba(56, 189, 248, 0.65)"
-                strokeWidth="2"
-                strokeLinecap="round"
-                fill="none"
+                className="transition-all duration-300"
               />
             )}
+
+            {/* 5. IDLE STATE: Serene Resting Aperture */}
+            {activeState === 'idle' && (
+              <path
+                d="M 93 126.5 Q 100 129 107 126.5"
+                stroke="rgba(56, 189, 248, 0.5)"
+                strokeWidth="1.8"
+                strokeLinecap="round"
+                fill="none"
+                className="transition-all duration-300"
+              />
+            )}
+
           </g>
         </svg>
 
       </div>
 
-      {/* 4. Soft Diffused Floating 3D Shadow on Floor Plane */}
+      {/* 4. Diffused Floating 3D Shadow on Floor Plane */}
       {cfg.showShadow && (
         <div 
           className="w-28 sm:w-32 h-3.5 mt-1 rounded-[100%] bg-black/60 blur-[6px] animate-hermes-shadow pointer-events-none transition-all duration-300" 
         />
       )}
 
-      {/* 5. Optional Status Pill */}
+      {/* 5. Clean Floating Status Badge */}
       {showStatusPill && (
-        <div className={`mt-2.5 px-3 py-1 rounded-full text-[11px] font-medium tracking-wide border transition-all duration-300 flex items-center space-x-1.5 shadow-sm ${theme.statusBadge}`}>
+        <div className={`mt-2.5 px-3 py-1 rounded-full text-[11px] font-medium tracking-wide border transition-all duration-500 flex items-center space-x-1.5 shadow-sm ${theme.statusBadge}`}>
           <span className="w-1.5 h-1.5 rounded-full animate-ping" style={{ backgroundColor: theme.led }} />
-          <span>{statusLabels[currentState]}</span>
+          <span>{statusLabels[activeState]}</span>
         </div>
       )}
     </div>
