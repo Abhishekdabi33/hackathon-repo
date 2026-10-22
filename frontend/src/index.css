@@ -155,4 +155,130 @@
   transform: scale(0.96);
 }
 
+/* ========================================================================= */
+/* APPLE-INSPIRED 3D DEPTH & PERSPECTIVE WORKSPACE UTILITIES                 */
+/* ========================================================================= */
+
+.perspective-1000 {
+  perspective: 1000px;
+}
+
+.perspective-1200 {
+  perspective: 1200px;
+}
+
+.preserve-3d {
+  transform-style: preserve-3d;
+}
+
+/* Layered 3D Glass Panel with multi-tier depth shadows & specular rims */
+.glass-panel-3d {
+  background: rgba(18, 20, 29, 0.72);
+  backdrop-filter: blur(28px);
+  -webkit-backdrop-filter: blur(28px);
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  box-shadow: 
+    0 4px 6px -1px rgba(0, 0, 0, 0.3),
+    0 18px 36px -12px rgba(0, 0, 0, 0.65),
+    0 32px 64px -20px rgba(0, 0, 0, 0.8),
+    inset 0 1px 1px 0 rgba(255, 255, 255, 0.15),
+    inset 0 -1px 1px 0 rgba(0, 0, 0, 0.4);
+  transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1), 
+              box-shadow 0.35s cubic-bezier(0.16, 1, 0.3, 1), 
+              border-color 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+  transform-style: preserve-3d;
+}
+
+/* Subtle 3D Card Hover Lift for dashboard cards & stats */
+.card-3d-subtle {
+  transform-style: preserve-3d;
+  transition: transform 0.28s cubic-bezier(0.16, 1, 0.3, 1), 
+              box-shadow 0.28s cubic-bezier(0.16, 1, 0.3, 1), 
+              border-color 0.28s cubic-bezier(0.16, 1, 0.3, 1),
+              background-color 0.28s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.card-3d-subtle:hover {
+  transform: translateY(-4px) translateZ(12px) rotateX(1.2deg);
+  border-color: rgba(255, 255, 255, 0.16);
+  box-shadow: 
+    0 12px 24px -8px rgba(0, 0, 0, 0.6),
+    0 24px 48px -12px rgba(0, 0, 0, 0.75),
+    0 0 24px 0 rgba(0, 113, 227, 0.08),
+    inset 0 1px 0 rgba(255, 255, 255, 0.14);
+}
+
+.card-3d-subtle:active {
+  transform: translateY(0px) translateZ(0px) scale(0.99);
+}
+
+/* Z-Index Depth Planes for elements nested inside preserve-3d parents */
+.depth-layer-xs {
+  transform: translateZ(6px);
+}
+
+.depth-layer-sm {
+  transform: translateZ(12px);
+}
+
+.depth-layer-md {
+  transform: translateZ(20px);
+}
+
+.depth-layer-lg {
+  transform: translateZ(32px);
+}
+
+/* Futuristic Ambient 3D Grid Plane */
+.ambient-grid-plane {
+  background-image: 
+    linear-gradient(to right, rgba(255, 255, 255, 0.025) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(255, 255, 255, 0.025) 1px, transparent 1px);
+  background-size: 40px 40px;
+  mask-image: radial-gradient(ellipse 60% 50% at 50% 35%, #000 30%, transparent 80%);
+  -webkit-mask-image: radial-gradient(ellipse 60% 50% at 50% 35%, #000 30%, transparent 80%);
+}
+
+/* Dynamic Glass Glare Overlay */
+.glass-glare {
+  pointer-events: none;
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  transition: opacity 0.3s ease;
+}
+
+/* Accessibility: Respect prefers-reduced-motion */
+@media (prefers-reduced-motion: reduce) {
+  .perspective-1000,
+  .perspective-1200,
+  .preserve-3d,
+  .card-3d-subtle,
+  .glass-panel-3d,
+  .depth-layer-xs,
+  .depth-layer-sm,
+  .depth-layer-md,
+  .depth-layer-lg {
+    perspective: none !important;
+    transform-style: flat !important;
+    transform: none !important;
+    transition: none !important;
+  }
+
+  .interactive-card:hover,
+  .button-spring:hover,
+  .button-spring:active {
+    transform: none !important;
+  }
+
+  .animate-ios-fade-in,
+  .animate-step-slide,
+  .skeleton-shimmer {
+    animation: none !important;
+    opacity: 1 !important;
+    transform: none !important;
+  }
+}
+
+
 
