@@ -280,5 +280,50 @@
   }
 }
 
+/* ========================================================================= */
+/* PREMIUM POLISH & MICRO-DETAIL UTILITIES                                   */
+/* ========================================================================= */
+
+/* Hide scrollbar for horizontal mobile docks */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+/* Soft Volumetric Glows */
+.glow-blue {
+  box-shadow: 0 0 20px -3px rgba(0, 113, 227, 0.45);
+}
+
+.glow-cyan {
+  box-shadow: 0 0 20px -3px rgba(6, 182, 212, 0.45);
+}
+
+.glow-emerald {
+  box-shadow: 0 0 20px -3px rgba(16, 185, 129, 0.45);
+}
+
+.glow-purple {
+  box-shadow: 0 0 20px -3px rgba(168, 85, 247, 0.45);
+}
+
+/* ReAct Pipeline Vertical Connector Line */
+.step-connector {
+  position: relative;
+}
+.step-connector::after {
+  content: '';
+  position: absolute;
+  top: 100%;
+  left: 20px;
+  width: 2px;
+  height: 12px;
+  background: linear-gradient(to bottom, rgba(59, 130, 246, 0.4), transparent);
+}
+
+
 
 
