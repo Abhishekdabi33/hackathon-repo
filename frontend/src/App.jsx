@@ -36,6 +36,7 @@ import {
 } from 'lucide-react';
 import HermesCharacter from './components/HermesCharacter';
 import TiltCard from './components/TiltCard';
+import WorkspaceSpotlight from './components/WorkspaceSpotlight';
 
 export default function App() {
   // Navigation & Workspace State
@@ -90,6 +91,7 @@ export default function App() {
 
   const messagesEndRef = useRef(null);
   const textareaRef = useRef(null);
+  const mainCanvasRef = useRef(null);
 
   // Speech read-aloud functionality
   const handleSpeakMessage = (msgId, text) => {
@@ -480,7 +482,12 @@ export default function App() {
       {/* ==================================================================== */}
       {/* 2. MAIN CONVERSATIONAL CANVAS (The Visual Center)                     */}
       {/* ==================================================================== */}
-      <div className="flex-1 flex flex-col h-full min-w-0 relative overflow-hidden bg-[#050505]">
+      <div 
+        ref={mainCanvasRef}
+        className="flex-1 flex flex-col h-full min-w-0 relative overflow-hidden bg-[#050505]"
+      >
+        {/* Layered Cursor Spotlight: Soft White Core + Cyan Highlight + Amethyst Ambient Glow */}
+        <WorkspaceSpotlight containerRef={mainCanvasRef} />
         
         {/* Royal Amethyst Ambient Illumination with 3D Parallax */}
         <div 
