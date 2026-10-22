@@ -26,7 +26,9 @@ import {
   Menu, 
   ArrowUp,
   RotateCcw,
-  Code2
+  Code2,
+  CheckCircle2,
+  CircleDot
 } from 'lucide-react';
 
 export default function App() {
@@ -39,6 +41,7 @@ export default function App() {
   const [messages, setMessages] = useState([]);
   const [promptInput, setPromptInput] = useState('');
   const [runningAgent, setRunningAgent] = useState(false);
+  const [liveExecutionStage, setLiveExecutionStage] = useState(0);
   const [expandedTraceId, setExpandedTraceId] = useState(null);
   const [copiedId, setCopiedId] = useState(null);
 
@@ -54,10 +57,28 @@ export default function App() {
   const messagesEndRef = useRef(null);
   const textareaRef = useRef(null);
 
+  // Smooth live execution stages when agent is running
+  useEffect(() => {
+    let t1, t2, t3;
+    if (runningAgent) {
+      setLiveExecutionStage(1); // Analyzing request
+      t1 = setTimeout(() => setLiveExecutionStage(2), 500);  // Discovering skills
+      t2 = setTimeout(() => setLiveExecutionStage(3), 1100); // Calling tools
+      t3 = setTimeout(() => setLiveExecutionStage(4), 1800); // Synthesizing response
+    } else {
+      setLiveExecutionStage(0);
+    }
+    return () => {
+      clearTimeout(t1);
+      clearTimeout(t2);
+      clearTimeout(t3);
+    };
+  }, [runningAgent]);
+
   // Scroll to bottom on new message
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [messages, runningAgent]);
+  }, [messages, runningAgent, liveExecutionStage]);
 
   // Fetch Health & Device Environment
   const fetchHealth = async () => {
@@ -155,7 +176,7 @@ export default function App() {
       const newAssistantMsg = {
         id: assistantMsgId,
         role: 'assistant',
-        content: data.final_answer || 'Execution complete.',
+        content: data.final_answer || 'Task completed successfully.',
         steps: data.steps || [],
         duration_ms: data.duration_ms || 0,
         status: data.status || 'success',
@@ -163,12 +184,11 @@ export default function App() {
       };
 
       setMessages((prev) => [...prev, newAssistantMsg]);
-      setExpandedTraceId(assistantMsgId);
     } catch (err) {
       const errorMsg = {
         id: (Date.now() + 1).toString(),
         role: 'assistant',
-        content: `Agent connection error: ${err.message}. Please check if the FastAPI backend is running on port 8000.`,
+        content: `Agent execution failed: ${err.message}. Please check if the FastAPI backend is running on port 8000.`,
         status: 'error',
         timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
       };
@@ -377,7 +397,7 @@ export default function App() {
       </aside>
 
       {/* ==================================================================== */}
-      {/* 2. MAIN CONVERSATIONAL CANVAS                                        */}
+      {/* 2. MAIN CONVERSATIONAL CANVAS (The Visual Center)                     */}
       {/* ==================================================================== */}
       <div className="flex-1 flex flex-col h-full min-w-0 relative overflow-hidden bg-[#06070a]">
         
@@ -409,7 +429,7 @@ export default function App() {
 
           {/* Right Header Controls */}
           <div className="flex items-center space-x-2">
-            {/* Cyan Status Pill (Strictly reserved for small status/system indicator) */}
+            {/* Cyan Status Pill */}
             {health?.cuda_available && (
               <span className="hidden sm:inline-flex items-center space-x-1.5 bg-cyan-950/30 text-cyan-300 border border-cyan-500/20 px-2.5 py-0.5 rounded-full text-[10px] font-mono">
                 <span className="w-1 h-1 rounded-full bg-cyan-400" />
@@ -439,31 +459,31 @@ export default function App() {
         <div className="flex-1 overflow-y-auto px-4 sm:px-6 py-6 space-y-6 relative z-10">
           <div className="max-w-3xl mx-auto w-full">
 
-            {/* A. EMPTY STATE: Large elegant Hermes Visual + Suggestion Cards */}
+            {/* A. POLISHED EMPTY STATE: Hermes AI Identity & Suggested Tasks */}
             {messages.length === 0 && (
-              <div className="animate-ios-fade-in flex flex-col items-center justify-center pt-10 pb-12 text-center space-y-8">
+              <div className="animate-ios-fade-in flex flex-col items-center justify-center pt-12 pb-14 text-center space-y-8">
                 
-                {/* Hermes AI Brand Emblem with Indigo/Violet Glow */}
+                {/* Hermes AI Brand Emblem with Indigo/Violet Ambient Aura */}
                 <div className="relative group">
-                  <div className="w-16 h-16 rounded-3xl bg-gradient-to-tr from-indigo-500 via-indigo-600 to-violet-600 p-0.5 shadow-[0_0_40px_rgba(99,102,241,0.3)] transition-transform duration-500 group-hover:scale-105">
+                  <div className="w-20 h-20 rounded-3xl bg-gradient-to-tr from-indigo-500 via-indigo-600 to-violet-600 p-0.5 shadow-[0_0_50px_rgba(99,102,241,0.35)] transition-transform duration-500 group-hover:scale-105">
                     <div className="w-full h-full rounded-[22px] bg-[#080a12] flex items-center justify-center">
-                      <Sparkles className="w-8 h-8 text-indigo-400 drop-shadow-[0_0_10px_rgba(99,102,241,0.6)]" />
+                      <Sparkles className="w-10 h-10 text-indigo-400 drop-shadow-[0_0_14px_rgba(99,102,241,0.7)]" />
                     </div>
                   </div>
-                  <div className="absolute -inset-1 rounded-3xl bg-indigo-500/20 blur-xl group-hover:opacity-60 transition-opacity" />
+                  <div className="absolute -inset-2 rounded-3xl bg-indigo-500/20 blur-2xl group-hover:opacity-75 transition-opacity" />
                 </div>
 
-                {/* Hero Greeting */}
-                <div className="space-y-2 max-w-lg">
+                {/* Hero Greeting Typography */}
+                <div className="space-y-2.5 max-w-lg">
                   <h2 className="text-2xl sm:text-3xl font-semibold text-white tracking-tight">
-                    How can Hermes help you today?
+                    What can Hermes do for you today?
                   </h2>
                   <p className="text-xs sm:text-sm text-[#94a3b8] leading-relaxed font-normal">
-                    Autonomous ReAct execution harness powered by Google Gemma open-weight models and progressive Agent Skills.
+                    Autonomous agent harness powered by Google Gemma. Ready to discover skills, invoke tools, and execute workflows.
                   </p>
                 </div>
 
-                {/* Refined Suggested Prompts Cards (Subtle surface elevation, electric blue hover) */}
+                {/* Refined Suggested Task Cards (USER → HERMES → RESULT) */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 w-full pt-2 text-left">
                   {suggestedPrompts.map((card, idx) => {
                     const IconComponent = card.icon;
@@ -489,13 +509,13 @@ export default function App() {
               </div>
             )}
 
-            {/* B. ACTIVE CONVERSATION: Messages Stream */}
+            {/* B. ACTIVE CONVERSATION: USER → HERMES WORKFLOW */}
             {messages.length > 0 && (
-              <div className="space-y-6 pb-28">
+              <div className="space-y-8 pb-32">
                 {messages.map((msg) => (
                   <div 
                     key={msg.id} 
-                    className={`animate-ios-fade-in flex flex-col ${msg.role === 'user' ? 'items-end' : 'items-start'} space-y-1.5`}
+                    className={`animate-ios-fade-in flex flex-col ${msg.role === 'user' ? 'items-end' : 'items-start'} space-y-2`}
                   >
                     
                     {/* Role Header */}
@@ -508,7 +528,7 @@ export default function App() {
                         </>
                       ) : (
                         <>
-                          <div className="w-4 h-4 rounded-full bg-gradient-to-tr from-indigo-500 to-violet-600 flex items-center justify-center">
+                          <div className="w-4 h-4 rounded-full bg-gradient-to-tr from-indigo-500 to-violet-600 flex items-center justify-center shadow-sm">
                             <Bot className="w-2.5 h-2.5 text-white" />
                           </div>
                           <span className="text-zinc-200 font-semibold">Hermes Agent</span>
@@ -518,32 +538,38 @@ export default function App() {
                       )}
                     </div>
 
-                    {/* User Bubble */}
+                    {/* User Prompt Message Bubble */}
                     {msg.role === 'user' && (
-                      <div className="max-w-xl rounded-2xl bg-indigo-600/15 border border-indigo-500/25 px-4 py-3 text-sm text-zinc-100 leading-relaxed shadow-sm">
+                      <div className="max-w-xl rounded-2xl bg-indigo-600/15 border border-indigo-500/25 px-4.5 py-3 text-sm text-zinc-100 leading-relaxed shadow-sm">
                         {msg.content}
                       </div>
                     )}
 
-                    {/* Assistant Response Container */}
+                    {/* Hermes Assistant Response Area (Spacious & Readable) */}
                     {msg.role === 'assistant' && (
-                      <div className="w-full max-w-3xl space-y-3">
+                      <div className="w-full max-w-3xl space-y-3.5">
                         
-                        {/* Expandable ReAct Execution Trace Accordion */}
+                        {/* Elegant Expandable Activity Element (Replacing Raw Technical Log) */}
                         {msg.steps && msg.steps.length > 0 && (
                           <div className="rounded-2xl bg-white/[0.02] border border-white/[0.05] overflow-hidden transition-all duration-200">
+                            
+                            {/* Summary Activity Pill */}
                             <button
                               onClick={() => setExpandedTraceId(expandedTraceId === msg.id ? null : msg.id)}
                               className="w-full px-4 py-2.5 flex items-center justify-between text-xs text-zinc-300 hover:text-white bg-white/[0.01] hover:bg-white/[0.025] transition-colors"
                             >
                               <div className="flex items-center space-x-2">
-                                <Activity className="w-3.5 h-3.5 text-indigo-400" />
-                                <span className="font-medium">
-                                  Autonomous ReAct Execution ({msg.steps.length} {msg.steps.length === 1 ? 'step' : 'steps'})
+                                <CheckCircle2 className="w-3.5 h-3.5 text-indigo-400" />
+                                <span className="font-medium text-zinc-200">
+                                  Agent completed {msg.steps.length} {msg.steps.length === 1 ? 'activity' : 'activities'}
+                                </span>
+                                <span className="hidden sm:inline text-zinc-500 text-[11px]">
+                                  ({msg.steps.map(s => s.action ? s.action : 'reasoning').join(' ➔ ')})
                                 </span>
                               </div>
-                              <div className="flex items-center space-x-2">
-                                <span className="text-[10px] font-mono text-[#94a3b8] bg-white/[0.03] px-2 py-0.5 rounded-full border border-white/[0.05]">
+                              
+                              <div className="flex items-center space-x-2 text-[11px]">
+                                <span className="font-mono text-[#94a3b8] bg-white/[0.03] px-2 py-0.5 rounded-full border border-white/[0.05]">
                                   {msg.duration_ms} ms
                                 </span>
                                 {expandedTraceId === msg.id ? (
@@ -554,32 +580,40 @@ export default function App() {
                               </div>
                             </button>
 
-                            {/* Accordion Body: Step Pipeline */}
+                            {/* Expandable Activity Details: Natural-Language Stepper */}
                             {expandedTraceId === msg.id && (
-                              <div className="p-4 border-t border-white/[0.04] space-y-3 animate-ios-fade-in bg-black/30">
+                              <div className="p-4 border-t border-white/[0.04] space-y-3 animate-ios-fade-in bg-black/40 text-xs">
                                 {msg.steps.map((s, sIdx) => (
-                                  <div key={sIdx} className="space-y-2 text-xs">
-                                    {/* Thought */}
-                                    <div className="flex items-start space-x-2 text-zinc-300">
-                                      <span className="w-5 h-5 rounded-md bg-indigo-500/15 text-indigo-400 border border-indigo-500/20 flex items-center justify-center font-mono text-[10px] font-bold shrink-0 mt-0.5">
-                                        {sIdx + 1}
-                                      </span>
-                                      <p className="leading-relaxed">
-                                        <strong className="text-indigo-400 font-semibold">Thought:</strong> {s.thought}
-                                      </p>
+                                  <div key={sIdx} className="space-y-2 p-3 rounded-xl bg-white/[0.015] border border-white/[0.04]">
+                                    {/* Activity Header */}
+                                    <div className="flex items-center justify-between">
+                                      <div className="flex items-center space-x-2">
+                                        <div className="w-5 h-5 rounded-md bg-indigo-500/15 text-indigo-400 border border-indigo-500/20 flex items-center justify-center font-mono text-[10px] font-bold">
+                                          {sIdx + 1}
+                                        </div>
+                                        <span className="font-semibold text-zinc-200">
+                                          {s.action ? `Calling tool: ${s.action}` : 'Reasoning & Planning'}
+                                        </span>
+                                      </div>
+                                      <span className="text-[10px] text-emerald-400 font-mono">Completed</span>
                                     </div>
 
-                                    {/* Tool Call / Action */}
+                                    {/* Natural Language Thought */}
+                                    <p className="text-zinc-300 leading-relaxed text-[11px] pl-7">
+                                      {s.thought}
+                                    </p>
+
+                                    {/* Action Input (if any) */}
                                     {s.action && (
-                                      <div className="ml-7 p-2 bg-black/50 rounded-xl border border-white/[0.05] text-[11px] font-mono flex flex-wrap items-center justify-between gap-2">
-                                        <span>Action: <strong className="text-amber-300">{s.action}</strong></span>
-                                        <span className="text-[#64748b] text-[10px]">Input: {s.action_input}</span>
+                                      <div className="ml-7 p-2 bg-black/60 rounded-lg border border-white/[0.04] text-[11px] font-mono text-zinc-400">
+                                        <span className="text-[#64748b]">Input: </span>
+                                        <span className="text-amber-300">{s.action_input}</span>
                                       </div>
                                     )}
 
-                                    {/* Observation */}
+                                    {/* Observation Output (if any) */}
                                     {s.observation && (
-                                      <div className="ml-7 p-2.5 bg-black/70 rounded-xl border border-emerald-500/20 text-emerald-300 text-[11px] font-mono whitespace-pre-wrap leading-relaxed">
+                                      <div className="ml-7 p-2.5 bg-black/80 rounded-lg border border-emerald-500/20 text-emerald-300 text-[11px] font-mono whitespace-pre-wrap leading-relaxed max-h-40 overflow-y-auto">
                                         <span className="text-[#64748b] block text-[9px] uppercase font-bold tracking-wider mb-0.5">Observation:</span>
                                         {s.observation}
                                       </div>
@@ -591,16 +625,16 @@ export default function App() {
                           </div>
                         )}
 
-                        {/* Final Answer Text Body */}
-                        <div className="p-4 sm:p-5 rounded-2xl bg-white/[0.025] border border-white/[0.05] shadow-[0_8px_30px_rgba(0,0,0,0.4)] space-y-3">
-                          <p className="text-sm text-zinc-100 whitespace-pre-wrap leading-relaxed font-normal">
+                        {/* Spacious, Highly Readable Final Answer */}
+                        <div className="space-y-3 pt-1">
+                          <p className="text-sm sm:text-base text-zinc-100 whitespace-pre-wrap leading-relaxed font-normal">
                             {msg.content}
                           </p>
 
-                          {/* Assistant Action Buttons Toolbar */}
-                          <div className="flex items-center justify-between pt-2 border-t border-white/[0.04] text-xs">
+                          {/* Assistant Footer Action Toolbar */}
+                          <div className="flex items-center justify-between pt-2 text-xs">
                             <span className="text-[10px] text-[#64748b] font-mono">
-                              Google Gemma • Hermes Engine
+                              Google Gemma 2 • Hermes Harness
                             </span>
                             
                             <div className="flex items-center space-x-1.5">
@@ -639,18 +673,63 @@ export default function App() {
                   </div>
                 ))}
 
-                {/* Live Thinking / Reasoning State */}
+                {/* VISUAL LIVE AGENT WORKFLOW IN PROGRESS (USER PROMPT ↓ HERMES WORKING) */}
                 {runningAgent && (
-                  <div className="animate-ios-fade-in flex items-start space-x-3 max-w-xl">
-                    <div className="w-7 h-7 rounded-xl bg-gradient-to-tr from-indigo-500 to-violet-600 flex items-center justify-center shrink-0 mt-1 shadow-[0_0_15px_rgba(99,102,241,0.4)]">
-                      <Bot className="w-4 h-4 text-white animate-spin" />
+                  <div className="animate-ios-fade-in flex items-start space-x-3.5 max-w-xl pt-2">
+                    <div className="w-8 h-8 rounded-2xl bg-gradient-to-tr from-indigo-500 to-violet-600 flex items-center justify-center shrink-0 mt-0.5 shadow-[0_0_20px_rgba(99,102,241,0.4)]">
+                      <Bot className="w-4.5 h-4.5 text-white animate-spin" />
                     </div>
-                    <div className="p-4 rounded-2xl bg-white/[0.025] border border-white/[0.05] space-y-2 flex-1">
-                      <div className="flex items-center space-x-2 text-xs font-semibold text-indigo-400">
+                    
+                    {/* Progressive Agent Activity Stepper */}
+                    <div className="p-4 rounded-2xl bg-white/[0.025] border border-white/[0.05] space-y-3 flex-1 text-xs">
+                      <div className="flex items-center space-x-2 text-indigo-400 font-medium">
                         <Sparkles className="w-3.5 h-3.5 animate-spin" />
-                        <span>Hermes is reasoning, discovering tools & executing loop...</span>
+                        <span>Hermes is executing agent workflow...</span>
                       </div>
-                      <div className="skeleton-shimmer h-8 rounded-xl border border-white/[0.04]" />
+
+                      {/* Live Workflow Steps Visualizer */}
+                      <div className="space-y-2 pt-1">
+                        <div className={`flex items-center space-x-2.5 transition-opacity ${liveExecutionStage >= 1 ? 'opacity-100 text-zinc-200' : 'opacity-40 text-zinc-500'}`}>
+                          {liveExecutionStage > 1 ? (
+                            <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
+                          ) : (
+                            <CircleDot className="w-3.5 h-3.5 text-indigo-400 animate-pulse shrink-0" />
+                          )}
+                          <span>Analyzing your request & planning strategy</span>
+                        </div>
+
+                        <div className={`flex items-center space-x-2.5 transition-opacity ${liveExecutionStage >= 2 ? 'opacity-100 text-zinc-200' : 'opacity-40 text-zinc-500'}`}>
+                          {liveExecutionStage > 2 ? (
+                            <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
+                          ) : liveExecutionStage === 2 ? (
+                            <CircleDot className="w-3.5 h-3.5 text-indigo-400 animate-pulse shrink-0" />
+                          ) : (
+                            <span className="w-3.5 h-3.5 rounded-full border border-zinc-600 shrink-0" />
+                          )}
+                          <span>Discovering Agent Skills & operational playbooks</span>
+                        </div>
+
+                        <div className={`flex items-center space-x-2.5 transition-opacity ${liveExecutionStage >= 3 ? 'opacity-100 text-zinc-200' : 'opacity-40 text-zinc-500'}`}>
+                          {liveExecutionStage > 3 ? (
+                            <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
+                          ) : liveExecutionStage === 3 ? (
+                            <CircleDot className="w-3.5 h-3.5 text-indigo-400 animate-pulse shrink-0" />
+                          ) : (
+                            <span className="w-3.5 h-3.5 rounded-full border border-zinc-600 shrink-0" />
+                          )}
+                          <span>Executing tool calls & evaluating observations</span>
+                        </div>
+
+                        <div className={`flex items-center space-x-2.5 transition-opacity ${liveExecutionStage >= 4 ? 'opacity-100 text-zinc-200' : 'opacity-40 text-zinc-500'}`}>
+                          {liveExecutionStage === 4 ? (
+                            <CircleDot className="w-3.5 h-3.5 text-indigo-400 animate-pulse shrink-0" />
+                          ) : (
+                            <span className="w-3.5 h-3.5 rounded-full border border-zinc-600 shrink-0" />
+                          )}
+                          <span>Processing & synthesizing final answer</span>
+                        </div>
+                      </div>
+
                     </div>
                   </div>
                 )}
