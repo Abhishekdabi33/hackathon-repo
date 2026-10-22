@@ -291,22 +291,32 @@ export default function HermesCharacter({
   // Sizing Styles
   const sizeStyles = {
     hero: {
-      container: 'w-44 h-48 sm:w-48 sm:h-52',
+      container: 'w-48 h-52 sm:w-56 sm:h-60',
       showAura: true,
       showShadow: true,
-      showOrbits: true
+      showOrbits: true,
+      showStardust: true
+    },
+    companion: {
+      container: 'w-14 h-14',
+      showAura: true,
+      showShadow: false,
+      showOrbits: false,
+      showStardust: false
     },
     md: {
       container: 'w-20 h-22 sm:w-22 sm:h-24',
       showAura: true,
       showShadow: false,
-      showOrbits: false
+      showOrbits: false,
+      showStardust: false
     },
     sm: {
       container: 'w-9 h-9',
       showAura: false,
       showShadow: false,
-      showOrbits: false
+      showOrbits: false,
+      showStardust: false
     }
   };
 
@@ -343,17 +353,80 @@ export default function HermesCharacter({
         style={{ transformStyle: 'preserve-3d' }}
       >
         
-        {/* Luminous Royal Amethyst Orbital Ring: Thinking State */}
+        {/* Signature 3D Astrolabe Orbit Geometry (Delicate Glass Gyro Rings) */}
+        {cfg.showOrbits && (
+          <div 
+            className="absolute inset-[-12%] flex items-center justify-center pointer-events-none transition-opacity duration-700"
+            style={{ transform: 'translateZ(6px)', transformStyle: 'preserve-3d' }}
+          >
+            {/* Primary Ambient Gyro Ring */}
+            <div 
+              className="w-full h-[62%] rounded-full border border-[#00E5FF]/20 animate-hermes-orbit-slow" 
+              style={{ 
+                transform: 'rotateX(68deg) rotateY(-16deg)',
+                boxShadow: '0 0 20px rgba(0, 229, 255, 0.08), inset 0 0 15px rgba(59, 10, 107, 0.2)'
+              }}
+            >
+              <div className="w-2 h-2 rounded-full bg-[#00E5FF] shadow-[0_0_10px_#00E5FF] -top-1 left-1/4 absolute" />
+            </div>
+
+            {/* Counter-Tilted Amethyst Deep Arc */}
+            <div 
+              className="w-[90%] h-[56%] rounded-full border border-[#3B0A6B]/40 animate-hermes-orbit-rev" 
+              style={{ 
+                transform: 'rotateX(74deg) rotateY(24deg) translateZ(-10px)',
+                boxShadow: '0 0 15px rgba(59, 10, 107, 0.25)'
+              }}
+            >
+              <div className="w-1.5 h-1.5 rounded-full bg-[#FFFFFF] shadow-[0_0_6px_#FFFFFF] top-1/2 -right-0.5 absolute" />
+            </div>
+          </div>
+        )}
+
+        {/* Luminous Floating Depth Stardust Particles */}
+        {cfg.showStardust && (
+          <div 
+            className="absolute inset-[-20%] pointer-events-none overflow-visible"
+            style={{ transform: 'translateZ(12px)', transformStyle: 'preserve-3d' }}
+          >
+            <div 
+              className="absolute left-2 top-8 w-1.5 h-1.5 rounded-full bg-[#00E5FF] shadow-[0_0_8px_#00E5FF] animate-stardust-1"
+              style={{ transform: 'translateZ(20px)' }}
+            />
+            <div 
+              className="absolute right-3 top-12 w-1.5 h-1.5 rounded-full bg-[#FFFFFF] shadow-[0_0_6px_#FFFFFF] animate-stardust-2"
+              style={{ transform: 'translateZ(-14px)' }}
+            />
+            <div 
+              className="absolute left-0 bottom-16 w-2 h-2 rounded-full bg-[#3B0A6B] border border-[#00E5FF]/40 shadow-[0_0_10px_rgba(59,10,107,0.8)] animate-stardust-3"
+              style={{ transform: 'translateZ(24px)' }}
+            />
+            <div 
+              className="absolute right-1 bottom-14 w-1.5 h-1.5 rounded-full bg-[#00E5FF] shadow-[0_0_8px_#00E5FF] animate-stardust-1"
+              style={{ transform: 'translateZ(10px)' }}
+            />
+            <div 
+              className="absolute left-8 bottom-4 w-1 h-1 rounded-full bg-[#FFFFFF] shadow-[0_0_4px_#FFFFFF] animate-stardust-2"
+              style={{ transform: 'translateZ(-8px)' }}
+            />
+            <div 
+              className="absolute right-10 top-4 w-1 h-1 rounded-full bg-[#00E5FF] shadow-[0_0_6px_#00E5FF] animate-stardust-3"
+              style={{ transform: 'translateZ(16px)' }}
+            />
+          </div>
+        )}
+
+        {/* Dynamic Activity Orbital Rings: Thinking State */}
         {cfg.showOrbits && activeState === 'thinking' && (
           <div 
             className="absolute inset-0 flex items-center justify-center pointer-events-none transition-opacity duration-500"
-            style={{ transform: 'translateZ(6px)' }}
+            style={{ transform: 'translateZ(8px)' }}
           >
             <div 
-              className="w-[125%] h-[58%] rounded-full border border-[#00E5FF]/35 animate-hermes-orbit-slow" 
+              className="w-[125%] h-[58%] rounded-full border border-[#00E5FF]/45 animate-hermes-orbit-fast" 
               style={{ transform: 'rotateX(70deg)' }}
             >
-              <div className="w-2.5 h-2.5 rounded-full bg-[#00E5FF] shadow-[0_0_10px_#00E5FF] -top-1 left-1/4 absolute" />
+              <div className="w-2.5 h-2.5 rounded-full bg-[#00E5FF] shadow-[0_0_12px_#00E5FF] -top-1 left-1/4 absolute" />
             </div>
           </div>
         )}
@@ -362,19 +435,19 @@ export default function HermesCharacter({
         {cfg.showOrbits && activeState === 'tool' && (
           <div 
             className="absolute inset-0 flex items-center justify-center pointer-events-none transition-opacity duration-500"
-            style={{ transform: 'translateZ(8px)' }}
+            style={{ transform: 'translateZ(10px)' }}
           >
             <div 
-              className="w-[128%] h-[60%] rounded-full border border-[#00E5FF]/40 animate-hermes-orbit-fast" 
+              className="w-[128%] h-[60%] rounded-full border border-[#00E5FF]/50 animate-hermes-orbit-fast" 
               style={{ transform: 'rotateX(68deg)' }}
             >
-              <div className="w-2.5 h-2.5 rounded-full bg-[#00E5FF] shadow-[0_0_10px_#00E5FF] -top-1 left-1/3 absolute" />
+              <div className="w-2.5 h-2.5 rounded-full bg-[#00E5FF] shadow-[0_0_12px_#00E5FF] -top-1 left-1/3 absolute" />
             </div>
             <div 
-              className="w-[114%] h-[54%] rounded-full border border-[#3B0A6B]/50 animate-hermes-orbit-rev" 
+              className="w-[114%] h-[54%] rounded-full border border-[#3B0A6B]/60 animate-hermes-orbit-rev" 
               style={{ transform: 'rotateX(74deg) rotateY(20deg)' }}
             >
-              <div className="w-2 h-2 rounded-full bg-[#00E5FF] shadow-[0_0_8px_#00E5FF] top-1/2 -right-1 absolute" />
+              <div className="w-2 h-2 rounded-full bg-[#00E5FF] shadow-[0_0_10px_#00E5FF] top-1/2 -right-1 absolute" />
             </div>
           </div>
         )}

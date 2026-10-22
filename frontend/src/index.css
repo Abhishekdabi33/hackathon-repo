@@ -555,6 +555,52 @@
   animation: hermesOrbitReverse 5.2s linear infinite;
 }
 
+/* Floating Dimensional Stardust Particles */
+@keyframes hermesStardustFloat1 {
+  0%, 100% {
+    transform: translateY(0px) translateX(0px) scale(1);
+    opacity: 0.35;
+  }
+  50% {
+    transform: translateY(-8px) translateX(3px) scale(1.25);
+    opacity: 0.95;
+  }
+}
+
+@keyframes hermesStardustFloat2 {
+  0%, 100% {
+    transform: translateY(0px) translateX(0px) scale(1);
+    opacity: 0.45;
+  }
+  50% {
+    transform: translateY(6px) translateX(-4px) scale(0.85);
+    opacity: 0.8;
+  }
+}
+
+@keyframes hermesStardustFloat3 {
+  0%, 100% {
+    transform: translateY(0px) scale(0.9);
+    opacity: 0.3;
+  }
+  50% {
+    transform: translateY(-10px) scale(1.3);
+    opacity: 1;
+  }
+}
+
+.animate-stardust-1 {
+  animation: hermesStardustFloat1 4.2s ease-in-out infinite;
+}
+
+.animate-stardust-2 {
+  animation: hermesStardustFloat2 5.6s ease-in-out infinite;
+}
+
+.animate-stardust-3 {
+  animation: hermesStardustFloat3 3.8s ease-in-out infinite;
+}
+
 /* ========================================================================= */
 /* 6. REDUCED MOTION SUPPORT                                                 */
 /* ========================================================================= */
@@ -580,6 +626,9 @@
   .animate-hermes-orbit-slow,
   .animate-hermes-orbit-fast,
   .animate-hermes-orbit-rev,
+  .animate-stardust-1,
+  .animate-stardust-2,
+  .animate-stardust-3,
   .animate-slide-up,
   .animate-slide-down,
   .animate-status-breathe,

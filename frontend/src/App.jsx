@@ -646,7 +646,51 @@ export default function App() {
 
             {/* B. ACTIVE CONVERSATION: USER → HERMES WORKFLOW */}
             {messages.length > 0 && (
-              <div className="space-y-8 pb-32">
+              <div className="space-y-8 pb-44">
+
+                {/* SIGNATURE 3D NEURAL COMPANION CAPSULE (Architectural Floating Module) */}
+                <div className="sticky top-0 z-30 mb-6 -mx-2 px-4 py-2.5 rounded-2xl bg-[#080310]/85 backdrop-blur-xl border border-[#3B0A6B]/40 hover:border-white/20 shadow-[0_8px_32px_rgba(0,0,0,0.8),0_0_20px_rgba(59,10,107,0.25)] flex items-center justify-between transition-all">
+                  <div className="flex items-center space-x-3">
+                    <div className="w-12 h-12 flex items-center justify-center shrink-0">
+                      <HermesCharacter 
+                        size="companion" 
+                        state={getHermesState()} 
+                        interactive={true} 
+                      />
+                    </div>
+                    <div>
+                      <div className="flex items-center space-x-2">
+                        <span className="text-xs font-bold text-[#F5F5FA] tracking-tight">Hermes Neural Assistant</span>
+                        <span className="w-1.5 h-1.5 rounded-full bg-[#00E5FF] animate-status-breathe" />
+                        <span className="text-[10px] font-mono text-[#00E5FF] uppercase tracking-wider bg-[#3B0A6B]/40 px-2 py-0.5 rounded-full border border-[#00E5FF]/25">
+                          {getHermesState()}
+                        </span>
+                      </div>
+                      <p className="text-[10px] text-[#858091] font-mono pt-0.5">
+                        {runningAgent 
+                          ? (liveExecutionStage === 1 ? 'Analyzing prompt intent...' : liveExecutionStage === 2 ? 'Discovering operational skills...' : liveExecutionStage === 3 ? 'Executing ReAct tool call...' : 'Synthesizing final answer...')
+                          : 'Ready for instructions • Google Gemma 2 ReAct Engine'}
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center space-x-2">
+                    {health?.cuda_available && (
+                      <span className="hidden sm:inline-flex items-center space-x-1.5 bg-[#3B0A6B]/30 text-[#00E5FF] border border-[#00E5FF]/30 px-2.5 py-1 rounded-full text-[10px] font-mono">
+                        <span className="w-1 h-1 rounded-full bg-[#00E5FF] shadow-[0_0_6px_#00E5FF]" />
+                        <span>CUDA 12.6</span>
+                      </span>
+                    )}
+                    <button
+                      onClick={handleNewChat}
+                      className="btn-premium px-2.5 py-1 rounded-lg text-xs text-[#858091] hover:text-[#F5F5FA] hover:bg-white/[0.04] border border-transparent hover:border-white/10 flex items-center space-x-1.5"
+                      title="Start New Agent Session"
+                    >
+                      <Plus className="w-3.5 h-3.5 text-[#00E5FF]" />
+                      <span className="hidden sm:inline">New Session</span>
+                    </button>
+                  </div>
+                </div>
                 {messages.map((msg) => (
                   <div 
                     key={msg.id} 
