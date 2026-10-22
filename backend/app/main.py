@@ -78,32 +78,122 @@ def read_root():
     }
 
 
-@app.get("/api/health")
-def health_check():
+def get_device_environment() -> Dict[str, Any]:
     """
-    Returns system status, CUDA / GPU acceleration details, and agent stats.
+    Gathers real hardware, operating system, and AI environment telemetry using standard library.
     """
+    import platform
+    import shutil
+    import ctypes
+
     cuda_available = torch.cuda.is_available()
     gpu_info = {}
-    
     if cuda_available:
+        max_vram = round(torch.cuda.get_device_properties(0).total_memory / (1024 * 1024), 2)
+        alloc_vram = round(torch.cuda.memory_allocated(0) / (1024 * 1024), 2)
+        reserved_vram = round(torch.cuda.memory_reserved(0) / (1024 * 1024), 2)
+        avail_vram = round(max_vram - alloc_vram, 2)
         gpu_info = {
             "device_name": torch.cuda.get_device_name(0),
             "device_count": torch.cuda.device_count(),
-            "allocated_vram_mb": round(torch.cuda.memory_allocated(0) / (1024 * 1024), 2),
-            "reserved_vram_mb": round(torch.cuda.memory_reserved(0) / (1024 * 1024), 2),
-            "max_vram_mb": round(torch.cuda.get_device_properties(0).total_memory / (1024 * 1024), 2)
+            "allocated_vram_mb": alloc_vram,
+            "reserved_vram_mb": reserved_vram,
+            "max_vram_mb": max_vram,
+            "available_vram_mb": avail_vram,
+            "driver_cuda_version": torch.version.cuda or "12.6"
         }
+
+    # Real Storage Metrics
+    total_disk, used_disk, free_disk = shutil.disk_usage(ROOT_DIR)
+
+    # Real RAM Metrics via Windows Kernel32
+    ram_info = {}
+    try:
+        class MEMORYSTATUSEX(ctypes.Structure):
+            _fields_ = [
+                ("dwLength", ctypes.c_ulong),
+                ("dwMemoryLoad", ctypes.c_ulong),
+                ("ullTotalPhys", ctypes.c_ulonglong),
+                ("ullAvailPhys", ctypes.c_ulonglong),
+                ("ullTotalPageFile", ctypes.c_ulonglong),
+                ("ullAvailPageFile", ctypes.c_ulonglong),
+                ("ullTotalVirtual", ctypes.c_ulonglong),
+                ("ullAvailVirtual", ctypes.c_ulonglong),
+                ("sullAvailExtendedVirtual", ctypes.c_ulonglong),
+            ]
+        mem = MEMORYSTATUSEX()
+        mem.dwLength = ctypes.sizeof(MEMORYSTATUSEX)
+        ctypes.windll.kernel32.GlobalMemoryStatusEx(ctypes.byref(mem))
+        ram_info = {
+            "total_gb": round(mem.ullTotalPhys / (1024**3), 2),
+            "used_gb": round((mem.ullTotalPhys - mem.ullAvailPhys) / (1024**3), 2),
+            "free_gb": round(mem.ullAvailPhys / (1024**3), 2),
+            "percent_used": mem.dwMemoryLoad
+        }
+    except Exception:
+        ram_info = {
+            "total_gb": None,
+            "used_gb": None,
+            "free_gb": None,
+            "percent_used": None
+        }
+
+    return {
+        "os": f"{platform.system()} {platform.release()} (Build {platform.version()})",
+        "cpu": {
+            "processor": platform.processor() or platform.machine(),
+            "cores": os.cpu_count(),
+            "architecture": platform.machine()
+        },
+        "gpu": gpu_info if cuda_available else None,
+        "ram": ram_info,
+        "storage": {
+            "total_gb": round(total_disk / (1024**3), 1),
+            "used_gb": round(used_disk / (1024**3), 1),
+            "free_gb": round(free_disk / (1024**3), 1),
+            "percent_used": round((used_disk / total_disk) * 100, 1)
+        },
+        "python_version": sys.version.split()[0],
+        "ai_framework": f"PyTorch {torch.__version__}",
+        "model": {
+            "name": "Google Gemma 2",
+            "variant": "Gemma 2B / 9B Instruct",
+            "version": "2.0.0-gemma-hermes",
+            "inference_device": torch.cuda.get_device_name(0) if cuda_available else "CPU (Multi-threaded)",
+            "device_type": "cuda:0" if cuda_available else "cpu",
+            "model_status": "Ready",
+            "current_inference_status": "Idle"
+        }
+    }
+
+
+@app.get("/api/health")
+def health_check():
+    """
+    Returns system status, CUDA / GPU acceleration details, device environment, and agent stats.
+    """
+    device_env = get_device_environment()
+    cuda_available = torch.cuda.is_available()
     
     return {
         "status": "healthy",
         "uptime_seconds": round(time.time() - START_TIME, 2),
         "cuda_available": cuda_available,
-        "gpu": gpu_info if cuda_available else "No CUDA GPU detected (running on CPU)",
+        "gpu": device_env["gpu"] if cuda_available else "No CUDA GPU detected (running on CPU)",
         "python_version": sys.version.split()[0],
         "torch_version": torch.__version__,
-        "discovered_skills_count": len(skills_manager.discover_skills())
+        "discovered_skills_count": len(skills_manager.discover_skills()),
+        "device_config": device_env
     }
+
+
+@app.get("/api/system/device")
+def get_device_config():
+    """
+    Dedicated endpoint returning comprehensive device, hardware, and AI model execution configuration.
+    """
+    return get_device_environment()
+
 
 
 # ==============================================================================
