@@ -33,6 +33,7 @@ import {
   VolumeX
 } from 'lucide-react';
 import HermesCharacter from './components/HermesCharacter';
+import TiltCard from './components/TiltCard';
 
 export default function App() {
   // Navigation & Workspace State
@@ -50,7 +51,18 @@ export default function App() {
   const [isInputFocused, setIsInputFocused] = useState(false);
   const [isSpeaking, setIsSpeaking] = useState(false);
   const [speakingMessageId, setSpeakingMessageId] = useState(null);
+  const [scrollProgress, setScrollProgress] = useState(0);
+  const [scrollOffset, setScrollOffset] = useState(0);
   const speakingTimeoutRef = useRef(null);
+
+  // 3D Parallax Scroll Handler
+  const handleFeedScroll = (e) => {
+    const top = e.currentTarget.scrollTop;
+    setScrollOffset(top);
+    // Smooth transition over the first 220px of scroll
+    const prog = Math.min(1, Math.max(0, top / 220));
+    setScrollProgress(prog);
+  };
 
   // Dynamic Living Hermes AI State (idle | listening | thinking | tool | speaking)
   const getHermesState = () => {
@@ -465,8 +477,11 @@ export default function App() {
       {/* ==================================================================== */}
       <div className="flex-1 flex flex-col h-full min-w-0 relative overflow-hidden bg-[#06070a]">
         
-        {/* Restrained Indigo & Violet Ambient Illumination */}
-        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[700px] h-[300px] bg-gradient-to-b from-indigo-500/[0.06] via-violet-500/[0.02] to-transparent blur-[160px] pointer-events-none z-0" />
+        {/* Restrained Indigo & Violet Ambient Illumination with 3D Parallax */}
+        <div 
+          style={{ transform: `translate(-50%, ${scrollOffset * 0.15}px)` }}
+          className="absolute top-0 left-1/2 w-[700px] h-[300px] bg-gradient-to-b from-indigo-500/[0.06] via-violet-500/[0.02] to-transparent blur-[160px] pointer-events-none z-0 will-change-transform" 
+        />
 
         {/* Top Minimal Navbar */}
         <header className="h-14 border-b border-white/[0.04] bg-[#06070a]/70 backdrop-blur-xl flex items-center justify-between px-4 sm:px-6 relative z-10 shrink-0">
@@ -531,22 +546,26 @@ export default function App() {
         </header>
 
         {/* ================================================================== */}
-        {/* CENTER CONVERSATION FEED                                           */}
+        {/* CENTER CONVERSATION FEED (with 3D Parallax Scroll Listener)        */}
         {/* ================================================================== */}
-        <div className="flex-1 overflow-y-auto px-4 sm:px-6 py-6 space-y-6 relative z-10">
+        <div 
+          onScroll={handleFeedScroll}
+          className="flex-1 overflow-y-auto px-4 sm:px-6 py-6 space-y-6 relative z-10 scroll-smooth"
+        >
           <div className="max-w-3xl mx-auto w-full">
 
             {/* A. POLISHED EMPTY STATE: Hermes AI Identity & Suggested Tasks */}
             {messages.length === 0 && (
-              <div className="animate-ios-fade-in flex flex-col items-center justify-center pt-12 pb-14 text-center space-y-8">
+              <div className="animate-ios-fade-in flex flex-col items-center justify-center pt-10 pb-14 text-center space-y-7">
                 
-                {/* THE LIVING HERMES AI CHARACTER (Primary Identity) */}
+                {/* THE 3D LIVING HERMES AI CHARACTER (Centerpiece) */}
                 <div className="flex flex-col items-center justify-center pt-2">
                   <HermesCharacter
                     size="hero"
                     state={getHermesState()}
                     interactive={true}
                     showStatusPill={true}
+                    scrollProgress={scrollProgress}
                   />
                 </div>
 
@@ -560,15 +579,15 @@ export default function App() {
                   </p>
                 </div>
 
-                {/* Refined Suggested Task Cards (USER → HERMES → RESULT) */}
+                {/* 3D Interactive Suggested Task Cards (USER → HERMES → RESULT) */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 w-full pt-2 text-left">
                   {suggestedPrompts.map((card, idx) => {
                     const IconComponent = card.icon;
                     return (
-                      <div
+                      <TiltCard
                         key={idx}
                         onClick={() => handleSendMessage(card.prompt)}
-                        className="card-3d-subtle p-4 rounded-2xl bg-white/[0.02] hover:bg-white/[0.045] border border-white/[0.04] hover:border-indigo-500/30 cursor-pointer space-y-2 transition-all duration-200 shadow-sm group"
+                        className="p-4 rounded-2xl bg-white/[0.02] hover:bg-white/[0.045] border border-white/[0.04] hover:border-indigo-500/30 cursor-pointer space-y-2 transition-colors duration-200 shadow-sm group"
                       >
                         <div className="flex items-center justify-between">
                           <div className="w-7 h-7 rounded-xl bg-indigo-500/10 text-indigo-400 flex items-center justify-center transition-transform duration-200 group-hover:scale-110">
@@ -578,7 +597,7 @@ export default function App() {
                         </div>
                         <h3 className="text-xs font-semibold text-white tracking-tight">{card.title}</h3>
                         <p className="text-[11px] text-[#94a3b8] leading-relaxed line-clamp-2">{card.description}</p>
-                      </div>
+                      </TiltCard>
                     );
                   })}
                 </div>
