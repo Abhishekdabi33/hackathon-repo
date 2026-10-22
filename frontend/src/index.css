@@ -1,3 +1,5 @@
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -5,20 +7,39 @@
 @layer base {
   :root {
     color-scheme: dark;
+
+    /* Strict 3-Color Brand Palette */
+    --color-jet-black: #050505;
+    --color-royal-amethyst: #3B0A6B;
+    --color-electric-cyan: #00E5FF;
+
+    /* Semantic Surfaces */
+    --surface-jet-black: #050505;
+    --surface-deep-amethyst: #0e041a;
+    --surface-panel-dark: #080310;
+    --surface-amethyst-glass: rgba(59, 10, 107, 0.35);
+
+    /* Coordinated Typography Hierarchy */
+    --text-primary: #F5F5FA;
+    --text-secondary: #B8B3C7;
+    --text-muted: #858091;
+    --text-interactive: #00E5FF;
+    --text-on-cyan: #050505;
+    --text-on-amethyst: #FFFFFF;
   }
   
   body {
     margin: 0;
-    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Inter", "Helvetica Neue", sans-serif;
-    background-color: #06070a;
-    color: #f8fafc;
+    font-family: "Plus Jakarta Sans", -apple-system, BlinkMacSystemFont, "Inter", sans-serif;
+    background-color: #050505;
+    color: #F5F5FA;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     overflow-x: hidden;
   }
 }
 
-/* Apple-style ultra-minimal scrollbars */
+/* Minimalist Scrollbars */
 ::-webkit-scrollbar {
   width: 5px;
   height: 5px;
@@ -29,55 +50,55 @@
 }
 
 ::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.1);
+  background: rgba(59, 10, 107, 0.4);
   border-radius: 9999px;
+  border: 1px solid rgba(0, 229, 255, 0.15);
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: rgba(255, 255, 255, 0.2);
+  background: rgba(0, 229, 255, 0.4);
 }
 
-/* Refined Glassmorphism Surfaces */
+/* Jet Black × Royal Amethyst Glassmorphism Panels */
 .glass-panel {
-  background: rgba(13, 15, 24, 0.7);
+  background: rgba(8, 3, 16, 0.82);
   backdrop-filter: blur(24px);
   -webkit-backdrop-filter: blur(24px);
-  border: 1px solid rgba(255, 255, 255, 0.05);
-  box-shadow: 0 16px 36px -10px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(59, 10, 107, 0.38);
+  box-shadow: 0 16px 40px -10px rgba(0, 0, 0, 0.8), inset 0 1px 0 rgba(0, 229, 255, 0.12);
 }
 
 .glass-panel-subtle {
-  background: rgba(255, 255, 255, 0.02);
+  background: rgba(14, 4, 26, 0.45);
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
-  border: 1px solid rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(59, 10, 107, 0.28);
 }
 
 .glass-pill {
-  background: rgba(255, 255, 255, 0.035);
+  background: rgba(59, 10, 107, 0.25);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
-  border: 1px solid rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(0, 229, 255, 0.25);
 }
 
-
-/* Subtle Apple specular glow */
-.apple-specular {
+/* Specular Highlights */
+.specular-sheen {
   position: relative;
 }
 
-.apple-specular::before {
+.specular-sheen::before {
   content: '';
   position: absolute;
   top: 0;
   left: 0;
   right: 0;
   height: 1px;
-  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.15) 30%, rgba(255, 255, 255, 0.25) 50%, rgba(255, 255, 255, 0.15) 70%, transparent);
+  background: linear-gradient(90deg, transparent, rgba(0, 229, 255, 0.3) 30%, rgba(255, 255, 255, 0.45) 50%, rgba(0, 229, 255, 0.3) 70%, transparent);
 }
 
 /* ========================================================================= */
-/* APPLE SPRING MOTION & MICRO-INTERACTIONS                                  */
+/* SPRING MOTION & MICRO-INTERACTIONS                                        */
 /* ========================================================================= */
 @keyframes iosFadeIn {
   from {
@@ -119,32 +140,16 @@
 }
 
 .skeleton-shimmer {
-  background: linear-gradient(90deg, rgba(255, 255, 255, 0.03) 25%, rgba(255, 255, 255, 0.08) 50%, rgba(255, 255, 255, 0.03) 75%);
+  background: linear-gradient(90deg, rgba(59, 10, 107, 0.15) 25%, rgba(0, 229, 255, 0.12) 50%, rgba(59, 10, 107, 0.15) 75%);
   background-size: 200% 100%;
   animation: shimmer 1.8s infinite linear;
-}
-
-.interactive-card {
-  transition: transform 0.24s cubic-bezier(0.16, 1, 0.3, 1), 
-              box-shadow 0.24s cubic-bezier(0.16, 1, 0.3, 1), 
-              border-color 0.24s cubic-bezier(0.16, 1, 0.3, 1),
-              background-color 0.24s cubic-bezier(0.16, 1, 0.3, 1);
-}
-
-.interactive-card:hover {
-  transform: translateY(-2px);
-  border-color: rgba(255, 255, 255, 0.15);
-  box-shadow: 0 16px 36px -12px rgba(0, 0, 0, 0.6);
-}
-
-.interactive-card:active {
-  transform: translateY(0px) scale(0.99);
 }
 
 .button-spring {
   transition: transform 0.18s cubic-bezier(0.34, 1.56, 0.64, 1),
               box-shadow 0.2s cubic-bezier(0.16, 1, 0.3, 1),
               background-color 0.2s cubic-bezier(0.16, 1, 0.3, 1),
+              border-color 0.2s cubic-bezier(0.16, 1, 0.3, 1),
               opacity 0.2s ease;
 }
 
@@ -157,9 +162,8 @@
 }
 
 /* ========================================================================= */
-/* APPLE-INSPIRED 3D DEPTH & PERSPECTIVE WORKSPACE UTILITIES                 */
+/* 3D DEPTH & PERSPECTIVE UTILITIES                                          */
 /* ========================================================================= */
-
 .perspective-1000 {
   perspective: 1000px;
 }
@@ -172,25 +176,23 @@
   transform-style: preserve-3d;
 }
 
-/* Layered 3D Glass Panel with multi-tier depth shadows & specular rims */
+/* Layered 3D Glass Panel */
 .glass-panel-3d {
-  background: rgba(18, 20, 29, 0.72);
+  background: rgba(8, 3, 16, 0.85);
   backdrop-filter: blur(28px);
   -webkit-backdrop-filter: blur(28px);
-  border: 1px solid rgba(255, 255, 255, 0.09);
+  border: 1px solid rgba(59, 10, 107, 0.45);
   box-shadow: 
-    0 4px 6px -1px rgba(0, 0, 0, 0.3),
-    0 18px 36px -12px rgba(0, 0, 0, 0.65),
-    0 32px 64px -20px rgba(0, 0, 0, 0.8),
-    inset 0 1px 1px 0 rgba(255, 255, 255, 0.15),
-    inset 0 -1px 1px 0 rgba(0, 0, 0, 0.4);
+    0 4px 6px -1px rgba(0, 0, 0, 0.4),
+    0 18px 36px -12px rgba(0, 0, 0, 0.8),
+    0 0 30px rgba(59, 10, 107, 0.2),
+    inset 0 1px 1px 0 rgba(0, 229, 255, 0.2);
   transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1), 
               box-shadow 0.35s cubic-bezier(0.16, 1, 0.3, 1), 
               border-color 0.35s cubic-bezier(0.16, 1, 0.3, 1);
   transform-style: preserve-3d;
 }
 
-/* Subtle 3D Card Hover Lift for dashboard cards & stats */
 .card-3d-subtle {
   transform-style: preserve-3d;
   transition: transform 0.28s cubic-bezier(0.16, 1, 0.3, 1), 
@@ -200,172 +202,68 @@
 }
 
 .card-3d-subtle:hover {
-  transform: translateY(-4px) translateZ(12px) rotateX(1.2deg);
-  border-color: rgba(255, 255, 255, 0.16);
+  transform: translateY(-4px) translateZ(10px) rotateX(1.2deg);
+  border-color: rgba(0, 229, 255, 0.45);
   box-shadow: 
-    0 12px 24px -8px rgba(0, 0, 0, 0.6),
-    0 24px 48px -12px rgba(0, 0, 0, 0.75),
-    0 0 24px 0 rgba(0, 113, 227, 0.08),
-    inset 0 1px 0 rgba(255, 255, 255, 0.14);
+    0 16px 32px -10px rgba(0, 0, 0, 0.8),
+    0 0 24px 0 rgba(0, 229, 255, 0.15),
+    inset 0 1px 0 rgba(0, 229, 255, 0.2);
 }
 
 .card-3d-subtle:active {
   transform: translateY(0px) translateZ(0px) scale(0.99);
 }
 
-/* Z-Index Depth Planes for elements nested inside preserve-3d parents */
-.depth-layer-xs {
-  transform: translateZ(6px);
-}
-
-.depth-layer-sm {
-  transform: translateZ(12px);
-}
-
-.depth-layer-md {
-  transform: translateZ(20px);
-}
-
-.depth-layer-lg {
-  transform: translateZ(32px);
-}
-
-/* Futuristic Ambient 3D Grid Plane */
-.ambient-grid-plane {
-  background-image: 
-    linear-gradient(to right, rgba(255, 255, 255, 0.025) 1px, transparent 1px),
-    linear-gradient(to bottom, rgba(255, 255, 255, 0.025) 1px, transparent 1px);
-  background-size: 40px 40px;
-  mask-image: radial-gradient(ellipse 60% 50% at 50% 35%, #000 30%, transparent 80%);
-  -webkit-mask-image: radial-gradient(ellipse 60% 50% at 50% 35%, #000 30%, transparent 80%);
-}
-
-/* Dynamic Glass Glare Overlay */
-.glass-glare {
-  pointer-events: none;
-  position: absolute;
-  inset: 0;
-  border-radius: inherit;
-  transition: opacity 0.3s ease;
-}
-
-/* Accessibility: Respect prefers-reduced-motion */
-@media (prefers-reduced-motion: reduce) {
-  .perspective-1000,
-  .perspective-1200,
-  .preserve-3d,
-  .card-3d-subtle,
-  .glass-panel-3d,
-  .depth-layer-xs,
-  .depth-layer-sm,
-  .depth-layer-md,
-  .depth-layer-lg {
-    perspective: none !important;
-    transform-style: flat !important;
-    transform: none !important;
-    transition: none !important;
-  }
-
-  .interactive-card:hover,
-  .button-spring:hover,
-  .button-spring:active {
-    transform: none !important;
-  }
-
-  .animate-ios-fade-in,
-  .animate-step-slide,
-  .skeleton-shimmer {
-    animation: none !important;
-    opacity: 1 !important;
-    transform: none !important;
-  }
-}
-
-/* ========================================================================= */
-/* PREMIUM POLISH & MICRO-DETAIL UTILITIES                                   */
-/* ========================================================================= */
-
-/* Hide scrollbar for horizontal mobile docks */
-.no-scrollbar::-webkit-scrollbar {
-  display: none;
-}
-.no-scrollbar {
-  -ms-overflow-style: none;
-  scrollbar-width: none;
-}
-
-/* Soft Volumetric Glows */
-.glow-blue {
-  box-shadow: 0 0 20px -3px rgba(0, 113, 227, 0.45);
-}
-
+/* Brand Glows */
 .glow-cyan {
-  box-shadow: 0 0 20px -3px rgba(6, 182, 212, 0.45);
+  box-shadow: 0 0 24px -2px rgba(0, 229, 255, 0.45);
 }
 
-.glow-emerald {
-  box-shadow: 0 0 20px -3px rgba(16, 185, 129, 0.45);
+.glow-cyan-sm {
+  box-shadow: 0 0 12px 0 rgba(0, 229, 255, 0.35);
 }
 
-.glow-purple {
-  box-shadow: 0 0 20px -3px rgba(168, 85, 247, 0.45);
+.glow-amethyst {
+  box-shadow: 0 0 28px -3px rgba(59, 10, 107, 0.65);
 }
 
-/* ReAct Pipeline Vertical Connector Line */
-.step-connector {
-  position: relative;
-}
-.step-connector::after {
-  content: '';
-  position: absolute;
-  top: 100%;
-  left: 20px;
-  width: 2px;
-  height: 12px;
-  background: linear-gradient(to bottom, rgba(99, 102, 241, 0.4), transparent);
+.glow-amethyst-sm {
+  box-shadow: 0 0 14px 0 rgba(59, 10, 107, 0.45);
 }
 
-/* AI Native App Utilities */
-.glow-indigo {
-  box-shadow: 0 0 25px -4px rgba(99, 102, 241, 0.45);
-}
-
-.glow-violet {
-  box-shadow: 0 0 25px -4px rgba(139, 92, 246, 0.45);
-}
-
+/* App Surfaces */
 .ai-composer-glass {
-  background: rgba(14, 16, 26, 0.78);
+  background: rgba(8, 3, 16, 0.92);
   backdrop-filter: blur(28px);
   -webkit-backdrop-filter: blur(28px);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(59, 10, 107, 0.4);
   box-shadow: 
-    0 16px 40px -10px rgba(0, 0, 0, 0.7),
-    0 0 0 1px rgba(255, 255, 255, 0.04),
-    inset 0 1px 1px 0 rgba(255, 255, 255, 0.15);
+    0 16px 40px -10px rgba(0, 0, 0, 0.85),
+    0 0 25px rgba(59, 10, 107, 0.25),
+    inset 0 1px 1px 0 rgba(0, 229, 255, 0.15);
 }
 
 .sidebar-glass {
-  background: rgba(10, 11, 19, 0.82);
+  background: rgba(5, 5, 5, 0.95);
   backdrop-filter: blur(24px);
   -webkit-backdrop-filter: blur(24px);
-  border-right: 1px solid rgba(255, 255, 255, 0.06);
+  border-right: 1px solid rgba(59, 10, 107, 0.35);
 }
 
 .context-drawer-glass {
-  background: rgba(11, 13, 22, 0.92);
+  background: rgba(7, 3, 14, 0.96);
   backdrop-filter: blur(32px);
   -webkit-backdrop-filter: blur(32px);
-  border-left: 1px solid rgba(255, 255, 255, 0.08);
-  box-shadow: -15px 0 50px rgba(0, 0, 0, 0.75);
+  border-left: 1px solid rgba(59, 10, 107, 0.4);
+  box-shadow: -20px 0 60px rgba(0, 0, 0, 0.9);
 }
 
-.aurora-bg {
-  background: radial-gradient(circle at 50% 15%, rgba(99, 102, 241, 0.12) 0%, rgba(139, 92, 246, 0.06) 35%, transparent 70%);
+.amethyst-ambient-aura {
+  background: radial-gradient(circle at 50% 18%, rgba(59, 10, 107, 0.32) 0%, rgba(14, 4, 26, 0.12) 40%, transparent 72%);
 }
 
 /* ========================================================================= */
-/* HERMES LIVE AI CHARACTER ANIMATIONS                                       */
+/* HERMES 3D LIVE AI CHARACTER ANIMATIONS                                    */
 /* ========================================================================= */
 
 @keyframes hermesFloat {
@@ -388,7 +286,6 @@
   }
 }
 
-/* Subtle Conversational Body Cadence During Speech */
 @keyframes hermesSpeechBody {
   0% {
     transform: translateY(0px) rotate(0deg);
@@ -410,7 +307,6 @@
   }
 }
 
-/* Eye Micro-Modulation During Speech */
 @keyframes hermesSpeechEyes {
   0%, 100% {
     transform: scaleY(1) scaleX(1);
@@ -426,7 +322,6 @@
   }
 }
 
-/* Fluid Acoustic Vocalizer Wave Modulation */
 @keyframes hermesVocalWavePrimary {
   0%, 100% {
     transform: scaleY(0.7) scaleX(0.95);
@@ -461,7 +356,6 @@
   }
 }
 
-/* Synchronized Acoustic Illumination Pulse */
 @keyframes hermesVocalGlow {
   0%, 100% {
     opacity: 0.35;
@@ -477,7 +371,6 @@
   }
 }
 
-/* Meditative Floating Sway in Thinking State */
 @keyframes hermesThinkingSway {
   0%, 100% {
     transform: translateY(0px) rotate(0deg);
@@ -586,9 +479,3 @@
     animation: none !important;
   }
 }
-
-
-
-
-
-
