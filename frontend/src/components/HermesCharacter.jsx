@@ -725,7 +725,7 @@ export default function HermesCharacter({
 
       {/* 5. Floating Status Badge (Jet Black × Royal Amethyst × Electric Cyan) */}
       {showStatusPill && (
-        <div className={`mt-2.5 px-3 py-1 rounded-full text-[11px] font-medium tracking-wide border transition-all duration-500 flex items-center space-x-1.5 shadow-sm ${theme.statusBadge}`}>
+        <div className={`mt-2.5 px-3 py-1 rounded-full text-[11px] font-medium tracking-wide border transition-all duration-300 flex items-center space-x-1.5 shadow-sm hover:border-white/25 hover:shadow-[0_0_15px_rgba(255,255,255,0.08)] ${theme.statusBadge}`}>
           <span className="w-1.5 h-1.5 rounded-full animate-ping" style={{ backgroundColor: theme.led }} />
           <span>{statusLabels[activeState]}</span>
         </div>

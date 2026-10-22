@@ -30,7 +30,9 @@ import {
   CheckCircle2,
   CircleDot,
   Volume2,
-  VolumeX
+  VolumeX,
+  Trash2,
+  Share2
 } from 'lucide-react';
 import HermesCharacter from './components/HermesCharacter';
 import TiltCard from './components/TiltCard';
@@ -122,7 +124,6 @@ export default function App() {
     
     window.speechSynthesis.speak(utterance);
   };
-
 
   // Smooth live execution stages when agent is running
   useEffect(() => {
@@ -296,28 +297,32 @@ export default function App() {
   // Cohesive Suggested Prompts for Empty State
   const suggestedPrompts = [
     {
-      title: "Database & Telemetry Analysis",
-      description: "Analyze system database statistics and verify real GPU status.",
+      category: "SYSTEM TELEMETRY",
+      title: "Hardware & CUDA Benchmark",
+      description: "Verify RTX 2050 CUDA 12.6 tensor acceleration, memory allocations, and core load.",
       prompt: "Analyze our database statistics and check GPU status.",
-      icon: Database
+      icon: Cpu
     },
     {
-      title: "API Skill Integration",
-      description: "Use the api-integrator skill to generate and format a REST endpoint schema.",
+      category: "API ORCHESTRATION",
+      title: "FastAPI Schema Integrator",
+      description: "Generate compliant OpenAPI endpoint contracts with input validations using the skill.",
       prompt: "Use api-integrator skill to format an endpoint",
       icon: Code2
     },
     {
-      title: "Hardware & Compute Check",
-      description: "Calculate 250 * 18.5 and check PyTorch CUDA tensor acceleration.",
-      prompt: "Calculate 250 * 18.5 and check system telemetry",
-      icon: Cpu
-    },
-    {
+      category: "AGENT PLAYBOOK",
       title: "Data Analyst Workflow",
-      description: "Inspect the data-analyst skill and execute an automated workflow.",
+      description: "Inspect discovered SKILL.md files, summarize dataset metrics, and log observations.",
       prompt: "Use data-analyst skill to summarize sample metrics",
       icon: Activity
+    },
+    {
+      category: "NEURAL HARNESS",
+      title: "Multi-Step ReAct Planning",
+      description: "Demonstrate thought-action-observation cycles across multiple tool calls.",
+      prompt: "Calculate 250 * 18.5 and check PyTorch compute speed",
+      icon: Zap
     }
   ];
 
@@ -342,128 +347,128 @@ export default function App() {
       <aside 
         className={`${
           sidebarOpen ? 'w-64 sm:w-72' : 'w-0'
-        } transition-all duration-300 ease-in-out shrink-0 h-full sidebar-glass flex flex-col justify-between overflow-hidden relative z-40`}
+        } transition-all duration-300 ease-in-out shrink-0 h-full sidebar-glass flex flex-col justify-between overflow-hidden relative z-40 border-r border-[#3B0A6B]/30`}
       >
         <div className="flex flex-col h-full p-3.5 space-y-4">
           
           {/* Logo & Product Brand */}
-          <div className="flex items-center justify-between px-2 pt-1.5 pb-2">
-            <div className="flex items-center space-x-3">
-              <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-[#3B0A6B] to-[#140326] border border-[#00E5FF]/40 flex items-center justify-center shadow-[0_0_20px_rgba(0,229,255,0.25)]">
+          <div className="flex items-center justify-between px-2 pt-1.5 pb-2 border-b border-[#3B0A6B]/25">
+            <div className="flex items-center space-x-2.5">
+              <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-[#3B0A6B] to-[#080310] border border-[#00E5FF]/40 flex items-center justify-center shadow-[0_0_15px_rgba(0,229,255,0.2)]">
                 <Bot className="w-4.5 h-4.5 text-[#00E5FF]" />
               </div>
               <div>
-                <span className="font-semibold text-sm text-[#F5F5FA] tracking-tight flex items-center space-x-1.5">
-                  <span>Hermes Agent</span>
-                  <span className="text-[10px] font-mono bg-[#3B0A6B]/40 text-[#00E5FF] border border-[#00E5FF]/30 px-1.5 py-0.2 rounded-full">
-                    v2.0
+                <span className="font-bold text-sm tracking-tight text-[#F5F5FA] flex items-center space-x-1.5">
+                  <span>Hermes</span>
+                  <span className="text-[10px] px-1.5 py-0.2 rounded-full bg-[#3B0A6B]/40 text-[#00E5FF] border border-[#00E5FF]/25 font-mono">
+                    2.0
                   </span>
                 </span>
-                <p className="text-[11px] text-[#B8B3C7]">Google Gemma ReAct</p>
+                <p className="text-[10px] text-[#858091] font-mono">Gemma ReAct Engine</p>
               </div>
             </div>
             
             <button 
               onClick={() => setSidebarOpen(false)}
-              className="sm:hidden text-[#B8B3C7] hover:text-[#00E5FF] p-1 rounded-lg hover:bg-[#3B0A6B]/20"
+              className="sm:hidden text-[#858091] hover:text-[#00E5FF] p-1 rounded-lg hover:bg-[#3B0A6B]/25 transition-colors"
             >
               <X className="w-4 h-4" />
             </button>
           </div>
 
-          {/* "+ New Agent Session" Button */}
+          {/* "+ New Agent Session" Button with white hover sheen */}
           <button
             onClick={handleNewChat}
-            className="w-full button-spring flex items-center justify-between px-3.5 py-2.5 rounded-xl bg-[#3B0A6B]/20 hover:bg-[#3B0A6B]/45 border border-[#3B0A6B]/50 hover:border-[#00E5FF]/50 text-xs font-medium text-[#F5F5FA] hover:text-white shadow-sm transition-all group"
+            className="w-full btn-premium sheen-travel flex items-center justify-between px-3.5 py-2.5 rounded-xl bg-gradient-to-r from-[#3B0A6B]/40 via-[#220642]/30 to-[#080310] border border-[#3B0A6B]/50 hover:border-white/30 text-xs font-semibold text-[#F5F5FA] hover:text-white shadow-sm transition-all group"
           >
             <div className="flex items-center space-x-2">
               <Plus className="w-4 h-4 text-[#00E5FF] transition-transform duration-200 group-hover:rotate-90" />
               <span>New Agent Session</span>
             </div>
-            <span className="text-[10px] text-[#858091] font-mono">⌘K</span>
+            <span className="text-[10px] text-[#858091] font-mono group-hover:text-[#00E5FF] transition-colors">⌘K</span>
           </button>
 
-          {/* Recent Sessions List */}
+          {/* Sessions & Navigation */}
           <div className="flex-1 overflow-y-auto no-scrollbar space-y-1 pt-1">
-            <span className="text-[10px] font-semibold uppercase tracking-wider text-[#858091] px-2 block mb-2">
+            <span className="text-[10px] font-semibold uppercase tracking-wider text-[#858091] px-2 block mb-2 font-mono">
               Conversations
             </span>
             
             <button
               onClick={() => {}}
-              className="w-full text-left px-2.5 py-2 rounded-xl text-xs bg-[#3B0A6B]/35 text-[#00E5FF] border border-[#00E5FF]/35 flex items-center space-x-2.5 truncate font-medium shadow-[0_0_15px_rgba(59,10,107,0.3)]"
+              className="w-full text-left px-2.5 py-2 rounded-xl text-xs bg-[#3B0A6B]/40 text-[#F5F5FA] border border-[#00E5FF]/50 flex items-center space-x-2.5 truncate font-medium shadow-[0_0_15px_rgba(0,229,255,0.15)] relative overflow-hidden group"
             >
-              <MessageSquare className="w-3.5 h-3.5 text-[#00E5FF] shrink-0" />
-              <span className="truncate">
-                {messages.length > 0 ? messages[0].content.slice(0, 28) + '...' : 'Current Agent Session'}
+              <div className="w-1.5 h-1.5 rounded-full bg-[#00E5FF] shadow-[0_0_6px_#00E5FF] shrink-0" />
+              <span className="truncate flex-1">
+                {messages.length > 0 ? messages[0].content.slice(0, 26) + '...' : 'Current Agent Session'}
               </span>
             </button>
 
             <button
               onClick={() => handleSendMessage("Analyze our database statistics and check GPU status.")}
-              className="w-full text-left px-2.5 py-2 rounded-xl text-xs text-[#B8B3C7] hover:text-[#F5F5FA] hover:bg-[#3B0A6B]/20 flex items-center space-x-2.5 truncate transition-colors"
+              className="w-full text-left px-2.5 py-2 rounded-xl text-xs text-[#B8B3C7] hover:text-[#F5F5FA] hover:bg-white/[0.04] border border-transparent hover:border-white/10 flex items-center space-x-2.5 truncate transition-all group"
             >
-              <Activity className="w-3.5 h-3.5 text-[#858091] shrink-0" />
+              <Activity className="w-3.5 h-3.5 text-[#858091] group-hover:text-[#00E5FF] shrink-0 transition-colors" />
               <span className="truncate">Database & Telemetry Audit</span>
             </button>
 
             <button
               onClick={() => handleSendMessage("Use api-integrator skill to format an endpoint")}
-              className="w-full text-left px-2.5 py-2 rounded-xl text-xs text-[#B8B3C7] hover:text-[#F5F5FA] hover:bg-[#3B0A6B]/20 flex items-center space-x-2.5 truncate transition-colors"
+              className="w-full text-left px-2.5 py-2 rounded-xl text-xs text-[#B8B3C7] hover:text-[#F5F5FA] hover:bg-white/[0.04] border border-transparent hover:border-white/10 flex items-center space-x-2.5 truncate transition-all group"
             >
-              <Code2 className="w-3.5 h-3.5 text-[#858091] shrink-0" />
+              <Code2 className="w-3.5 h-3.5 text-[#858091] group-hover:text-[#00E5FF] shrink-0 transition-colors" />
               <span className="truncate">API Schema Generator</span>
             </button>
 
             {/* Context Panel Shortcut Links */}
             <div className="pt-4 space-y-1">
-              <span className="text-[10px] font-semibold uppercase tracking-wider text-[#858091] px-2 block mb-2">
+              <span className="text-[10px] font-semibold uppercase tracking-wider text-[#858091] px-2 block mb-2 font-mono">
                 Workspace Tools
               </span>
 
               <button
                 onClick={() => { setContextTab('skills'); setContextPanelOpen(true); }}
-                className="w-full text-left px-2.5 py-2 rounded-xl text-xs text-[#B8B3C7] hover:text-[#00E5FF] hover:bg-[#3B0A6B]/20 flex items-center justify-between transition-colors group"
+                className="w-full text-left px-2.5 py-2 rounded-xl text-xs text-[#B8B3C7] hover:text-[#F5F5FA] hover:bg-white/[0.04] border border-transparent hover:border-white/10 flex items-center justify-between transition-all group"
               >
                 <div className="flex items-center space-x-2.5">
-                  <FileCode className="w-3.5 h-3.5 text-[#00E5FF] group-hover:text-[#00E5FF]" />
+                  <FileCode className="w-3.5 h-3.5 text-[#00E5FF] group-hover:scale-110 transition-transform" />
                   <span>Agent Skills Hub</span>
                 </div>
-                <span className="text-[10px] font-mono px-1.5 py-0.5 rounded-full bg-[#3B0A6B]/30 text-[#00E5FF] border border-[#3B0A6B]/40">
+                <span className="text-[10px] font-mono px-1.5 py-0.5 rounded-full bg-[#3B0A6B]/30 text-[#00E5FF] border border-[#3B0A6B]/40 group-hover:border-[#00E5FF]/40">
                   {skills.length}
                 </span>
               </button>
 
               <button
                 onClick={() => { setContextTab('device'); setContextPanelOpen(true); }}
-                className="w-full text-left px-2.5 py-2 rounded-xl text-xs text-[#B8B3C7] hover:text-[#00E5FF] hover:bg-[#3B0A6B]/20 flex items-center justify-between transition-colors group"
+                className="w-full text-left px-2.5 py-2 rounded-xl text-xs text-[#B8B3C7] hover:text-[#F5F5FA] hover:bg-white/[0.04] border border-transparent hover:border-white/10 flex items-center justify-between transition-all group"
               >
                 <div className="flex items-center space-x-2.5">
-                  <Cpu className="w-3.5 h-3.5 text-[#00E5FF] group-hover:text-[#00E5FF]" />
-                  <span>Device & Compute</span>
+                  <Cpu className="w-3.5 h-3.5 text-[#00E5FF] group-hover:scale-110 transition-transform" />
+                  <span>Device Telemetry</span>
                 </div>
                 <span className="w-1.5 h-1.5 rounded-full bg-[#00E5FF] shadow-[0_0_6px_#00E5FF]" />
               </button>
 
               <button
                 onClick={() => { setContextTab('project'); setContextPanelOpen(true); }}
-                className="w-full text-left px-2.5 py-2 rounded-xl text-xs text-[#B8B3C7] hover:text-[#00E5FF] hover:bg-[#3B0A6B]/20 flex items-center space-x-2.5 transition-colors group"
+                className="w-full text-left px-2.5 py-2 rounded-xl text-xs text-[#B8B3C7] hover:text-[#F5F5FA] hover:bg-white/[0.04] border border-transparent hover:border-white/10 flex items-center space-x-2.5 transition-all group"
               >
-                <Users className="w-3.5 h-3.5 text-[#00E5FF] group-hover:text-[#00E5FF]" />
+                <Users className="w-3.5 h-3.5 text-[#00E5FF] group-hover:scale-110 transition-transform" />
                 <span>Team & Pods</span>
               </button>
             </div>
           </div>
 
-          {/* User Profile Card at Bottom */}
-          <div className="p-2.5 rounded-2xl bg-[#080310] border border-[#3B0A6B]/40 flex items-center justify-between">
+          {/* User Profile Card at Bottom with White Hover Highlight */}
+          <div className="p-2.5 rounded-2xl bg-[#080310] border border-[#3B0A6B]/40 hover:border-white/20 transition-all flex items-center justify-between shadow-sm group">
             <div className="flex items-center space-x-2.5">
-              <div className="w-7 h-7 rounded-xl bg-gradient-to-tr from-[#3B0A6B] to-[#120324] border border-[#00E5FF]/30 flex items-center justify-center font-bold text-xs text-[#FFFFFF] shadow-sm">
+              <div className="w-7 h-7 rounded-xl bg-gradient-to-tr from-[#3B0A6B] to-[#120324] border border-[#00E5FF]/30 flex items-center justify-center font-bold text-xs text-[#FFFFFF] shadow-sm group-hover:border-[#00E5FF]">
                 V
               </div>
               <div className="overflow-hidden">
                 <span className="text-xs font-medium text-[#F5F5FA] block truncate">@vedxnt-b</span>
-                <span className="text-[10px] text-[#B8B3C7] block truncate">Pod 1 • Frontend Lead</span>
+                <span className="text-[10px] text-[#858091] block truncate font-mono">Pod 1 • Frontend Lead</span>
               </div>
             </div>
             <span className="w-2 h-2 rounded-full bg-[#00E5FF] shadow-[0_0_8px_#00E5FF] shrink-0" title="System Online" />
@@ -475,67 +480,81 @@ export default function App() {
       {/* ==================================================================== */}
       {/* 2. MAIN CONVERSATIONAL CANVAS (The Visual Center)                     */}
       {/* ==================================================================== */}
-      <div className="flex-1 flex flex-col h-full min-w-0 relative overflow-hidden bg-[#06070a]">
+      <div className="flex-1 flex flex-col h-full min-w-0 relative overflow-hidden bg-[#050505]">
         
         {/* Royal Amethyst Ambient Illumination with 3D Parallax */}
         <div 
-          style={{ transform: `translate(-50%, ${scrollOffset * 0.15}px)` }}
-          className="absolute top-0 left-1/2 w-[700px] h-[320px] amethyst-ambient-aura pointer-events-none z-0 will-change-transform" 
+          style={{ transform: `translate(-50%, ${scrollOffset * 0.12}px)` }}
+          className="absolute top-0 left-1/2 w-[760px] h-[360px] amethyst-ambient-aura pointer-events-none z-0 will-change-transform" 
         />
 
-        {/* Top Minimal Navbar */}
-        <header className="h-14 border-b border-[#3B0A6B]/30 bg-[#050505]/90 backdrop-blur-xl flex items-center justify-between px-4 sm:px-6 relative z-10 shrink-0">
+        {/* Top Minimal Navbar with Specular Line */}
+        <header className="h-14 border-b border-[#3B0A6B]/30 bg-[#050505]/90 backdrop-blur-xl flex items-center justify-between px-4 sm:px-6 relative z-10 shrink-0 specular-line">
           <div className="flex items-center space-x-3">
             <button
               onClick={() => setSidebarOpen(!sidebarOpen)}
-              className="button-spring text-[#B8B3C7] hover:text-[#00E5FF] p-1.5 rounded-xl hover:bg-[#3B0A6B]/20"
+              className="btn-premium text-[#B8B3C7] hover:text-[#00E5FF] p-1.5 rounded-xl hover:bg-white/[0.04] border border-transparent hover:border-white/10"
               title={sidebarOpen ? "Collapse Sidebar" : "Expand Sidebar"}
             >
               <Menu className="w-4 h-4" />
             </button>
 
-            {/* Hermes Live AI Identity Pill */}
-            <div className="flex items-center space-x-2 px-2.5 py-1 rounded-full bg-[#080310] border border-[#3B0A6B]/45 shadow-[0_0_15px_rgba(59,10,107,0.3)]">
+            {/* Hermes Dynamic Companion Badge in Top Bar */}
+            <div className="flex items-center space-x-2 px-3 py-1 rounded-full bg-[#080310] border border-[#3B0A6B]/45 hover:border-white/20 transition-all shadow-[0_0_15px_rgba(59,10,107,0.3)]">
               <HermesCharacter size="sm" state={getHermesState()} interactive={false} />
               <div className="flex flex-col text-left">
-                <span className="text-[11px] font-semibold text-[#F5F5FA] tracking-tight leading-none">
-                  Hermes
-                </span>
-                <span className="text-[9px] font-mono text-[#00E5FF] capitalize leading-none pt-0.5">
+                <div className="flex items-center space-x-1.5">
+                  <span className="text-[11px] font-semibold text-[#F5F5FA] tracking-tight leading-none">
+                    Hermes
+                  </span>
+                  <span className="w-1.5 h-1.5 rounded-full bg-[#00E5FF] animate-status-breathe" />
+                </div>
+                <span className="text-[9px] font-mono text-[#00E5FF] uppercase leading-none pt-0.5 tracking-wider">
                   {getHermesState()}
                 </span>
               </div>
             </div>
 
             {/* Model Identity Pill */}
-            <div className="hidden md:flex items-center space-x-2 px-3 py-1 rounded-full bg-[#3B0A6B]/25 border border-[#3B0A6B]/45 shadow-sm">
-              <div className="w-1.5 h-1.5 rounded-full bg-[#00E5FF] shadow-[0_0_6px_#00E5FF]" />
+            <div className="hidden md:flex items-center space-x-2 px-3 py-1 rounded-full bg-[#3B0A6B]/20 border border-[#3B0A6B]/45 shadow-sm">
               <span className="text-xs font-medium text-[#F5F5FA] tracking-tight">
                 Google Gemma 2
               </span>
-              <span className="text-[10px] font-mono text-[#00E5FF] bg-[#3B0A6B]/40 border border-[#00E5FF]/20 px-1.5 py-0.2 rounded-full">
-                Hermes ReAct
+              <span className="text-[9px] font-mono text-[#00E5FF] bg-[#3B0A6B]/40 border border-[#00E5FF]/20 px-1.5 py-0.2 rounded-full">
+                ReAct Agent
               </span>
             </div>
           </div>
 
           {/* Right Header Controls */}
           <div className="flex items-center space-x-2">
-            {/* Cyan Status Pill */}
+            {/* CUDA Status Pill */}
             {health?.cuda_available && (
-              <span className="hidden sm:inline-flex items-center space-x-1.5 bg-[#00E5FF]/10 text-[#00E5FF] border border-[#00E5FF]/30 px-2.5 py-0.5 rounded-full text-[10px] font-mono">
-                <span className="w-1 h-1 rounded-full bg-[#00E5FF] shadow-[0_0_6px_#00E5FF]" />
+              <span className="hidden sm:inline-flex items-center space-x-1.5 bg-[#3B0A6B]/25 text-[#00E5FF] border border-[#00E5FF]/30 px-2.5 py-1 rounded-full text-[10px] font-mono shadow-[0_0_12px_rgba(0,229,255,0.15)]">
+                <span className="w-1.5 h-1.5 rounded-full bg-[#00E5FF] shadow-[0_0_6px_#00E5FF]" />
                 <span>RTX 2050 CUDA 12.6</span>
               </span>
+            )}
+
+            {/* New Chat Clear Shortcut if in conversation */}
+            {messages.length > 0 && (
+              <button
+                onClick={handleNewChat}
+                className="btn-premium px-2.5 py-1.5 rounded-xl text-xs text-[#858091] hover:text-[#F5F5FA] hover:bg-white/[0.04] border border-transparent hover:border-white/10 flex items-center space-x-1.5"
+                title="Reset conversation"
+              >
+                <Trash2 className="w-3.5 h-3.5" />
+                <span className="hidden sm:inline">Reset</span>
+              </button>
             )}
 
             {/* Context Workspace Panel Toggle Button */}
             <button
               onClick={() => setContextPanelOpen(!contextPanelOpen)}
-              className={`button-spring px-3 py-1.5 rounded-xl text-xs font-medium flex items-center space-x-2 border transition-all ${
+              className={`btn-premium sheen-travel px-3 py-1.5 rounded-xl text-xs font-medium flex items-center space-x-2 border transition-all ${
                 contextPanelOpen
-                  ? 'bg-[#3B0A6B] text-[#FFFFFF] border-[#00E5FF]/60 shadow-[0_0_20px_rgba(0,229,255,0.35)]'
-                  : 'bg-[#080310] text-[#B8B3C7] hover:text-[#00E5FF] hover:bg-[#3B0A6B]/20 border-[#3B0A6B]/35'
+                  ? 'bg-[#3B0A6B] text-[#FFFFFF] border-[#00E5FF]/60 shadow-[0_0_20px_rgba(0,229,255,0.3)]'
+                  : 'bg-[#080310] text-[#B8B3C7] hover:text-[#00E5FF] hover:border-white/20 border-[#3B0A6B]/35'
               }`}
               title="Toggle Workspace Inspector"
             >
@@ -550,13 +569,13 @@ export default function App() {
         {/* ================================================================== */}
         <div 
           onScroll={handleFeedScroll}
-          className="flex-1 overflow-y-auto px-4 sm:px-6 py-6 space-y-6 relative z-10 scroll-smooth"
+          className="flex-1 overflow-y-auto px-4 sm:px-6 py-6 space-y-6 relative z-10 scroll-smooth custom-scrollbar"
         >
-          <div className="max-w-3xl mx-auto w-full">
+          <div className="max-w-4xl mx-auto w-full">
 
             {/* A. POLISHED EMPTY STATE: Hermes AI Identity & Suggested Tasks */}
             {messages.length === 0 && (
-              <div className="animate-ios-fade-in flex flex-col items-center justify-center pt-10 pb-14 text-center space-y-7">
+              <div className="animate-slide-up flex flex-col items-center justify-center pt-8 pb-12 text-center space-y-7">
                 
                 {/* THE 3D LIVING HERMES AI CHARACTER (Centerpiece) */}
                 <div className="flex flex-col items-center justify-center pt-2">
@@ -570,12 +589,16 @@ export default function App() {
                 </div>
 
                 {/* Hero Greeting Typography */}
-                <div className="space-y-2.5 max-w-lg">
-                  <h2 className="text-2xl sm:text-3xl font-semibold text-[#F5F5FA] tracking-tight">
-                    What can Hermes do for you today?
+                <div className="space-y-2 max-w-xl">
+                  <div className="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-[#3B0A6B]/25 border border-[#3B0A6B]/40 text-[#00E5FF] text-[10px] font-mono tracking-widest uppercase mb-1">
+                    <Sparkles className="w-3 h-3 text-[#00E5FF]" />
+                    <span>Neural Agent Workspace</span>
+                  </div>
+                  <h2 className="text-2xl sm:text-3xl font-bold text-[#F5F5FA] tracking-tight">
+                    What can Hermes orchestrate for you?
                   </h2>
                   <p className="text-xs sm:text-sm text-[#B8B3C7] leading-relaxed font-normal">
-                    Autonomous agent harness powered by Google Gemma. Ready to discover skills, invoke tools, and execute workflows.
+                    Autonomous agent harness powered by Google Gemma open weights. Ready to explore playbooks, invoke dynamic tools, and evaluate observations.
                   </p>
                 </div>
 
@@ -587,16 +610,25 @@ export default function App() {
                       <TiltCard
                         key={idx}
                         onClick={() => handleSendMessage(card.prompt)}
-                        className="p-4 rounded-2xl bg-[#080310] hover:bg-[#120324] border border-[#3B0A6B]/40 hover:border-[#00E5FF]/60 cursor-pointer space-y-2 transition-colors duration-200 shadow-sm group"
+                        className="p-4 rounded-2xl bg-[#080310] border border-[#3B0A6B]/40 cursor-pointer space-y-2.5 transition-colors duration-200"
                       >
                         <div className="flex items-center justify-between">
-                          <div className="w-7 h-7 rounded-xl bg-[#3B0A6B]/35 text-[#00E5FF] flex items-center justify-center transition-transform duration-200 group-hover:scale-110">
+                          <span className="text-[9px] font-mono uppercase tracking-wider text-[#00E5FF] bg-[#3B0A6B]/30 px-2 py-0.5 rounded-md border border-[#3B0A6B]/40">
+                            {card.category}
+                          </span>
+                          <div className="w-6 h-6 rounded-lg bg-[#3B0A6B]/35 text-[#00E5FF] flex items-center justify-center transition-transform duration-200 group-hover:scale-110">
                             <IconComponent className="w-3.5 h-3.5" />
                           </div>
-                          <ChevronRight className="w-3.5 h-3.5 text-[#858091] transition-transform duration-200 group-hover:translate-x-1 group-hover:text-[#00E5FF]" />
                         </div>
-                        <h3 className="text-xs font-semibold text-[#F5F5FA] tracking-tight">{card.title}</h3>
-                        <p className="text-[11px] text-[#B8B3C7] leading-relaxed line-clamp-2">{card.description}</p>
+                        <div>
+                          <h3 className="text-xs font-semibold text-[#F5F5FA] tracking-tight group-hover:text-white flex items-center justify-between">
+                            <span>{card.title}</span>
+                            <ChevronRight className="w-3 h-3 text-[#858091] group-hover:text-[#00E5FF] group-hover:translate-x-0.5 transition-transform" />
+                          </h3>
+                          <p className="text-[11px] text-[#B8B3C7] leading-relaxed line-clamp-2 pt-1 font-normal">
+                            {card.description}
+                          </p>
+                        </div>
                       </TiltCard>
                     );
                   })}
@@ -611,7 +643,7 @@ export default function App() {
                 {messages.map((msg) => (
                   <div 
                     key={msg.id} 
-                    className={`animate-ios-fade-in flex flex-col ${msg.role === 'user' ? 'items-end' : 'items-start'} space-y-2`}
+                    className={`animate-slide-up flex flex-col ${msg.role === 'user' ? 'items-end' : 'items-start'} space-y-2`}
                   >
                     
                     {/* Role Header */}
@@ -638,20 +670,20 @@ export default function App() {
                       )}
                     </div>
 
-                    {/* User Prompt Message Bubble (Royal Amethyst Surface) */}
+                    {/* User Prompt Message Bubble (Royal Amethyst Surface with white hover sheen) */}
                     {msg.role === 'user' && (
-                      <div className="max-w-xl rounded-2xl bg-[#3B0A6B]/30 border border-[#3B0A6B]/50 px-4.5 py-3 text-sm text-[#F5F5FA] leading-relaxed shadow-[0_4px_24px_rgba(59,10,107,0.3)]">
+                      <div className="max-w-xl rounded-2xl bg-[#3B0A6B]/25 border border-[#3B0A6B]/45 hover:border-white/20 transition-all px-4.5 py-3 text-sm text-[#F5F5FA] leading-relaxed shadow-[0_4px_24px_rgba(0,0,0,0.6)]">
                         {msg.content}
                       </div>
                     )}
 
                     {/* Hermes Assistant Response Area */}
                     {msg.role === 'assistant' && (
-                      <div className="w-full max-w-3xl space-y-3.5">
+                      <div className="w-full max-w-4xl space-y-3.5">
                         
-                        {/* Elegant Expandable Activity Element */}
+                        {/* Elegant Expandable Activity Stepper Element */}
                         {msg.steps && msg.steps.length > 0 && (
-                          <div className="rounded-2xl bg-[#080310] border border-[#3B0A6B]/40 overflow-hidden transition-all duration-200">
+                          <div className="rounded-2xl bg-[#080310] border border-[#3B0A6B]/40 hover:border-white/15 overflow-hidden transition-all duration-200 shadow-sm">
                             
                             {/* Summary Activity Pill */}
                             <button
@@ -663,7 +695,7 @@ export default function App() {
                                 <span className="font-medium text-[#F5F5FA]">
                                   Agent completed {msg.steps.length} {msg.steps.length === 1 ? 'activity' : 'activities'}
                                 </span>
-                                <span className="hidden sm:inline text-[#858091] text-[11px]">
+                                <span className="hidden sm:inline text-[#858091] text-[11px] font-mono">
                                   ({msg.steps.map(s => s.action ? s.action : 'reasoning').join(' ➔ ')})
                                 </span>
                               </div>
@@ -682,9 +714,9 @@ export default function App() {
 
                             {/* Expandable Activity Details */}
                             {expandedTraceId === msg.id && (
-                              <div className="p-4 border-t border-[#3B0A6B]/30 space-y-3 animate-ios-fade-in bg-[#050505] text-xs">
+                              <div className="p-4 border-t border-[#3B0A6B]/30 space-y-3 animate-slide-up bg-[#050505] text-xs">
                                 {msg.steps.map((s, sIdx) => (
-                                  <div key={sIdx} className="space-y-2 p-3 rounded-xl bg-[#080310] border border-[#3B0A6B]/35">
+                                  <div key={sIdx} className="space-y-2 p-3 rounded-xl bg-[#080310] border border-[#3B0A6B]/35 hover:border-white/15 transition-all">
                                     {/* Activity Header */}
                                     <div className="flex items-center justify-between">
                                       <div className="flex items-center space-x-2">
@@ -713,7 +745,7 @@ export default function App() {
 
                                     {/* Observation Output (if any) */}
                                     {s.observation && (
-                                      <div className="ml-7 p-2.5 bg-[#050505] rounded-lg border border-[#00E5FF]/30 text-[#00E5FF] text-[11px] font-mono whitespace-pre-wrap leading-relaxed max-h-40 overflow-y-auto">
+                                      <div className="ml-7 p-2.5 bg-[#050505] rounded-lg border border-[#00E5FF]/30 text-[#00E5FF] text-[11px] font-mono whitespace-pre-wrap leading-relaxed max-h-40 overflow-y-auto custom-scrollbar">
                                         <span className="text-[#858091] block text-[9px] uppercase font-bold tracking-wider mb-0.5">Observation:</span>
                                         {s.observation}
                                       </div>
@@ -731,20 +763,20 @@ export default function App() {
                             {msg.content}
                           </p>
 
-                          {/* Assistant Footer Action Toolbar */}
-                          <div className="flex items-center justify-between pt-2 text-xs">
+                          {/* Assistant Footer Action Toolbar with White Hover Highlights */}
+                          <div className="flex items-center justify-between pt-2 text-xs border-t border-[#3B0A6B]/20">
                             <span className="text-[10px] text-[#858091] font-mono">
-                              Google Gemma 2 • Hermes Harness
+                              Google Gemma 2 • Hermes ReAct Harness
                             </span>
                             
                             <div className="flex items-center space-x-1.5">
                               {/* Voice Read Aloud Toggle */}
                               <button
                                 onClick={() => handleSpeakMessage(msg.id, msg.content)}
-                                className={`button-spring px-2 py-1 rounded-lg border flex items-center space-x-1 text-[11px] transition-colors ${
+                                className={`btn-premium px-2.5 py-1 rounded-lg border flex items-center space-x-1 text-[11px] transition-all ${
                                   speakingMessageId === msg.id && isSpeaking
-                                    ? 'bg-[#00E5FF]/20 text-[#00E5FF] border-[#00E5FF]/50 shadow-[0_0_15px_rgba(0,229,255,0.3)]'
-                                    : 'bg-[#3B0A6B]/20 hover:bg-[#3B0A6B]/40 text-[#B8B3C7] hover:text-[#00E5FF] border-[#3B0A6B]/35'
+                                    ? 'bg-[#00E5FF]/20 text-[#00E5FF] border-[#00E5FF]/60 shadow-[0_0_15px_rgba(0,229,255,0.3)]'
+                                    : 'bg-[#080310] hover:bg-white/[0.05] text-[#B8B3C7] hover:text-[#00E5FF] border-[#3B0A6B]/35 hover:border-white/20'
                                 }`}
                                 title={speakingMessageId === msg.id && isSpeaking ? "Stop Voice" : "Hear Hermes Speak"}
                               >
@@ -763,7 +795,7 @@ export default function App() {
 
                               <button
                                 onClick={() => handleCopy(msg.id, msg.content)}
-                                className="button-spring px-2.5 py-1 rounded-lg bg-[#3B0A6B]/20 hover:bg-[#3B0A6B]/40 text-[#B8B3C7] hover:text-[#00E5FF] border border-[#3B0A6B]/35 flex items-center space-x-1.5 text-[11px]"
+                                className="btn-premium px-2.5 py-1 rounded-lg bg-[#080310] hover:bg-white/[0.05] text-[#B8B3C7] hover:text-[#00E5FF] border border-[#3B0A6B]/35 hover:border-white/20 flex items-center space-x-1.5 text-[11px]"
                                 title="Copy Response"
                               >
                                 {copiedId === msg.id ? (
@@ -781,7 +813,7 @@ export default function App() {
 
                               <button
                                 onClick={() => handleSendMessage(messages[messages.length - 2]?.content || "Retry")}
-                                className="button-spring p-1.5 rounded-lg bg-[#3B0A6B]/20 hover:bg-[#3B0A6B]/40 text-[#B8B3C7] hover:text-[#00E5FF] border border-[#3B0A6B]/35"
+                                className="btn-premium p-1.5 rounded-lg bg-[#080310] hover:bg-white/[0.05] text-[#B8B3C7] hover:text-[#00E5FF] border border-[#3B0A6B]/35 hover:border-white/20"
                                 title="Regenerate"
                               >
                                 <RotateCcw className="w-3 h-3" />
@@ -798,7 +830,7 @@ export default function App() {
 
                 {/* VISUAL LIVE AGENT WORKFLOW IN PROGRESS */}
                 {runningAgent && (
-                  <div className="animate-ios-fade-in flex items-start space-x-4 max-w-xl pt-2">
+                  <div className="animate-slide-up flex items-start space-x-4 max-w-2xl pt-2">
                     {/* Live Reactive Hermes Character (MD size) */}
                     <div className="shrink-0 -mt-1">
                       <HermesCharacter
@@ -809,14 +841,14 @@ export default function App() {
                     </div>
                     
                     {/* Progressive Agent Activity Stepper */}
-                    <div className="p-4 rounded-2xl bg-[#080310] border border-[#3B0A6B]/45 shadow-[0_0_30px_rgba(59,10,107,0.35)] space-y-3 flex-1 text-xs">
+                    <div className="p-4 rounded-2xl bg-[#080310] border border-[#3B0A6B]/45 shadow-[0_0_30px_rgba(59,10,107,0.35)] space-y-3 flex-1 text-xs card-interactive">
                       <div className="flex items-center space-x-2 text-[#00E5FF] font-medium">
                         <Sparkles className="w-3.5 h-3.5 animate-spin text-[#00E5FF]" />
                         <span>Hermes is executing agent workflow...</span>
                       </div>
 
                       {/* Live Workflow Steps Visualizer */}
-                      <div className="space-y-2 pt-1">
+                      <div className="space-y-2 pt-1 font-sans">
                         <div className={`flex items-center space-x-2.5 transition-opacity ${liveExecutionStage >= 1 ? 'opacity-100 text-[#F5F5FA]' : 'opacity-40 text-[#858091]'}`}>
                           {liveExecutionStage > 1 ? (
                             <CheckCircle2 className="w-3.5 h-3.5 text-[#00E5FF] shrink-0" />
@@ -870,10 +902,10 @@ export default function App() {
         </div>
 
         {/* ================================================================== */}
-        {/* 3. FLOATING COMPOSER                                               */}
+        {/* 3. FLOATING COMPOSER DOCK (Tactile White Highlights & Cyan CTA)     */}
         {/* ================================================================== */}
-        <div className="relative z-20 max-w-3xl mx-auto w-full px-4 pb-4">
-          <div className="ai-composer-glass rounded-3xl p-3 sm:p-3.5 shadow-2xl transition-all duration-200 focus-within:border-[#00E5FF] focus-within:ring-2 focus-within:ring-[#00E5FF]/20">
+        <div className="relative z-20 max-w-4xl mx-auto w-full px-4 pb-4">
+          <div className="ai-composer-glass rounded-3xl p-3 sm:p-3.5 shadow-2xl">
             
             {/* Multiline Prompt Textarea */}
             <textarea
@@ -896,7 +928,7 @@ export default function App() {
                 <button
                   type="button"
                   onClick={() => { setContextTab('skills'); setContextPanelOpen(true); }}
-                  className="button-spring px-2.5 py-1 rounded-full bg-[#3B0A6B]/25 hover:bg-[#3B0A6B]/45 border border-[#3B0A6B]/40 text-[#00E5FF] hover:border-[#00E5FF]/50 flex items-center space-x-1.5 text-[11px]"
+                  className="btn-premium px-2.5 py-1 rounded-full bg-[#3B0A6B]/25 hover:bg-[#3B0A6B]/45 border border-[#3B0A6B]/40 text-[#00E5FF] hover:border-white/20 flex items-center space-x-1.5 text-[11px]"
                 >
                   <Wrench className="w-3 h-3 text-[#00E5FF]" />
                   <span>Skills ({skills.length})</span>
@@ -920,7 +952,7 @@ export default function App() {
                 <button
                   onClick={() => handleSendMessage()}
                   disabled={runningAgent || !promptInput.trim()}
-                  className="button-spring w-9 h-9 rounded-2xl bg-[#00E5FF] hover:bg-[#33ebff] text-[#050505] font-bold flex items-center justify-center shadow-[0_0_24px_rgba(0,229,255,0.5)] disabled:opacity-30 disabled:cursor-not-allowed disabled:shadow-none"
+                  className="btn-premium sheen-travel w-9 h-9 rounded-2xl bg-[#00E5FF] hover:bg-[#33ebff] text-[#050505] font-bold flex items-center justify-center shadow-[0_0_24px_rgba(0,229,255,0.5)] disabled:opacity-30 disabled:cursor-not-allowed disabled:shadow-none"
                   title="Send message (Enter)"
                 >
                   {runningAgent ? (
@@ -948,7 +980,7 @@ export default function App() {
       <div 
         className={`${
           contextPanelOpen ? 'w-full sm:w-96' : 'w-0'
-        } transition-all duration-300 ease-in-out shrink-0 h-full bg-[#050505]/95 backdrop-blur-2xl border-l border-[#3B0A6B]/30 flex flex-col justify-between overflow-hidden relative z-40`}
+        } transition-all duration-300 ease-in-out shrink-0 h-full context-drawer-glass flex flex-col justify-between overflow-hidden relative z-40 border-l border-[#3B0A6B]/30`}
       >
         <div className="flex flex-col h-full p-4 space-y-4">
           
@@ -957,30 +989,30 @@ export default function App() {
             <div className="flex items-center space-x-1 bg-[#050505] p-1 rounded-xl border border-[#3B0A6B]/30">
               <button
                 onClick={() => setContextTab('device')}
-                className={`px-3 py-1 rounded-lg text-xs font-medium transition-all ${
+                className={`btn-premium px-3 py-1 rounded-lg text-xs font-medium transition-all ${
                   contextTab === 'device'
                     ? 'bg-[#3B0A6B] text-[#FFFFFF] border border-[#00E5FF]/40 shadow-[0_0_12px_rgba(0,229,255,0.2)]'
-                    : 'text-[#B8B3C7] hover:text-[#00E5FF]'
+                    : 'text-[#B8B3C7] hover:text-[#00E5FF] hover:border-white/10'
                 }`}
               >
                 Device Specs
               </button>
               <button
                 onClick={() => setContextTab('skills')}
-                className={`px-3 py-1 rounded-lg text-xs font-medium transition-all ${
+                className={`btn-premium px-3 py-1 rounded-lg text-xs font-medium transition-all ${
                   contextTab === 'skills'
                     ? 'bg-[#3B0A6B] text-[#FFFFFF] border border-[#00E5FF]/40 shadow-[0_0_12px_rgba(0,229,255,0.2)]'
-                    : 'text-[#B8B3C7] hover:text-[#00E5FF]'
+                    : 'text-[#B8B3C7] hover:text-[#00E5FF] hover:border-white/10'
                 }`}
               >
                 Skills ({skills.length})
               </button>
               <button
                 onClick={() => setContextTab('project')}
-                className={`px-3 py-1 rounded-lg text-xs font-medium transition-all ${
+                className={`btn-premium px-3 py-1 rounded-lg text-xs font-medium transition-all ${
                   contextTab === 'project'
                     ? 'bg-[#3B0A6B] text-[#FFFFFF] border border-[#00E5FF]/40 shadow-[0_0_12px_rgba(0,229,255,0.2)]'
-                    : 'text-[#B8B3C7] hover:text-[#00E5FF]'
+                    : 'text-[#B8B3C7] hover:text-[#00E5FF] hover:border-white/10'
                 }`}
               >
                 Team & Pods
@@ -989,7 +1021,7 @@ export default function App() {
 
             <button
               onClick={() => setContextPanelOpen(false)}
-              className="text-[#858091] hover:text-[#00E5FF] p-1.5 rounded-xl hover:bg-[#3B0A6B]/30 transition-colors"
+              className="btn-premium text-[#858091] hover:text-[#00E5FF] p-1.5 rounded-xl hover:bg-[#3B0A6B]/30 transition-colors border border-transparent hover:border-white/10"
               title="Close Panel"
             >
               <X className="w-4 h-4" />
@@ -997,11 +1029,11 @@ export default function App() {
           </div>
 
           {/* Drawer Content */}
-          <div className="flex-1 overflow-y-auto no-scrollbar space-y-4 text-xs">
+          <div className="flex-1 overflow-y-auto custom-scrollbar space-y-4 text-xs">
             
             {/* TAB 1: DEVICE SPECS & TELEMETRY */}
             {contextTab === 'device' && (
-              <div className="space-y-4 animate-ios-fade-in">
+              <div className="space-y-4 animate-slide-up">
                 <div className="flex items-center justify-between">
                   <span className="font-semibold text-[#F5F5FA] tracking-tight flex items-center space-x-2">
                     <Cpu className="w-4 h-4 text-[#00E5FF]" />
@@ -1010,7 +1042,7 @@ export default function App() {
                   <button
                     onClick={() => fetchHealth()}
                     disabled={loadingHealth}
-                    className="p-1 rounded-lg text-[#858091] hover:text-[#00E5FF] hover:bg-[#3B0A6B]/30 transition-colors"
+                    className="btn-premium p-1.5 rounded-lg text-[#858091] hover:text-[#00E5FF] hover:bg-[#3B0A6B]/30 transition-colors border border-transparent hover:border-white/10"
                     title="Refresh Telemetry"
                   >
                     <RefreshCw className={`w-3.5 h-3.5 ${loadingHealth ? 'animate-spin text-[#00E5FF]' : ''}`} />
@@ -1018,9 +1050,9 @@ export default function App() {
                 </div>
 
                 {/* GPU Card */}
-                <div className="p-3.5 rounded-2xl bg-[#050505] border border-[#3B0A6B]/35 space-y-2.5 shadow-[0_4px_20px_rgba(0,0,0,0.5)]">
+                <div className="p-3.5 rounded-2xl bg-[#080310] border border-[#3B0A6B]/35 space-y-2.5 shadow-[0_4px_20px_rgba(0,0,0,0.5)] card-interactive">
                   <div className="flex items-center justify-between">
-                    <span className="text-[10px] uppercase font-semibold text-[#858091] tracking-wider">GPU Device</span>
+                    <span className="text-[10px] uppercase font-semibold text-[#858091] tracking-wider font-mono">GPU Device</span>
                     <span className="text-[10px] font-mono text-[#00E5FF] bg-[#3B0A6B]/30 px-2 py-0.5 rounded-full border border-[#00E5FF]/30 shadow-[0_0_8px_rgba(0,229,255,0.2)]">
                       CUDA 12.6
                     </span>
@@ -1045,16 +1077,16 @@ export default function App() {
                 </div>
 
                 {/* CPU & Memory Card */}
-                <div className="p-3.5 rounded-2xl bg-[#050505] border border-[#3B0A6B]/35 space-y-2.5 shadow-[0_4px_20px_rgba(0,0,0,0.5)]">
-                  <span className="text-[10px] uppercase font-semibold text-[#858091] tracking-wider block">Processor & Memory</span>
+                <div className="p-3.5 rounded-2xl bg-[#080310] border border-[#3B0A6B]/35 space-y-2.5 shadow-[0_4px_20px_rgba(0,0,0,0.5)] card-interactive">
+                  <span className="text-[10px] uppercase font-semibold text-[#858091] tracking-wider block font-mono">Processor & Memory</span>
                   
                   <div className="grid grid-cols-2 gap-2 text-[11px]">
                     <div className="p-2.5 bg-[#050505] rounded-xl border border-[#3B0A6B]/30">
-                      <span className="text-[#858091] block text-[9px] uppercase">CPU Cores</span>
+                      <span className="text-[#858091] block text-[9px] uppercase font-mono">CPU Cores</span>
                       <span className="font-semibold text-[#F5F5FA] font-mono">{cpuInfo?.cores || 12} Logical</span>
                     </div>
                     <div className="p-2.5 bg-[#050505] rounded-xl border border-[#3B0A6B]/30">
-                      <span className="text-[#858091] block text-[9px] uppercase">RAM Total</span>
+                      <span className="text-[#858091] block text-[9px] uppercase font-mono">RAM Total</span>
                       <span className="font-semibold text-[#00E5FF] font-mono">{ramInfo?.total_gb || 7.73} GB</span>
                     </div>
                   </div>
@@ -1074,8 +1106,8 @@ export default function App() {
                 </div>
 
                 {/* Software Stack */}
-                <div className="p-3.5 rounded-2xl bg-[#050505] border border-[#3B0A6B]/35 space-y-2 text-[11px] shadow-[0_4px_20px_rgba(0,0,0,0.5)]">
-                  <span className="text-[10px] uppercase font-semibold text-[#858091] tracking-wider block">Software Environment</span>
+                <div className="p-3.5 rounded-2xl bg-[#080310] border border-[#3B0A6B]/35 space-y-2 text-[11px] shadow-[0_4px_20px_rgba(0,0,0,0.5)] card-interactive">
+                  <span className="text-[10px] uppercase font-semibold text-[#858091] tracking-wider block font-mono">Software Environment</span>
                   <div className="flex justify-between py-1 border-b border-[#3B0A6B]/20">
                     <span className="text-[#858091]">OS:</span>
                     <span className="font-mono text-[#F5F5FA]">{deviceConfig?.os || 'Windows 11'}</span>
@@ -1090,7 +1122,7 @@ export default function App() {
                   </div>
                   <div className="flex justify-between py-1">
                     <span className="text-[#858091]">Model Engine:</span>
-                    <span className="font-medium text-[#00E5FF]">Gemma 2B / 9B</span>
+                    <span className="font-medium text-[#00E5FF]">Google Gemma 2 (2B/9B)</span>
                   </div>
                 </div>
 
@@ -1099,7 +1131,7 @@ export default function App() {
 
             {/* TAB 2: AGENT SKILLS HUB (SKILL.md) */}
             {contextTab === 'skills' && (
-              <div className="space-y-4 animate-ios-fade-in">
+              <div className="space-y-4 animate-slide-up">
                 <div className="space-y-2">
                   <span className="font-semibold text-[#F5F5FA] tracking-tight flex items-center space-x-2">
                     <FileCode className="w-4 h-4 text-[#00E5FF]" />
@@ -1114,7 +1146,7 @@ export default function App() {
                       value={skillSearch}
                       onChange={(e) => setSkillSearch(e.target.value)}
                       placeholder="Search skills..."
-                      className="w-full bg-[#050505] border border-[#3B0A6B]/40 rounded-xl pl-8 pr-3 py-1.5 text-xs text-[#F5F5FA] placeholder-[#858091] focus:outline-none focus:border-[#00E5FF] focus:shadow-[0_0_10px_rgba(0,229,255,0.25)] transition-all"
+                      className="w-full bg-[#050505] border border-[#3B0A6B]/40 rounded-xl pl-8 pr-3 py-1.5 text-xs text-[#F5F5FA] placeholder-[#858091] focus:outline-none focus:border-[#00E5FF] focus:shadow-[0_0_12px_rgba(0,229,255,0.25)] transition-all hover:border-white/20"
                     />
                   </div>
                 </div>
@@ -1125,10 +1157,10 @@ export default function App() {
                     <div
                       key={s.name}
                       onClick={() => fetchSkillDetail(s.name)}
-                      className={`p-3 rounded-xl border cursor-pointer transition-all ${
+                      className={`p-3 rounded-xl border cursor-pointer transition-all card-interactive ${
                         selectedSkill?.name === s.name
                           ? 'bg-[#3B0A6B]/40 border-[#00E5FF]/60 text-[#F5F5FA] shadow-[0_0_15px_rgba(0,229,255,0.15)]'
-                          : 'bg-[#050505] border-[#3B0A6B]/25 hover:border-[#3B0A6B]/60 hover:bg-[#3B0A6B]/20 text-[#B8B3C7]'
+                          : 'bg-[#080310] border-[#3B0A6B]/25 hover:border-white/20 hover:bg-[#3B0A6B]/20 text-[#B8B3C7]'
                       }`}
                     >
                       <div className="flex items-center justify-between mb-1">
@@ -1144,7 +1176,7 @@ export default function App() {
 
                 {/* Selected Skill Preview */}
                 {selectedSkill && (
-                  <div className="p-3.5 rounded-2xl bg-[#050505] border border-[#3B0A6B]/40 space-y-2.5 shadow-[0_4px_20px_rgba(0,0,0,0.5)]">
+                  <div className="p-3.5 rounded-2xl bg-[#080310] border border-[#3B0A6B]/40 space-y-2.5 shadow-[0_4px_20px_rgba(0,0,0,0.5)] card-interactive">
                     <div className="flex items-center justify-between">
                       <span className="font-mono font-semibold text-xs text-[#F5F5FA]">{selectedSkill.name}/SKILL.md</span>
                       <button
@@ -1152,7 +1184,7 @@ export default function App() {
                           setPromptInput(`Please execute the ${selectedSkill.name} skill for our task.`);
                           setContextPanelOpen(false);
                         }}
-                        className="button-spring text-[10px] px-2.5 py-1 rounded-lg bg-[#00E5FF] hover:bg-[#00E5FF]/90 text-[#050505] font-semibold shadow-[0_0_10px_rgba(0,229,255,0.3)] transition-all"
+                        className="btn-premium sheen-travel text-[10px] px-2.5 py-1 rounded-lg bg-[#00E5FF] hover:bg-[#33ebff] text-[#050505] font-semibold shadow-[0_0_12px_rgba(0,229,255,0.3)] transition-all"
                       >
                         Use in Chat
                       </button>
@@ -1167,16 +1199,16 @@ export default function App() {
 
             {/* TAB 3: TEAM & PODS */}
             {contextTab === 'project' && (
-              <div className="space-y-4 animate-ios-fade-in">
+              <div className="space-y-4 animate-slide-up">
                 <span className="font-semibold text-[#F5F5FA] tracking-tight flex items-center space-x-2">
                   <Users className="w-4 h-4 text-[#00E5FF]" />
                   <span>4-Person Hackathon Engineering Pods</span>
                 </span>
 
                 {/* Pod 1 */}
-                <div className="p-3.5 rounded-2xl bg-[#050505] border border-[#3B0A6B]/35 space-y-2 shadow-[0_4px_20px_rgba(0,0,0,0.5)]">
+                <div className="p-3.5 rounded-2xl bg-[#080310] border border-[#3B0A6B]/35 space-y-2 shadow-[0_4px_20px_rgba(0,0,0,0.5)] card-interactive">
                   <div className="flex items-center justify-between">
-                    <span className="text-[10px] uppercase font-bold text-[#00E5FF]">Pod 1: Frontend Squad</span>
+                    <span className="text-[10px] uppercase font-bold text-[#00E5FF] font-mono">Pod 1: Frontend Squad</span>
                     <span className="text-[9px] font-mono bg-[#3B0A6B]/30 text-[#00E5FF] px-2 py-0.5 rounded-full border border-[#00E5FF]/30 shadow-[0_0_8px_rgba(0,229,255,0.15)]">
                       feature/frontend
                     </span>
@@ -1188,9 +1220,9 @@ export default function App() {
                 </div>
 
                 {/* Pod 2 */}
-                <div className="p-3.5 rounded-2xl bg-[#050505] border border-[#3B0A6B]/35 space-y-2 shadow-[0_4px_20px_rgba(0,0,0,0.5)]">
+                <div className="p-3.5 rounded-2xl bg-[#080310] border border-[#3B0A6B]/35 space-y-2 shadow-[0_4px_20px_rgba(0,0,0,0.5)] card-interactive">
                   <div className="flex items-center justify-between">
-                    <span className="text-[10px] uppercase font-bold text-[#00E5FF]">Pod 2: Backend & AI Engine</span>
+                    <span className="text-[10px] uppercase font-bold text-[#00E5FF] font-mono">Pod 2: Backend & AI Engine</span>
                     <span className="text-[9px] font-mono bg-[#3B0A6B]/30 text-[#00E5FF] px-2 py-0.5 rounded-full border border-[#00E5FF]/30 shadow-[0_0_8px_rgba(0,229,255,0.15)]">
                       feature/backend-ai
                     </span>
@@ -1202,8 +1234,8 @@ export default function App() {
                 </div>
 
                 {/* Hackathon Core Stack */}
-                <div className="p-3.5 rounded-2xl bg-[#050505] border border-[#3B0A6B]/35 space-y-2 text-[11px] shadow-[0_4px_20px_rgba(0,0,0,0.5)]">
-                  <span className="text-[10px] uppercase font-semibold text-[#858091] tracking-wider block">Hackathon Core Stack</span>
+                <div className="p-3.5 rounded-2xl bg-[#080310] border border-[#3B0A6B]/35 space-y-2 text-[11px] shadow-[0_4px_20px_rgba(0,0,0,0.5)] card-interactive">
+                  <span className="text-[10px] uppercase font-semibold text-[#858091] tracking-wider block font-mono">Hackathon Core Stack</span>
                   <div className="flex justify-between py-1 border-b border-[#3B0A6B]/20">
                     <span className="text-[#858091]">Model Engine:</span>
                     <span className="text-[#F5F5FA]">Google Gemma 2 (2B / 9B)</span>
