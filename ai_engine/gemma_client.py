@@ -42,13 +42,22 @@ class GemmaClient:
                 import httpx
                 resp = httpx.post(
                     f"{self.cloud_gpu_url}/api/predict",
-                    json={"prompt": prompt, "max_tokens": 200},
-                    timeout=30.0
+                    json={"prompt": prompt, "max_tokens": 512},
+                    timeout=45.0
                 )
                 if resp.status_code == 200:
                     data = resp.json()
+                    raw_text = data.get("result", "")
+                    
+                    # Clean up Causal LM output (strip prompt echoes)
+                    clean_text = raw_text
+                    if clean_text.startswith(prompt):
+                        clean_text = clean_text[len(prompt):].strip()
+                    elif "Provide the final comprehensive response to the user." in clean_text:
+                        clean_text = clean_text.split("Provide the final comprehensive response to the user.")[-1].strip()
+
                     return {
-                        "text": data.get("result", ""),
+                        "text": clean_text,
                         "model": "gemma-kaggle-t4-cloud",
                         "provider": "kaggle-cloud-gpu",
                         "status": "success"

@@ -24,8 +24,158 @@ import {
   Check,
   Plus,
   X,
-  FileUp
+  FileUp,
+  Image as ImageIcon,
+  Printer,
+  FileDown,
+  ExternalLink,
+  ChevronDown,
+  ChevronRight
 } from 'lucide-react';
+
+// ==============================================================================
+// RICH MARKDOWN & MULTIMODAL ARTIFACT RENDERER COMPONENT
+// ==============================================================================
+function MarkdownAnswerView({ content }) {
+  if (!content) return null;
+
+  const renderInlineStyles = (text) => {
+    const parts = text.split(/(\*\*.*?\*\*|`.*?`)/g);
+    return parts.map((part, i) => {
+      if (part.startsWith('**') && part.endsWith('**')) {
+        return <strong key={i} className="text-white font-semibold">{part.slice(2, -2)}</strong>;
+      }
+      if (part.startsWith('`') && part.endsWith('`')) {
+        return <code key={i} className="px-1.5 py-0.5 rounded bg-slate-900 border border-slate-800 text-cyan-300 font-mono text-xs">{part.slice(1, -1)}</code>;
+      }
+      return part;
+    });
+  };
+
+  const renderFormattedText = (raw) => {
+    const lines = raw.split('\n');
+    const elements = [];
+    let inCodeBlock = false;
+    let codeLanguage = '';
+    let codeBuffer = [];
+
+    lines.forEach((line, idx) => {
+      // Code blocks ```
+      if (line.trim().startsWith('```')) {
+        if (!inCodeBlock) {
+          inCodeBlock = true;
+          codeLanguage = line.trim().replace('```', '') || 'code';
+          codeBuffer = [];
+        } else {
+          inCodeBlock = false;
+          const fullCode = codeBuffer.join('\n');
+          elements.push(
+            <div key={`code-${idx}`} className="my-3 rounded-xl overflow-hidden border border-slate-800 bg-slate-950 shadow-inner">
+              <div className="flex items-center justify-between px-3.5 py-1.5 bg-slate-900 border-b border-slate-800 text-[11px] text-slate-400">
+                <span className="font-mono uppercase text-cyan-400 font-semibold">{codeLanguage}</span>
+                <button
+                  type="button"
+                  onClick={() => navigator.clipboard.writeText(fullCode)}
+                  className="px-2 py-0.5 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded text-[10px] transition-colors"
+                >
+                  Copy Code
+                </button>
+              </div>
+              <pre className="p-3.5 text-xs text-slate-200 font-mono overflow-x-auto whitespace-pre leading-relaxed">
+                {fullCode}
+              </pre>
+            </div>
+          );
+        }
+        return;
+      }
+
+      if (inCodeBlock) {
+        codeBuffer.push(line);
+        return;
+      }
+
+      // Check for standalone markdown images: ![alt](url)
+      const imgMatch = line.match(/^!\[(.*?)\]\((https?:\/\/[^\s\)]+)\)$/);
+      if (imgMatch) {
+        const alt = imgMatch[1];
+        const src = imgMatch[2];
+        elements.push(
+          <div key={`img-${idx}`} className="my-4 rounded-xl overflow-hidden border border-cyan-500/40 bg-slate-950 shadow-2xl">
+            <div className="flex items-center justify-between px-4 py-2 bg-gradient-to-r from-cyan-950/80 via-slate-900 to-slate-950 border-b border-cyan-900/50 text-xs">
+              <span className="flex items-center space-x-2 text-cyan-300 font-semibold">
+                <ImageIcon className="w-4 h-4 text-cyan-400" />
+                <span>AI Generated Visual Asset: {alt || 'Render'}</span>
+              </span>
+              <a
+                href={src}
+                target="_blank"
+                rel="noreferrer"
+                download="ai_visual_asset.png"
+                className="flex items-center space-x-1.5 px-3 py-1 bg-cyan-500/20 hover:bg-cyan-500/30 text-cyan-300 rounded-lg text-xs font-medium transition-colors shadow-sm"
+              >
+                <Download className="w-3.5 h-3.5" />
+                <span>Download High-Res</span>
+              </a>
+            </div>
+            <div className="p-3 flex justify-center bg-slate-950/90">
+              <img 
+                src={src} 
+                alt={alt} 
+                className="max-h-96 w-auto rounded-lg object-contain shadow-xl hover:scale-[1.01] transition-transform" 
+                loading="lazy"
+              />
+            </div>
+          </div>
+        );
+        return;
+      }
+
+      // Headers
+      if (line.startsWith('### ')) {
+        elements.push(<h3 key={idx} className="text-base font-bold text-cyan-300 mt-3.5 mb-1.5">{line.replace('### ', '')}</h3>);
+        return;
+      }
+      if (line.startsWith('## ')) {
+        elements.push(<h2 key={idx} className="text-lg font-bold text-white border-b border-slate-800 pb-1 mt-4 mb-2">{line.replace('## ', '')}</h2>);
+        return;
+      }
+      if (line.startsWith('# ')) {
+        elements.push(<h1 key={idx} className="text-xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-blue-400 mt-4 mb-2">{line.replace('# ', '')}</h1>);
+        return;
+      }
+
+      // Bullet points
+      if (line.trim().startsWith('* ') || line.trim().startsWith('- ')) {
+        const bulletText = line.trim().substring(2);
+        elements.push(
+          <div key={idx} className="flex items-start space-x-2.5 my-1 text-slate-200">
+            <span className="text-cyan-400 mt-1 text-xs">◆</span>
+            <span>{renderInlineStyles(bulletText)}</span>
+          </div>
+        );
+        return;
+      }
+
+      // Empty line spacer
+      if (!line.trim()) {
+        elements.push(<div key={idx} className="h-1.5" />);
+        return;
+      }
+
+      // Standard text line
+      elements.push(
+        <p key={idx} className="text-sm text-slate-200 leading-relaxed my-1">
+          {renderInlineStyles(line)}
+        </p>
+      );
+    });
+
+    return elements;
+  };
+
+  return <div className="space-y-1">{renderFormattedText(content)}</div>;
+}
 
 export default function App() {
   const [health, setHealth] = useState(null);
@@ -166,6 +316,94 @@ export default function App() {
     const a = document.createElement('a');
     a.href = url;
     a.download = `agent_report_${Date.now()}.md`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
+  // Download PDF Report via Styled Browser Print / Save
+  const handleDownloadPDF = () => {
+    if (!agentResponse) return;
+    const printWindow = window.open('', '_blank');
+    if (!printWindow) {
+      alert('Please allow popups in your browser to export the PDF report.');
+      return;
+    }
+
+    const htmlContent = `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <title>Hackathon AI Agent Executive Report</title>
+        <style>
+          body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; line-height: 1.6; color: #0f172a; padding: 40px; max-width: 850px; margin: auto; }
+          .header { border-bottom: 3px solid #0284c7; padding-bottom: 16px; margin-bottom: 24px; }
+          .pill { display: inline-block; padding: 4px 10px; background: #e0f2fe; color: #0369a1; border-radius: 9999px; font-size: 11px; font-weight: 700; margin-right: 6px; }
+          .meta-box { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 16px; margin-bottom: 24px; font-size: 13px; }
+          .step-card { background: #f8fafc; border-left: 4px solid #0284c7; border-radius: 0 8px 8px 0; padding: 12px 16px; margin-bottom: 12px; font-size: 13px; }
+          .final-card { background: #f0fdf4; border: 1px solid #86efac; border-radius: 12px; padding: 20px; margin-top: 24px; }
+          pre { background: #0f172a; color: #f8fafc; padding: 14px; border-radius: 8px; font-size: 12px; overflow-x: auto; }
+          img { max-width: 100%; border-radius: 8px; margin: 12px 0; box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1); }
+          @media print {
+            body { padding: 0; }
+            .no-print { display: none; }
+          }
+        </style>
+      </head>
+      <body>
+        <div class="header">
+          <h1 style="margin: 0 0 8px 0; font-size: 22px; color: #0f172a;">Autonomous AI Agent Executive Report</h1>
+          <div>
+            <span class="pill">Google Gemma</span>
+            <span class="pill">Nous Hermes Agent</span>
+            <span class="pill">SKILL.md Standard</span>
+            <span class="pill">Kaggle 2x Tesla T4 Cloud GPU</span>
+          </div>
+        </div>
+
+        <div class="meta-box">
+          <div><strong>Query:</strong> ${agentResponse.query}</div>
+          <div><strong>Model Engine:</strong> ${agentResponse.model_engine || 'gemma-kaggle-t4-cloud'}</div>
+          <div><strong>Latency:</strong> ${agentResponse.duration_ms || 0} ms</div>
+          <div><strong>Generated:</strong> ${new Date().toLocaleString()}</div>
+        </div>
+
+        <h3 style="color: #334155; font-size: 15px; margin-top: 20px;">Reasoning Trace:</h3>
+        ${(agentResponse.steps || []).map(s => `
+          <div class="step-card">
+            <div><strong>Thought:</strong> ${s.thought}</div>
+            ${s.action ? `<div><strong>Action:</strong> ${s.action} (Input: ${s.action_input || 'None'})</div>` : ''}
+            ${s.observation ? `<div><strong>Observation:</strong> ${s.observation}</div>` : ''}
+          </div>
+        `).join('')}
+
+        <div class="final-card">
+          <h3 style="margin-top: 0; color: #166534; font-size: 15px;">Final Agent Output:</h3>
+          <div style="white-space: pre-wrap; font-size: 14px;">${agentResponse.final_answer.replace(/!\[(.*?)\]\((.*?)\)/g, '<br/><img src="$2" alt="$1" /><br/>')}</div>
+        </div>
+
+        <div style="margin-top: 30px; text-align: center;" class="no-print">
+          <button onclick="window.print()" style="background: #0284c7; color: white; border: none; padding: 10px 24px; border-radius: 8px; font-weight: 600; cursor: pointer; font-size: 14px;">Save as PDF / Print</button>
+        </div>
+        <script>
+          window.onload = function() {
+            setTimeout(function() { window.print(); }, 400);
+          };
+        </script>
+      </body>
+      </html>
+    `;
+    printWindow.document.write(htmlContent);
+    printWindow.document.close();
+  };
+
+  // Download JSON Telemetry
+  const handleDownloadJSON = () => {
+    if (!agentResponse) return;
+    const blob = new Blob([JSON.stringify(agentResponse, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `agent_telemetry_${Date.now()}.json`;
     a.click();
     URL.revokeObjectURL(url);
   };
@@ -378,22 +616,29 @@ export default function App() {
                         </>
                       )}
                     </button>
-                    <div className="flex items-center space-x-2 text-xs text-slate-500">
-                      <span>Quick Test:</span>
+                    <div className="flex flex-wrap items-center gap-2 text-xs text-slate-500">
+                      <span>Quick Prompts:</span>
                       <button 
                         type="button" 
-                        onClick={() => setAgentPrompt("Calculate 250 * 18.5 and check system telemetry")} 
-                        className="text-cyan-400 hover:underline"
+                        onClick={() => setAgentPrompt("Generate an image of a futuristic AI hospital dashboard with glowing vitals in 8k cinematic lighting")} 
+                        className="px-2.5 py-1 rounded-lg bg-cyan-950/70 border border-cyan-800/60 text-cyan-300 hover:bg-cyan-900 transition-colors flex items-center space-x-1"
                       >
-                        Math + Telemetry
+                        <ImageIcon className="w-3 h-3 text-cyan-400" />
+                        <span>AI Image Gen</span>
                       </button>
-                      <span>•</span>
                       <button 
                         type="button" 
-                        onClick={() => setAgentPrompt("Use api-integrator skill to format an endpoint")} 
-                        className="text-cyan-400 hover:underline"
+                        onClick={() => setAgentPrompt("Draw a flowchart of our autonomous agent platform architecture and data flow")} 
+                        className="px-2.5 py-1 rounded-lg bg-blue-950/70 border border-blue-800/60 text-blue-300 hover:bg-blue-900 transition-colors"
                       >
-                        API Skill
+                        <span>Flowchart Diagram</span>
+                      </button>
+                      <button 
+                        type="button" 
+                        onClick={() => setAgentPrompt("Calculate 250 * 18.5 and check system GPU telemetry")} 
+                        className="px-2.5 py-1 rounded-lg bg-slate-900 border border-slate-800 text-slate-300 hover:bg-slate-800 transition-colors"
+                      >
+                        <span>Math + Telemetry</span>
                       </button>
                     </div>
                   </div>
@@ -407,7 +652,7 @@ export default function App() {
                         Reasoning Steps & Tool Traces
                       </span>
                       <span className="text-xs text-emerald-400 font-mono">
-                        Latency: {agentResponse.duration_ms || 0} ms
+                        Latency: {agentResponse.duration_ms || 0} ms • Engine: {agentResponse.model_engine || 'Gemma'}
                       </span>
                     </div>
 
@@ -432,32 +677,55 @@ export default function App() {
                       </div>
                     ))}
 
-                    {/* Final Answer Card with Export Controls */}
-                    <div className="p-5 bg-gradient-to-br from-blue-950/40 to-slate-950 border border-blue-900/40 rounded-xl space-y-3">
-                      <div className="flex items-center justify-between">
-                        <span className="text-xs font-bold uppercase tracking-wider text-blue-400">
-                          Final Agent Output (Gemma Engine)
-                        </span>
+                    {/* Final Answer Card with Multimodal Outputs & Rich Export Controls */}
+                    <div className="p-6 bg-gradient-to-br from-blue-950/40 via-slate-950 to-slate-950 border border-blue-900/50 rounded-2xl space-y-4 shadow-2xl">
+                      <div className="flex flex-wrap items-center justify-between gap-3 border-b border-blue-900/40 pb-3">
                         <div className="flex items-center space-x-2">
+                          <Sparkles className="w-4 h-4 text-cyan-400" />
+                          <span className="text-xs font-bold uppercase tracking-wider text-cyan-300">
+                            Final Agent Output (Google Gemma + Hermes)
+                          </span>
+                        </div>
+                        <div className="flex flex-wrap items-center gap-1.5">
                           <button
                             onClick={handleCopyAnswer}
                             className="px-2.5 py-1 text-xs rounded-lg bg-slate-900 hover:bg-slate-800 text-slate-300 border border-slate-800 flex items-center space-x-1.5 transition-colors"
+                            title="Copy output text"
                           >
                             {copied ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5 text-slate-400" />}
                             <span>{copied ? 'Copied!' : 'Copy'}</span>
                           </button>
                           <button
+                            onClick={handleDownloadPDF}
+                            className="px-2.5 py-1 text-xs rounded-lg bg-rose-950/40 hover:bg-rose-900/60 text-rose-300 border border-rose-800/60 flex items-center space-x-1.5 transition-colors"
+                            title="Save / Print PDF Report"
+                          >
+                            <Printer className="w-3.5 h-3.5 text-rose-400" />
+                            <span>Export PDF</span>
+                          </button>
+                          <button
                             onClick={handleDownloadReport}
                             className="px-2.5 py-1 text-xs rounded-lg bg-slate-900 hover:bg-slate-800 text-slate-300 border border-slate-800 flex items-center space-x-1.5 transition-colors"
+                            title="Export Markdown Document"
                           >
                             <Download className="w-3.5 h-3.5 text-slate-400" />
                             <span>Export .md</span>
                           </button>
+                          <button
+                            onClick={handleDownloadJSON}
+                            className="px-2.5 py-1 text-xs rounded-lg bg-slate-900 hover:bg-slate-800 text-slate-300 border border-slate-800 flex items-center space-x-1.5 transition-colors"
+                            title="Export JSON Telemetry & Steps"
+                          >
+                            <FileDown className="w-3.5 h-3.5 text-slate-400" />
+                            <span>JSON</span>
+                          </button>
                         </div>
                       </div>
-                      <p className="text-sm text-slate-200 whitespace-pre-wrap leading-relaxed">
-                        {agentResponse.final_answer}
-                      </p>
+
+                      {/* Render Formatted Markdown, Code Blocks, and AI Images */}
+                      <div className="text-sm text-slate-200 leading-relaxed pt-1">
+                        <MarkdownAnswerView content={agentResponse.final_answer} />
+                      </div>
                     </div>
                   </div>
                 )}
