@@ -21,7 +21,7 @@ $backendProcess = Start-Process powershell -ArgumentList "-NoExit", "-Command", 
 
 # 3. Start Frontend
 Write-Host "🌐 Starting Frontend on http://localhost:5173..." -ForegroundColor Green
-$frontendProcess = Start-Process powershell -ArgumentList "-NoExit", "-Command", "cd '$PWD\frontend'; pnpm run dev" -PassThru
+$frontendProcess = Start-Process powershell -ArgumentList "-NoExit", "-Command", "cd '$PWD\frontend'; pnpm.cmd run dev" -PassThru
 
 Write-Host "`n✅ Both services have been launched!" -ForegroundColor Green
 Write-Host "👉 Frontend UI: http://localhost:5173" -ForegroundColor Cyan

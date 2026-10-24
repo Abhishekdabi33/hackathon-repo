@@ -1,207 +1,167 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { 
-  Cpu, 
-  Activity, 
-  Zap, 
-  Users, 
-  CheckCircle2, 
-  Terminal, 
+  Bot, 
   Sparkles, 
-  Server, 
-  Database,
-  ArrowRight,
-  RefreshCw,
-  BookOpen,
-  Bot,
-  Layers,
-  Wrench,
+  Send, 
+  Plus, 
+  MessageSquare, 
+  Sliders, 
+  Cpu, 
+  Zap, 
+  Activity, 
+  Database, 
+  Terminal, 
+  Wrench, 
+  FileCode, 
+  Layers, 
+  Users, 
+  RefreshCw, 
+  Copy, 
+  Check, 
+  Search, 
+  ChevronDown, 
+  ChevronUp, 
+  ChevronRight, 
+  X, 
+  Menu, 
+  ArrowUp,
+  RotateCcw,
   Code2,
-  FileCode,
-  Upload,
+  CheckCircle2,
+  CircleDot,
+  Volume2,
+  VolumeX,
+  Trash2,
+  Share2,
+  Paperclip,
   FileText,
-  Download,
-  Copy,
-  Check,
-  Plus,
-  X,
-  FileUp,
-  Image as ImageIcon,
-  Printer,
-  FileDown,
   ExternalLink,
-  ChevronDown,
-  ChevronRight
+  PlusCircle,
+  Download
 } from 'lucide-react';
-
-// ==============================================================================
-// RICH MARKDOWN & MULTIMODAL ARTIFACT RENDERER COMPONENT
-// ==============================================================================
-function MarkdownAnswerView({ content }) {
-  if (!content) return null;
-
-  const renderInlineStyles = (text) => {
-    const parts = text.split(/(\*\*.*?\*\*|`.*?`)/g);
-    return parts.map((part, i) => {
-      if (part.startsWith('**') && part.endsWith('**')) {
-        return <strong key={i} className="text-white font-semibold">{part.slice(2, -2)}</strong>;
-      }
-      if (part.startsWith('`') && part.endsWith('`')) {
-        return <code key={i} className="px-1.5 py-0.5 rounded bg-slate-900 border border-slate-800 text-cyan-300 font-mono text-xs">{part.slice(1, -1)}</code>;
-      }
-      return part;
-    });
-  };
-
-  const renderFormattedText = (raw) => {
-    const lines = raw.split('\n');
-    const elements = [];
-    let inCodeBlock = false;
-    let codeLanguage = '';
-    let codeBuffer = [];
-
-    lines.forEach((line, idx) => {
-      // Code blocks ```
-      if (line.trim().startsWith('```')) {
-        if (!inCodeBlock) {
-          inCodeBlock = true;
-          codeLanguage = line.trim().replace('```', '') || 'code';
-          codeBuffer = [];
-        } else {
-          inCodeBlock = false;
-          const fullCode = codeBuffer.join('\n');
-          elements.push(
-            <div key={`code-${idx}`} className="my-3 rounded-xl overflow-hidden border border-slate-800 bg-slate-950 shadow-inner">
-              <div className="flex items-center justify-between px-3.5 py-1.5 bg-slate-900 border-b border-slate-800 text-[11px] text-slate-400">
-                <span className="font-mono uppercase text-cyan-400 font-semibold">{codeLanguage}</span>
-                <button
-                  type="button"
-                  onClick={() => navigator.clipboard.writeText(fullCode)}
-                  className="px-2 py-0.5 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded text-[10px] transition-colors"
-                >
-                  Copy Code
-                </button>
-              </div>
-              <pre className="p-3.5 text-xs text-slate-200 font-mono overflow-x-auto whitespace-pre leading-relaxed">
-                {fullCode}
-              </pre>
-            </div>
-          );
-        }
-        return;
-      }
-
-      if (inCodeBlock) {
-        codeBuffer.push(line);
-        return;
-      }
-
-      // Check for standalone markdown images: ![alt](url)
-      const imgMatch = line.match(/^!\[(.*?)\]\((https?:\/\/[^\s\)]+)\)$/);
-      if (imgMatch) {
-        const alt = imgMatch[1];
-        const src = imgMatch[2];
-        elements.push(
-          <div key={`img-${idx}`} className="my-4 rounded-xl overflow-hidden border border-cyan-500/40 bg-slate-950 shadow-2xl">
-            <div className="flex items-center justify-between px-4 py-2 bg-gradient-to-r from-cyan-950/80 via-slate-900 to-slate-950 border-b border-cyan-900/50 text-xs">
-              <span className="flex items-center space-x-2 text-cyan-300 font-semibold">
-                <ImageIcon className="w-4 h-4 text-cyan-400" />
-                <span>AI Generated Visual Asset: {alt || 'Render'}</span>
-              </span>
-              <a
-                href={src}
-                target="_blank"
-                rel="noreferrer"
-                download="ai_visual_asset.png"
-                className="flex items-center space-x-1.5 px-3 py-1 bg-cyan-500/20 hover:bg-cyan-500/30 text-cyan-300 rounded-lg text-xs font-medium transition-colors shadow-sm"
-              >
-                <Download className="w-3.5 h-3.5" />
-                <span>Download High-Res</span>
-              </a>
-            </div>
-            <div className="p-3 flex justify-center bg-slate-950/90">
-              <img 
-                src={src} 
-                alt={alt} 
-                className="max-h-96 w-auto rounded-lg object-contain shadow-xl hover:scale-[1.01] transition-transform" 
-                loading="lazy"
-              />
-            </div>
-          </div>
-        );
-        return;
-      }
-
-      // Headers
-      if (line.startsWith('### ')) {
-        elements.push(<h3 key={idx} className="text-base font-bold text-cyan-300 mt-3.5 mb-1.5">{line.replace('### ', '')}</h3>);
-        return;
-      }
-      if (line.startsWith('## ')) {
-        elements.push(<h2 key={idx} className="text-lg font-bold text-white border-b border-slate-800 pb-1 mt-4 mb-2">{line.replace('## ', '')}</h2>);
-        return;
-      }
-      if (line.startsWith('# ')) {
-        elements.push(<h1 key={idx} className="text-xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-blue-400 mt-4 mb-2">{line.replace('# ', '')}</h1>);
-        return;
-      }
-
-      // Bullet points
-      if (line.trim().startsWith('* ') || line.trim().startsWith('- ')) {
-        const bulletText = line.trim().substring(2);
-        elements.push(
-          <div key={idx} className="flex items-start space-x-2.5 my-1 text-slate-200">
-            <span className="text-cyan-400 mt-1 text-xs">◆</span>
-            <span>{renderInlineStyles(bulletText)}</span>
-          </div>
-        );
-        return;
-      }
-
-      // Empty line spacer
-      if (!line.trim()) {
-        elements.push(<div key={idx} className="h-1.5" />);
-        return;
-      }
-
-      // Standard text line
-      elements.push(
-        <p key={idx} className="text-sm text-slate-200 leading-relaxed my-1">
-          {renderInlineStyles(line)}
-        </p>
-      );
-    });
-
-    return elements;
-  };
-
-  return <div className="space-y-1">{renderFormattedText(content)}</div>;
-}
+import HermesCharacter from './components/HermesCharacter';
+import TiltCard from './components/TiltCard';
+import WorkspaceSpotlight from './components/WorkspaceSpotlight';
 
 export default function App() {
-  const [health, setHealth] = useState(null);
-  const [loadingHealth, setLoadingHealth] = useState(false);
-  const [activeTab, setActiveTab] = useState('agent');
+  // Navigation & Workspace State
+  const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [contextPanelOpen, setContextPanelOpen] = useState(false);
+  const [contextTab, setContextTab] = useState('device'); // 'device' | 'skills' | 'project'
   
-  // Agent State
-  const [agentPrompt, setAgentPrompt] = useState('Analyze our database statistics and check GPU status.');
-  const [agentResponse, setAgentResponse] = useState(null);
+  // Chat Conversation State (Clean Conversational AI)
+  const [messages, setMessages] = useState([]);
+  const [promptInput, setPromptInput] = useState('');
   const [runningAgent, setRunningAgent] = useState(false);
-  const [attachedFile, setAttachedFile] = useState(null);
-  const [copied, setCopied] = useState(false);
+  const [liveExecutionStage, setLiveExecutionStage] = useState(0);
+  const [expandedTraceId, setExpandedTraceId] = useState(null);
+  const [copiedId, setCopiedId] = useState(null);
+  const [isInputFocused, setIsInputFocused] = useState(false);
+  const [isSpeaking, setIsSpeaking] = useState(false);
+  const [speakingMessageId, setSpeakingMessageId] = useState(null);
+  const [scrollProgress, setScrollProgress] = useState(0);
+  const [scrollOffset, setScrollOffset] = useState(0);
+  const speakingTimeoutRef = useRef(null);
 
-  // Skills State
+  // 3D Parallax Scroll Handler
+  const handleFeedScroll = (e) => {
+    const top = e.currentTarget.scrollTop;
+    setScrollOffset(top);
+    // Smooth transition over the first 220px of scroll
+    const prog = Math.min(1, Math.max(0, top / 220));
+    setScrollProgress(prog);
+  };
+
+  // Dynamic Living Hermes AI State (idle | listening | thinking | tool | speaking)
+  const getHermesState = () => {
+    if (isSpeaking) return 'speaking';
+    if (runningAgent) {
+      if (liveExecutionStage === 1 || liveExecutionStage === 2) return 'thinking';
+      if (liveExecutionStage === 3) return 'tool';
+      if (liveExecutionStage === 4) return 'speaking';
+      return 'thinking';
+    }
+    if (promptInput.trim().length > 0 || isInputFocused) return 'listening';
+    return 'idle';
+  };
+
+  // Backend Telemetry & Skills State
+  const [health, setHealth] = useState(null);
+  const [deviceConfig, setDeviceConfig] = useState(null);
+  const [loadingHealth, setLoadingHealth] = useState(false);
   const [skills, setSkills] = useState([]);
   const [selectedSkill, setSelectedSkill] = useState(null);
   const [loadingSkills, setLoadingSkills] = useState(false);
+  const [skillSearch, setSkillSearch] = useState('');
 
-  // Custom Skill Modal State
+  const messagesEndRef = useRef(null);
+  const textareaRef = useRef(null);
+  const mainCanvasRef = useRef(null);
+  const fileInputRef = useRef(null);
+  const [attachedFile, setAttachedFile] = useState(null);
+  const [uploadingFile, setUploadingFile] = useState(false);
   const [showSkillModal, setShowSkillModal] = useState(false);
-  const [newSkillName, setNewSkillName] = useState('');
-  const [newSkillDesc, setNewSkillDesc] = useState('');
-  const [newSkillInstructions, setNewSkillInstructions] = useState('');
-  const [creatingSkill, setCreatingSkill] = useState(false);
+  const [newSkillData, setNewSkillData] = useState({ name: '', description: '', instructions: '', tags: '' });
+  const [savingSkill, setSavingSkill] = useState(false);
 
-  // Fetch System Health
+  // Speech read-aloud functionality
+  const handleSpeakMessage = (msgId, text) => {
+    if (!('speechSynthesis' in window)) return;
+    
+    if (speakingMessageId === msgId && isSpeaking) {
+      window.speechSynthesis.cancel();
+      setIsSpeaking(false);
+      setSpeakingMessageId(null);
+      return;
+    }
+    
+    window.speechSynthesis.cancel();
+    const utterance = new SpeechSynthesisUtterance(text);
+    utterance.rate = 1.0;
+    utterance.pitch = 1.05;
+    
+    utterance.onstart = () => {
+      setIsSpeaking(true);
+      setSpeakingMessageId(msgId);
+    };
+    
+    utterance.onend = () => {
+      setIsSpeaking(false);
+      setSpeakingMessageId(null);
+    };
+    
+    utterance.onerror = () => {
+      setIsSpeaking(false);
+      setSpeakingMessageId(null);
+    };
+    
+    window.speechSynthesis.speak(utterance);
+  };
+
+  // Smooth live execution stages when agent is running
+  useEffect(() => {
+    let t1, t2, t3;
+    if (runningAgent) {
+      setLiveExecutionStage(1); // Analyzing request
+      t1 = setTimeout(() => setLiveExecutionStage(2), 500);  // Discovering skills
+      t2 = setTimeout(() => setLiveExecutionStage(3), 1100); // Calling tools
+      t3 = setTimeout(() => setLiveExecutionStage(4), 1800); // Synthesizing response
+    } else {
+      setLiveExecutionStage(0);
+    }
+    return () => {
+      clearTimeout(t1);
+      clearTimeout(t2);
+      clearTimeout(t3);
+    };
+  }, [runningAgent]);
+
+  // Scroll to bottom on new message
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [messages, runningAgent, liveExecutionStage]);
+
+  // Fetch Health & Device Environment
   const fetchHealth = async () => {
     setLoadingHealth(true);
     try {
@@ -209,8 +169,19 @@ export default function App() {
       if (res.ok) {
         const data = await res.json();
         setHealth(data);
+        if (data.device_config) setDeviceConfig(data.device_config);
       } else {
         setHealth({ status: 'offline', error: 'Backend unreachable' });
+      }
+
+      try {
+        const devRes = await fetch('/api/system/device');
+        if (devRes.ok) {
+          const devData = await devRes.json();
+          setDeviceConfig(devData);
+        }
+      } catch (e) {
+        // Handled via health fallback
       }
     } catch (err) {
       setHealth({ status: 'offline', error: err.message });
@@ -256,841 +227,1404 @@ export default function App() {
     fetchSkills();
   }, []);
 
-  // Handle File Upload
-  const handleFileChange = (e) => {
+  // Send message to Hermes Agent ReAct loop
+    // Handle File Upload to Backend
+  const handleFileUpload = async (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
-
-    const reader = new FileReader();
-    reader.onload = (event) => {
-      const content = event.target?.result;
-      setAttachedFile({
-        name: file.name,
-        size: file.size,
-        content: content
-      });
-    };
-    reader.readAsText(file);
-  };
-
-  // Run Hermes Agent
-  const handleRunAgent = async (e) => {
-    e.preventDefault();
-    setRunningAgent(true);
-    setAgentResponse(null);
+    setUploadingFile(true);
     try {
-      const res = await fetch('/api/agent/chat', {
+      const formData = new FormData();
+      formData.append('file', file);
+      const res = await fetch('/api/upload', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ 
-          message: agentPrompt, 
-          max_steps: 3,
-          file_name: attachedFile?.name,
-          file_content: attachedFile?.content
-        })
+        body: formData,
       });
       const data = await res.json();
-      setAgentResponse(data);
+      if (res.ok) {
+        setAttachedFile({
+          name: data.filename,
+          size: data.size_bytes,
+          content: data.content
+        });
+      } else {
+        alert(data.detail || 'Failed to upload file');
+      }
     } catch (err) {
-      setAgentResponse({ status: 'error', detail: err.message });
+      console.error('File upload error:', err);
+      alert('File upload error: ' + err.message);
     } finally {
-      setRunningAgent(false);
+      setUploadingFile(false);
+      if (fileInputRef.current) fileInputRef.current.value = '';
     }
   };
 
-  // Copy to Clipboard
-  const handleCopyAnswer = () => {
-    if (!agentResponse?.final_answer) return;
-    navigator.clipboard.writeText(agentResponse.final_answer);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
-  };
-
-  // Download Markdown Report
-  const handleDownloadReport = () => {
-    if (!agentResponse) return;
-    const report = `# Hackathon AI Agent Report\n\n**Query:** ${agentResponse.query}\n**Model:** ${agentResponse.model_engine}\n**Execution Time:** ${agentResponse.duration_ms} ms\n\n## Agent Steps\n${agentResponse.steps?.map(s => `- **Thought:** ${s.thought}\n  - **Action:** ${s.action} (${s.action_input})\n  - **Observation:** ${s.observation}`).join('\n')}\n\n## Final Synthesis\n${agentResponse.final_answer}\n`;
-    
-    const blob = new Blob([report], { type: 'text/markdown' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `agent_report_${Date.now()}.md`;
-    a.click();
-    URL.revokeObjectURL(url);
-  };
-
-  // Download PDF Report via Styled Browser Print / Save
-  const handleDownloadPDF = () => {
-    if (!agentResponse) return;
-    const printWindow = window.open('', '_blank');
-    if (!printWindow) {
-      alert('Please allow popups in your browser to export the PDF report.');
-      return;
-    }
-
-    const htmlContent = `
-      <!DOCTYPE html>
-      <html>
-      <head>
-        <title>Hackathon AI Agent Executive Report</title>
-        <style>
-          body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; line-height: 1.6; color: #0f172a; padding: 40px; max-width: 850px; margin: auto; }
-          .header { border-bottom: 3px solid #0284c7; padding-bottom: 16px; margin-bottom: 24px; }
-          .pill { display: inline-block; padding: 4px 10px; background: #e0f2fe; color: #0369a1; border-radius: 9999px; font-size: 11px; font-weight: 700; margin-right: 6px; }
-          .meta-box { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 16px; margin-bottom: 24px; font-size: 13px; }
-          .step-card { background: #f8fafc; border-left: 4px solid #0284c7; border-radius: 0 8px 8px 0; padding: 12px 16px; margin-bottom: 12px; font-size: 13px; }
-          .final-card { background: #f0fdf4; border: 1px solid #86efac; border-radius: 12px; padding: 20px; margin-top: 24px; }
-          pre { background: #0f172a; color: #f8fafc; padding: 14px; border-radius: 8px; font-size: 12px; overflow-x: auto; }
-          img { max-width: 100%; border-radius: 8px; margin: 12px 0; box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1); }
-          @media print {
-            body { padding: 0; }
-            .no-print { display: none; }
-          }
-        </style>
-      </head>
-      <body>
-        <div class="header">
-          <h1 style="margin: 0 0 8px 0; font-size: 22px; color: #0f172a;">Autonomous AI Agent Executive Report</h1>
-          <div>
-            <span class="pill">Google Gemma</span>
-            <span class="pill">Nous Hermes Agent</span>
-            <span class="pill">SKILL.md Standard</span>
-            <span class="pill">Kaggle 2x Tesla T4 Cloud GPU</span>
-          </div>
-        </div>
-
-        <div class="meta-box">
-          <div><strong>Query:</strong> ${agentResponse.query}</div>
-          <div><strong>Model Engine:</strong> ${agentResponse.model_engine || 'gemma-kaggle-t4-cloud'}</div>
-          <div><strong>Latency:</strong> ${agentResponse.duration_ms || 0} ms</div>
-          <div><strong>Generated:</strong> ${new Date().toLocaleString()}</div>
-        </div>
-
-        <h3 style="color: #334155; font-size: 15px; margin-top: 20px;">Reasoning Trace:</h3>
-        ${(agentResponse.steps || []).map(s => `
-          <div class="step-card">
-            <div><strong>Thought:</strong> ${s.thought}</div>
-            ${s.action ? `<div><strong>Action:</strong> ${s.action} (Input: ${s.action_input || 'None'})</div>` : ''}
-            ${s.observation ? `<div><strong>Observation:</strong> ${s.observation}</div>` : ''}
-          </div>
-        `).join('')}
-
-        <div class="final-card">
-          <h3 style="margin-top: 0; color: #166534; font-size: 15px;">Final Agent Output:</h3>
-          <div style="white-space: pre-wrap; font-size: 14px;">${agentResponse.final_answer.replace(/!\[(.*?)\]\((.*?)\)/g, '<br/><img src="$2" alt="$1" /><br/>')}</div>
-        </div>
-
-        <div style="margin-top: 30px; text-align: center;" class="no-print">
-          <button onclick="window.print()" style="background: #0284c7; color: white; border: none; padding: 10px 24px; border-radius: 8px; font-weight: 600; cursor: pointer; font-size: 14px;">Save as PDF / Print</button>
-        </div>
-        <script>
-          window.onload = function() {
-            setTimeout(function() { window.print(); }, 400);
-          };
-        </script>
-      </body>
-      </html>
-    `;
-    printWindow.document.write(htmlContent);
-    printWindow.document.close();
-  };
-
-  // Download JSON Telemetry
-  const handleDownloadJSON = () => {
-    if (!agentResponse) return;
-    const blob = new Blob([JSON.stringify(agentResponse, null, 2)], { type: 'application/json' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `agent_telemetry_${Date.now()}.json`;
-    a.click();
-    URL.revokeObjectURL(url);
-  };
-
-  // Create Custom Skill on the Fly
-  const handleCreateSkillSubmit = async (e) => {
+  // Handle Custom Skill Creation
+  const handleCreateSkill = async (e) => {
     e.preventDefault();
-    if (!newSkillName || !newSkillDesc || !newSkillInstructions) return;
-    setCreatingSkill(true);
+    if (!newSkillData.name.trim() || !newSkillData.instructions.trim()) return;
+    setSavingSkill(true);
     try {
+      const tagsArray = newSkillData.tags.split(',').map(t => t.trim()).filter(Boolean);
       const res = await fetch('/api/skills/create', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          name: newSkillName,
-          description: newSkillDesc,
-          instructions: newSkillInstructions,
-          tags: ['hackathon-custom']
+          name: newSkillData.name.trim(),
+          description: newSkillData.description.trim() || 'Custom agent skill',
+          instructions: newSkillData.instructions.trim(),
+          tags: tagsArray
         })
       });
+      const data = await res.json();
       if (res.ok) {
-        await fetchSkills();
         setShowSkillModal(false);
-        setNewSkillName('');
-        setNewSkillDesc('');
-        setNewSkillInstructions('');
+        setNewSkillData({ name: '', description: '', instructions: '', tags: '' });
+        await fetchSkills();
+        if (data.skill) setSelectedSkill(data.skill);
+      } else {
+        alert(data.detail || 'Failed to create skill');
       }
     } catch (err) {
-      console.error('Error creating skill:', err);
+      console.error('Skill creation error:', err);
+      alert('Skill creation error: ' + err.message);
     } finally {
-      setCreatingSkill(false);
+      setSavingSkill(false);
     }
   };
 
-  return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 selection:bg-cyan-500 selection:text-white">
-      {/* Header */}
-      <header className="border-b border-slate-800 bg-slate-900/60 backdrop-blur-md sticky top-0 z-50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
-          <div className="flex items-center space-x-3">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-cyan-500 to-blue-600 flex items-center justify-center shadow-lg shadow-cyan-500/20">
-              <Bot className="w-5 h-5 text-white" />
-            </div>
-            <div>
-              <h1 className="text-lg font-bold text-white tracking-tight flex items-center space-x-2">
-                <span>Gemma & Hermes Agent Platform</span>
-                <span className="text-[11px] font-mono px-2 py-0.5 rounded-full bg-cyan-500/20 text-cyan-300 border border-cyan-500/30">
-                  Universal Hackathon Engine
-                </span>
-              </h1>
-              <p className="text-xs text-slate-400">Google Gemma • Nous Hermes Agent • SKILL.md Standard</p>
-            </div>
-          </div>
+  // Send message to Hermes Agent ReAct loop
+  const handleSendMessage = async (textToSend) => {
+    const text = textToSend || promptInput;
+    if ((!text.trim() && !attachedFile) || runningAgent) return;
 
-          {/* System Status Pill */}
-          <div className="flex items-center space-x-3">
-            <button 
-              onClick={() => { fetchHealth(); fetchSkills(); }} 
-              disabled={loadingHealth}
-              className="p-2 text-slate-400 hover:text-slate-200 transition-colors rounded-lg hover:bg-slate-800"
-              title="Refresh"
-            >
-              <RefreshCw className={`w-4 h-4 ${loadingHealth ? 'animate-spin' : ''}`} />
-            </button>
-            <div className="flex items-center space-x-2 px-3 py-1.5 rounded-full text-xs font-medium border border-slate-700 bg-slate-800/80">
-              <span className={`w-2 h-2 rounded-full ${health?.status === 'healthy' ? 'bg-emerald-400 animate-pulse' : 'bg-amber-400'}`} />
-              <span>{health?.status === 'healthy' ? 'Backend Online' : 'Connecting...'}</span>
-              {health?.cuda_available && (
-                <span className="bg-cyan-500/20 text-cyan-300 px-1.5 py-0.5 rounded text-[10px] font-semibold border border-cyan-500/30">
-                  GPU ACCELERATED
-                </span>
-              )}
-            </div>
-          </div>
-        </div>
-      </header>
+    const currentAttached = attachedFile;
+    const userMsgId = Date.now().toString();
+    const newUserMsg = {
+      id: userMsgId,
+      role: 'user',
+      content: text.trim() || (currentAttached ? `Analyze attached file: ${currentAttached.name}` : ''),
+      attachedFile: currentAttached ? { name: currentAttached.name, size: currentAttached.size } : null,
+      timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+    };
 
-      {/* Nav Tabs */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-6">
-        <div className="flex space-x-2 border-b border-slate-800 pb-2">
-          <button
-            onClick={() => setActiveTab('agent')}
-            className={`px-4 py-2 rounded-lg text-sm font-medium transition-all flex items-center space-x-2 ${
-              activeTab === 'agent'
-                ? 'bg-blue-600/20 text-blue-400 border border-blue-500/30'
-                : 'text-slate-400 hover:text-slate-200 hover:bg-slate-900'
-            }`}
-          >
-            <Bot className="w-4 h-4" />
-            <span>Hermes Agent Console</span>
-          </button>
-          <button
-            onClick={() => setActiveTab('skills')}
-            className={`px-4 py-2 rounded-lg text-sm font-medium transition-all flex items-center space-x-2 ${
-              activeTab === 'skills'
-                ? 'bg-blue-600/20 text-blue-400 border border-blue-500/30'
-                : 'text-slate-400 hover:text-slate-200 hover:bg-slate-900'
-            }`}
-          >
-            <FileCode className="w-4 h-4" />
-            <span>Agent Skills Hub (SKILL.md)</span>
-            <span className="bg-slate-800 text-slate-300 text-[10px] px-1.5 py-0.5 rounded-full border border-slate-700">
-              {skills.length}
-            </span>
-          </button>
-          <button
-            onClick={() => setActiveTab('stack')}
-            className={`px-4 py-2 rounded-lg text-sm font-medium transition-all flex items-center space-x-2 ${
-              activeTab === 'stack'
-                ? 'bg-blue-600/20 text-blue-400 border border-blue-500/30'
-                : 'text-slate-400 hover:text-slate-200 hover:bg-slate-900'
-            }`}
-          >
-            <Layers className="w-4 h-4" />
-            <span>Hackathon Tech Stack</span>
-          </button>
-          <button
-            onClick={() => setActiveTab('team')}
-            className={`px-4 py-2 rounded-lg text-sm font-medium transition-all flex items-center space-x-2 ${
-              activeTab === 'team'
-                ? 'bg-blue-600/20 text-blue-400 border border-blue-500/30'
-                : 'text-slate-400 hover:text-slate-200 hover:bg-slate-900'
-            }`}
-          >
-            <Users className="w-4 h-4" />
-            <span>Team Pods & Roles</span>
-          </button>
-        </div>
-      </div>
+    setMessages((prev) => [...prev, newUserMsg]);
+    setPromptInput('');
+    setAttachedFile(null);
+    setRunningAgent(true);
 
-      {/* Main Content */}
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* TAB 1: HERMES AGENT CONSOLE */}
-        {activeTab === 'agent' && (
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            <div className="lg:col-span-2 space-y-6">
-              <div className="bg-slate-900/50 border border-slate-800 rounded-2xl p-6 shadow-xl">
-                <div className="flex items-center justify-between mb-2">
-                  <h2 className="text-xl font-semibold text-white flex items-center space-x-2">
-                    <Bot className="w-5 h-5 text-cyan-400" />
-                    <span>Hermes Autonomous Agent Execution Loop</span>
-                  </h2>
+    try {
+      const res = await fetch('/api/agent/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          message: text.trim() || `Analyze the attached file: ${currentAttached?.name}`,
+          file_name: currentAttached?.name || null,
+          file_content: currentAttached?.content || null,
+          max_steps: 3
+        })
+      });
+
+      const data = await res.json();
+      const assistantMsgId = (Date.now() + 1).toString();
+      
+      const newAssistantMsg = {
+        id: assistantMsgId,
+        role: 'assistant',
+        content: data.final_answer || 'Task completed successfully.',
+        steps: data.steps || [],
+        duration_ms: data.duration_ms || 0,
+        status: data.status || 'success',
+        timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+      };
+
+      setMessages((prev) => [...prev, newAssistantMsg]);
+
+      // Connect character animation: Switch Hermes to Speaking state
+      setSpeakingMessageId(assistantMsgId);
+      setIsSpeaking(true);
+      if (speakingTimeoutRef.current) clearTimeout(speakingTimeoutRef.current);
+      speakingTimeoutRef.current = setTimeout(() => {
+        setIsSpeaking(false);
+        setSpeakingMessageId(null);
+      }, 3500);
+    } catch (err) {
+      const errorMsg = {
+        id: (Date.now() + 1).toString(),
+        role: 'assistant',
+        content: `Agent execution failed: ${err.message}. Please check if the FastAPI backend is running on port 8000.`,
+        status: 'error',
+        timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+      };
+      setMessages((prev) => [...prev, errorMsg]);
+    } finally {
+      setRunningAgent(false);
+      fetchHealth();
+    }
+  };
+
+  // Multimodal assistant output renderer (Images, Diagrams, Formatting)
+  const renderAssistantContent = (text) => {
+    if (!text) return null;
+    const imgRegex = /!\[(.*?)\]\((https?:\/\/[^\s\)]+)\)/g;
+    const parts = [];
+    let lastIndex = 0;
+    let match;
+
+    while ((match = imgRegex.exec(text)) !== null) {
+      const [fullMatch, alt, url] = match;
+      const matchIndex = match.index;
+      
+      if (matchIndex > lastIndex) {
+        parts.push({
+          type: 'text',
+          content: text.substring(lastIndex, matchIndex)
+        });
+      }
+
+      parts.push({
+        type: 'image',
+        alt: alt || 'Generated Visual',
+        url: url
+      });
+
+      lastIndex = matchIndex + fullMatch.length;
+    }
+
+    if (lastIndex < text.length) {
+      parts.push({
+        type: 'text',
+        content: text.substring(lastIndex)
+      });
+    }
+
+    if (parts.length === 0) {
+      return (
+        <p className="text-sm sm:text-base text-[#F5F5FA] whitespace-pre-wrap leading-relaxed font-normal">
+          {text}
+        </p>
+      );
+    }
+
+    return (
+      <div className="space-y-3.5">
+        {parts.map((p, idx) => {
+          if (p.type === 'text') {
+            return (
+              <p key={idx} className="text-sm sm:text-base text-[#F5F5FA] whitespace-pre-wrap leading-relaxed font-normal">
+                {p.content}
+              </p>
+            );
+          }
+          if (p.type === 'image') {
+            return (
+              <div key={idx} className="rounded-2xl overflow-hidden border border-[#3B0A6B]/50 bg-[#080310] shadow-[0_8px_30px_rgba(0,0,0,0.6)] group transition-all hover:border-[#00E5FF]/60 hover:shadow-[0_0_25px_rgba(0,229,255,0.2)]">
+                <div className="relative overflow-hidden bg-[#050505] flex items-center justify-center min-h-[220px]">
+                  <img
+                    src={p.url}
+                    alt={p.alt}
+                    loading="lazy"
+                    className="w-full max-h-[460px] object-contain transition-transform duration-500 group-hover:scale-[1.02]"
+                  />
                 </div>
-                <p className="text-sm text-slate-400 mb-6">
-                  Universal multi-modal agent loop. Upload documents, datasets, or code to reason with Google Gemma.
-                </p>
+                <div className="px-3.5 py-2.5 bg-[#080310] border-t border-[#3B0A6B]/30 flex items-center justify-between text-xs">
+                  <div className="flex items-center space-x-2 truncate">
+                    <span className="w-1.5 h-1.5 rounded-full bg-[#00E5FF] shadow-[0_0_6px_#00E5FF]" />
+                    <span className="text-[#F5F5FA] font-medium truncate">{p.alt}</span>
+                  </div>
+                  <a
+                    href={p.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="btn-premium px-2 py-1 rounded-lg bg-[#3B0A6B]/30 hover:bg-[#00E5FF]/20 text-[#00E5FF] border border-[#3B0A6B]/40 hover:border-[#00E5FF]/50 flex items-center space-x-1 text-[11px] shrink-0"
+                  >
+                    <span>View Full Size</span>
+                    <ExternalLink className="w-3 h-3" />
+                  </a>
+                </div>
+              </div>
+            );
+          }
+          return null;
+        })}
+      </div>
+    );
+  };
 
-                <form onSubmit={handleRunAgent} className="space-y-4">
-                  <div>
-                    <div className="flex items-center justify-between mb-2">
-                      <label className="text-xs font-semibold uppercase tracking-wider text-slate-400">
-                        Agent Goal / Instructions
-                      </label>
-                      {/* File Upload Trigger */}
-                      <label className="cursor-pointer text-xs flex items-center space-x-1.5 text-cyan-400 hover:text-cyan-300 transition-colors">
-                        <Upload className="w-3.5 h-3.5" />
-                        <span>Attach File (CSV, JSON, Code, Docs)</span>
-                        <input
-                          type="file"
-                          accept=".csv,.json,.txt,.py,.js,.jsx,.md,.sql,.log"
-                          onChange={handleFileChange}
-                          className="hidden"
-                        />
-                      </label>
-                    </div>
+  const handleKeyDown = (e) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      handleSendMessage();
+    }
+  };
 
-                    <textarea
-                      rows={3}
-                      value={agentPrompt}
-                      onChange={(e) => setAgentPrompt(e.target.value)}
-                      placeholder="e.g. Ingest the attached file and use our data-analyst skill to summarize outliers..."
-                      className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-sm text-slate-100 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-transparent transition-all"
-                    />
+  const handleCopy = (id, text) => {
+    navigator.clipboard.writeText(text);
+    setCopiedId(id);
+    setTimeout(() => setCopiedId(null), 2000);
+  };
 
-                    {/* Attached File Preview Badge */}
-                    {attachedFile && (
-                      <div className="mt-2.5 flex items-center justify-between p-2.5 bg-cyan-950/30 border border-cyan-800/40 rounded-xl text-xs text-cyan-300">
-                        <div className="flex items-center space-x-2 truncate">
-                          <FileText className="w-4 h-4 text-cyan-400 shrink-0" />
-                          <span className="font-mono font-medium truncate">{attachedFile.name}</span>
-                          <span className="text-[10px] text-slate-500 font-mono">({Math.round(attachedFile.size / 1024)} KB)</span>
+  const handleNewChat = () => {
+    setMessages([]);
+    setPromptInput('');
+  };
+
+  // Cohesive Suggested Prompts for Empty State
+  const suggestedPrompts = [
+    {
+      category: "SYSTEM TELEMETRY",
+      title: "Hardware & CUDA Benchmark",
+      description: "Verify RTX 2050 CUDA 12.6 tensor acceleration, memory allocations, and core load.",
+      prompt: "Analyze our database statistics and check GPU status.",
+      icon: Cpu
+    },
+    {
+      category: "API ORCHESTRATION",
+      title: "FastAPI Schema Integrator",
+      description: "Generate compliant OpenAPI endpoint contracts with input validations using the skill.",
+      prompt: "Use api-integrator skill to format an endpoint",
+      icon: Code2
+    },
+    {
+      category: "AGENT PLAYBOOK",
+      title: "Data Analyst Workflow",
+      description: "Inspect discovered SKILL.md files, summarize dataset metrics, and log observations.",
+      prompt: "Use data-analyst skill to summarize sample metrics",
+      icon: Activity
+    },
+    {
+      category: "NEURAL HARNESS",
+      title: "Multi-Step ReAct Planning",
+      description: "Demonstrate thought-action-observation cycles across multiple tool calls.",
+      prompt: "Calculate 250 * 18.5 and check PyTorch compute speed",
+      icon: Zap
+    }
+  ];
+
+  // Filter skills by search
+  const filteredSkills = skills.filter((s) => {
+    const q = skillSearch.toLowerCase();
+    return s.name.toLowerCase().includes(q) || s.description?.toLowerCase().includes(q) || s.tags?.some(t => t.toLowerCase().includes(q));
+  });
+
+  const gpuInfo = deviceConfig?.gpu || (health?.gpu && typeof health.gpu === 'object' ? health.gpu : null);
+  const cpuInfo = deviceConfig?.cpu || null;
+  const ramInfo = deviceConfig?.ram || null;
+  const storageInfo = deviceConfig?.storage || null;
+  const modelInfo = deviceConfig?.model || null;
+
+  return (
+    <div className="flex h-screen w-screen overflow-hidden bg-[#050505] text-[#F5F5FA] font-sans antialiased selection:bg-[#3B0A6B]/50 selection:text-[#00E5FF]">
+      
+      {/* ==================================================================== */}
+      {/* 1. LEFT SIDEBAR                                                      */}
+      {/* ==================================================================== */}
+      <aside 
+        className={`${
+          sidebarOpen ? 'w-64 sm:w-72' : 'w-0'
+        } transition-all duration-300 ease-in-out shrink-0 h-full sidebar-glass flex flex-col justify-between overflow-hidden relative z-40 border-r border-[#3B0A6B]/30`}
+      >
+        <div className="flex flex-col h-full p-3.5 space-y-4">
+          
+          {/* Logo & Product Brand */}
+          <div className="flex items-center justify-between px-2 pt-1.5 pb-2 border-b border-[#3B0A6B]/25">
+            <div className="flex items-center space-x-2.5">
+              <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-[#3B0A6B] to-[#080310] border border-[#00E5FF]/40 flex items-center justify-center shadow-[0_0_15px_rgba(0,229,255,0.2)]">
+                <Bot className="w-4.5 h-4.5 text-[#00E5FF]" />
+              </div>
+              <div>
+                <span className="font-bold text-sm tracking-tight text-[#F5F5FA] flex items-center space-x-1.5">
+                  <span>Hermes</span>
+                  <span className="text-[10px] px-1.5 py-0.2 rounded-full bg-[#3B0A6B]/40 text-[#00E5FF] border border-[#00E5FF]/25 font-mono">
+                    2.0
+                  </span>
+                </span>
+                <p className="text-[10px] text-[#858091] font-mono">Gemma ReAct Engine</p>
+              </div>
+            </div>
+            
+            <button 
+              onClick={() => setSidebarOpen(false)}
+              className="sm:hidden text-[#858091] hover:text-[#00E5FF] p-1 rounded-lg hover:bg-[#3B0A6B]/25 transition-colors"
+            >
+              <X className="w-4 h-4" />
+            </button>
+          </div>
+
+          {/* "+ New Agent Session" Button with white hover sheen */}
+          <button
+            onClick={handleNewChat}
+            className="w-full btn-premium sheen-travel flex items-center justify-between px-3.5 py-2.5 rounded-xl bg-gradient-to-r from-[#3B0A6B]/40 via-[#220642]/30 to-[#080310] border border-[#3B0A6B]/50 hover:border-white/30 text-xs font-semibold text-[#F5F5FA] hover:text-white shadow-sm transition-all group"
+          >
+            <div className="flex items-center space-x-2">
+              <Plus className="w-4 h-4 text-[#00E5FF] transition-transform duration-200 group-hover:rotate-90" />
+              <span>New Agent Session</span>
+            </div>
+            <span className="text-[10px] text-[#858091] font-mono group-hover:text-[#00E5FF] transition-colors">⌘K</span>
+          </button>
+
+          {/* Sessions & Navigation */}
+          <div className="flex-1 overflow-y-auto no-scrollbar space-y-1 pt-1">
+            <span className="text-[10px] font-semibold uppercase tracking-wider text-[#858091] px-2 block mb-2 font-mono">
+              Conversations
+            </span>
+            
+            <button
+              onClick={() => {}}
+              className="w-full text-left px-2.5 py-2 rounded-xl text-xs bg-[#3B0A6B]/40 text-[#F5F5FA] border border-[#00E5FF]/50 flex items-center space-x-2.5 truncate font-medium shadow-[0_0_15px_rgba(0,229,255,0.15)] relative overflow-hidden group"
+            >
+              <div className="w-1.5 h-1.5 rounded-full bg-[#00E5FF] shadow-[0_0_6px_#00E5FF] shrink-0" />
+              <span className="truncate flex-1">
+                {messages.length > 0 ? messages[0].content.slice(0, 26) + '...' : 'Current Agent Session'}
+              </span>
+            </button>
+
+            <button
+              onClick={() => handleSendMessage("Analyze our database statistics and check GPU status.")}
+              className="w-full text-left px-2.5 py-2 rounded-xl text-xs text-[#B8B3C7] hover:text-[#F5F5FA] hover:bg-white/[0.04] border border-transparent hover:border-white/10 flex items-center space-x-2.5 truncate transition-all group"
+            >
+              <Activity className="w-3.5 h-3.5 text-[#858091] group-hover:text-[#00E5FF] shrink-0 transition-colors" />
+              <span className="truncate">Database & Telemetry Audit</span>
+            </button>
+
+            <button
+              onClick={() => handleSendMessage("Use api-integrator skill to format an endpoint")}
+              className="w-full text-left px-2.5 py-2 rounded-xl text-xs text-[#B8B3C7] hover:text-[#F5F5FA] hover:bg-white/[0.04] border border-transparent hover:border-white/10 flex items-center space-x-2.5 truncate transition-all group"
+            >
+              <Code2 className="w-3.5 h-3.5 text-[#858091] group-hover:text-[#00E5FF] shrink-0 transition-colors" />
+              <span className="truncate">API Schema Generator</span>
+            </button>
+
+            {/* Context Panel Shortcut Links */}
+            <div className="pt-4 space-y-1">
+              <span className="text-[10px] font-semibold uppercase tracking-wider text-[#858091] px-2 block mb-2 font-mono">
+                Workspace Tools
+              </span>
+
+              <button
+                onClick={() => { setContextTab('skills'); setContextPanelOpen(true); }}
+                className="w-full text-left px-2.5 py-2 rounded-xl text-xs text-[#B8B3C7] hover:text-[#F5F5FA] hover:bg-white/[0.04] border border-transparent hover:border-white/10 flex items-center justify-between transition-all group"
+              >
+                <div className="flex items-center space-x-2.5">
+                  <FileCode className="w-3.5 h-3.5 text-[#00E5FF] group-hover:scale-110 transition-transform" />
+                  <span>Agent Skills Hub</span>
+                </div>
+                <span className="text-[10px] font-mono px-1.5 py-0.5 rounded-full bg-[#3B0A6B]/30 text-[#00E5FF] border border-[#3B0A6B]/40 group-hover:border-[#00E5FF]/40">
+                  {skills.length}
+                </span>
+              </button>
+
+              <button
+                onClick={() => { setContextTab('device'); setContextPanelOpen(true); }}
+                className="w-full text-left px-2.5 py-2 rounded-xl text-xs text-[#B8B3C7] hover:text-[#F5F5FA] hover:bg-white/[0.04] border border-transparent hover:border-white/10 flex items-center justify-between transition-all group"
+              >
+                <div className="flex items-center space-x-2.5">
+                  <Cpu className="w-3.5 h-3.5 text-[#00E5FF] group-hover:scale-110 transition-transform" />
+                  <span>Device Telemetry</span>
+                </div>
+                <span className="w-1.5 h-1.5 rounded-full bg-[#00E5FF] shadow-[0_0_6px_#00E5FF]" />
+              </button>
+
+              <button
+                onClick={() => { setContextTab('project'); setContextPanelOpen(true); }}
+                className="w-full text-left px-2.5 py-2 rounded-xl text-xs text-[#B8B3C7] hover:text-[#F5F5FA] hover:bg-white/[0.04] border border-transparent hover:border-white/10 flex items-center space-x-2.5 transition-all group"
+              >
+                <Users className="w-3.5 h-3.5 text-[#00E5FF] group-hover:scale-110 transition-transform" />
+                <span>Team & Pods</span>
+              </button>
+            </div>
+          </div>
+
+          {/* User Profile Card at Bottom with White Hover Highlight */}
+          <div className="p-2.5 rounded-2xl bg-[#080310] border border-[#3B0A6B]/40 hover:border-white/20 transition-all flex items-center justify-between shadow-sm group">
+            <div className="flex items-center space-x-2.5">
+              <div className="w-7 h-7 rounded-xl bg-gradient-to-tr from-[#3B0A6B] to-[#120324] border border-[#00E5FF]/30 flex items-center justify-center font-bold text-xs text-[#FFFFFF] shadow-sm group-hover:border-[#00E5FF]">
+                V
+              </div>
+              <div className="overflow-hidden">
+                <span className="text-xs font-medium text-[#F5F5FA] block truncate">@vedxnt-b</span>
+                <span className="text-[10px] text-[#858091] block truncate font-mono">Pod 1 • Frontend Lead</span>
+              </div>
+            </div>
+            <span className="w-2 h-2 rounded-full bg-[#00E5FF] shadow-[0_0_8px_#00E5FF] shrink-0" title="System Online" />
+          </div>
+
+        </div>
+      </aside>
+
+      {/* ==================================================================== */}
+      {/* 2. MAIN CONVERSATIONAL CANVAS (The Visual Center)                     */}
+      {/* ==================================================================== */}
+      <div 
+        ref={mainCanvasRef}
+        className="flex-1 flex flex-col h-full min-w-0 relative overflow-hidden bg-[#050505]"
+      >
+        {/* Layered Cursor Spotlight: Soft White Core + Cyan Highlight + Amethyst Ambient Glow */}
+        <WorkspaceSpotlight containerRef={mainCanvasRef} />
+        
+        {/* Royal Amethyst Ambient Illumination with 3D Parallax */}
+        <div 
+          style={{ transform: `translate(-50%, ${scrollOffset * 0.12}px)` }}
+          className="absolute top-0 left-1/2 w-[760px] h-[360px] amethyst-ambient-aura pointer-events-none z-0 will-change-transform" 
+        />
+
+        {/* Top Minimal Navbar with Specular Line */}
+        <header className="h-14 border-b border-[#3B0A6B]/30 bg-[#050505]/90 backdrop-blur-xl flex items-center justify-between px-4 sm:px-6 relative z-10 shrink-0 specular-line">
+          <div className="flex items-center space-x-3">
+            <button
+              onClick={() => setSidebarOpen(!sidebarOpen)}
+              className="btn-premium text-[#B8B3C7] hover:text-[#00E5FF] p-1.5 rounded-xl hover:bg-white/[0.04] border border-transparent hover:border-white/10"
+              title={sidebarOpen ? "Collapse Sidebar" : "Expand Sidebar"}
+            >
+              <Menu className="w-4 h-4" />
+            </button>
+
+            {/* Hermes Dynamic Companion Badge in Top Bar */}
+            <div className="flex items-center space-x-2 px-3 py-1 rounded-full bg-[#080310] border border-[#3B0A6B]/45 hover:border-white/20 transition-all shadow-[0_0_15px_rgba(59,10,107,0.3)]">
+              <HermesCharacter size="sm" state={getHermesState()} interactive={false} />
+              <div className="flex flex-col text-left">
+                <div className="flex items-center space-x-1.5">
+                  <span className="text-[11px] font-semibold text-[#F5F5FA] tracking-tight leading-none">
+                    Hermes
+                  </span>
+                  <span className="w-1.5 h-1.5 rounded-full bg-[#00E5FF] animate-status-breathe" />
+                </div>
+                <span className="text-[9px] font-mono text-[#00E5FF] uppercase leading-none pt-0.5 tracking-wider">
+                  {getHermesState()}
+                </span>
+              </div>
+            </div>
+
+            {/* Model Identity Pill */}
+            <div className="hidden md:flex items-center space-x-2 px-3 py-1 rounded-full bg-[#3B0A6B]/20 border border-[#3B0A6B]/45 shadow-sm">
+              <span className="text-xs font-medium text-[#F5F5FA] tracking-tight">
+                Google Gemma 2
+              </span>
+              <span className="text-[9px] font-mono text-[#00E5FF] bg-[#3B0A6B]/40 border border-[#00E5FF]/20 px-1.5 py-0.2 rounded-full">
+                ReAct Agent
+              </span>
+            </div>
+          </div>
+
+          {/* Right Header Controls */}
+          <div className="flex items-center space-x-2">
+            {/* CUDA Status Pill */}
+            {health?.cuda_available && (
+              <span className="hidden sm:inline-flex items-center space-x-1.5 bg-[#3B0A6B]/25 text-[#00E5FF] border border-[#00E5FF]/30 px-2.5 py-1 rounded-full text-[10px] font-mono shadow-[0_0_12px_rgba(0,229,255,0.15)]">
+                <span className="w-1.5 h-1.5 rounded-full bg-[#00E5FF] shadow-[0_0_6px_#00E5FF]" />
+                <span>RTX 2050 CUDA 12.6</span>
+              </span>
+            )}
+
+            {/* New Chat Clear Shortcut if in conversation */}
+            {messages.length > 0 && (
+              <button
+                onClick={handleNewChat}
+                className="btn-premium px-2.5 py-1.5 rounded-xl text-xs text-[#858091] hover:text-[#F5F5FA] hover:bg-white/[0.04] border border-transparent hover:border-white/10 flex items-center space-x-1.5"
+                title="Reset conversation"
+              >
+                <Trash2 className="w-3.5 h-3.5" />
+                <span className="hidden sm:inline">Reset</span>
+              </button>
+            )}
+
+            {/* Context Workspace Panel Toggle Button */}
+            <button
+              onClick={() => setContextPanelOpen(!contextPanelOpen)}
+              className={`btn-premium sheen-travel px-3 py-1.5 rounded-xl text-xs font-medium flex items-center space-x-2 border transition-all ${
+                contextPanelOpen
+                  ? 'bg-[#3B0A6B] text-[#FFFFFF] border-[#00E5FF]/60 shadow-[0_0_20px_rgba(0,229,255,0.3)]'
+                  : 'bg-[#080310] text-[#B8B3C7] hover:text-[#00E5FF] hover:border-white/20 border-[#3B0A6B]/35'
+              }`}
+              title="Toggle Workspace Inspector"
+            >
+              <Sliders className="w-3.5 h-3.5 text-[#00E5FF]" />
+              <span className="hidden sm:inline">Workspace Specs</span>
+            </button>
+          </div>
+        </header>
+
+        {/* ================================================================== */}
+        {/* CENTER CONVERSATION FEED (with 3D Parallax Scroll Listener)        */}
+        {/* ================================================================== */}
+        <div 
+          onScroll={handleFeedScroll}
+          className="flex-1 overflow-y-auto px-4 sm:px-6 py-6 space-y-6 relative z-10 scroll-smooth custom-scrollbar"
+        >
+          <div className="max-w-4xl mx-auto w-full">
+
+            {/* A. POLISHED EMPTY STATE: Hermes AI Identity & Suggested Tasks */}
+            {messages.length === 0 && (
+              <div className="animate-slide-up flex flex-col items-center justify-center pt-8 pb-12 text-center space-y-7">
+                
+                {/* THE 3D LIVING HERMES AI CHARACTER (Centerpiece) */}
+                <div className="flex flex-col items-center justify-center pt-2">
+                  <HermesCharacter
+                    size="hero"
+                    state={getHermesState()}
+                    interactive={true}
+                    showStatusPill={true}
+                    scrollProgress={scrollProgress}
+                  />
+                </div>
+
+                {/* Hero Greeting Typography */}
+                <div className="space-y-2 max-w-xl">
+                  <div className="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-[#3B0A6B]/25 border border-[#3B0A6B]/40 text-[#00E5FF] text-[10px] font-mono tracking-widest uppercase mb-1">
+                    <Sparkles className="w-3 h-3 text-[#00E5FF]" />
+                    <span>Neural Agent Workspace</span>
+                  </div>
+                  <h2 className="text-2xl sm:text-3xl font-bold text-[#F5F5FA] tracking-tight">
+                    What can Hermes orchestrate for you?
+                  </h2>
+                  <p className="text-xs sm:text-sm text-[#B8B3C7] leading-relaxed font-normal">
+                    Autonomous agent harness powered by Google Gemma open weights. Ready to explore playbooks, invoke dynamic tools, and evaluate observations.
+                  </p>
+                </div>
+
+                {/* 3D Interactive Suggested Task Cards (USER → HERMES → RESULT) */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 w-full pt-2 text-left">
+                  {suggestedPrompts.map((card, idx) => {
+                    const IconComponent = card.icon;
+                    return (
+                      <TiltCard
+                        key={idx}
+                        onClick={() => handleSendMessage(card.prompt)}
+                        className="p-4 rounded-2xl bg-[#080310] border border-[#3B0A6B]/40 cursor-pointer space-y-2.5 transition-colors duration-200"
+                      >
+                        <div className="flex items-center justify-between">
+                          <span className="text-[9px] font-mono uppercase tracking-wider text-[#00E5FF] bg-[#3B0A6B]/30 px-2 py-0.5 rounded-md border border-[#3B0A6B]/40">
+                            {card.category}
+                          </span>
+                          <div className="w-6 h-6 rounded-lg bg-[#3B0A6B]/35 text-[#00E5FF] flex items-center justify-center transition-transform duration-200 group-hover:scale-110">
+                            <IconComponent className="w-3.5 h-3.5" />
+                          </div>
                         </div>
-                        <button
-                          type="button"
-                          onClick={() => setAttachedFile(null)}
-                          className="text-slate-400 hover:text-red-400 p-1 transition-colors"
-                          title="Remove file"
-                        >
-                          <X className="w-4 h-4" />
-                        </button>
+                        <div>
+                          <h3 className="text-xs font-semibold text-[#F5F5FA] tracking-tight group-hover:text-white flex items-center justify-between">
+                            <span>{card.title}</span>
+                            <ChevronRight className="w-3 h-3 text-[#858091] group-hover:text-[#00E5FF] group-hover:translate-x-0.5 transition-transform" />
+                          </h3>
+                          <p className="text-[11px] text-[#B8B3C7] leading-relaxed line-clamp-2 pt-1 font-normal">
+                            {card.description}
+                          </p>
+                        </div>
+                      </TiltCard>
+                    );
+                  })}
+                </div>
+
+              </div>
+            )}
+
+            {/* B. ACTIVE CONVERSATION: USER → HERMES WORKFLOW */}
+            {messages.length > 0 && (
+              <div className="space-y-8 pb-44">
+
+                {/* SIGNATURE 3D NEURAL COMPANION CAPSULE (Architectural Floating Module) */}
+                <div className="sticky top-0 z-30 mb-6 -mx-2 px-4 py-2.5 rounded-2xl bg-[#080310]/85 backdrop-blur-xl border border-[#3B0A6B]/40 hover:border-white/20 shadow-[0_8px_32px_rgba(0,0,0,0.8),0_0_20px_rgba(59,10,107,0.25)] flex items-center justify-between transition-all">
+                  <div className="flex items-center space-x-3">
+                    <div className="w-12 h-12 flex items-center justify-center shrink-0">
+                      <HermesCharacter 
+                        size="companion" 
+                        state={getHermesState()} 
+                        interactive={true} 
+                      />
+                    </div>
+                    <div>
+                      <div className="flex items-center space-x-2">
+                        <span className="text-xs font-bold text-[#F5F5FA] tracking-tight">Hermes Neural Assistant</span>
+                        <span className="w-1.5 h-1.5 rounded-full bg-[#00E5FF] animate-status-breathe" />
+                        <span className="text-[10px] font-mono text-[#00E5FF] uppercase tracking-wider bg-[#3B0A6B]/40 px-2 py-0.5 rounded-full border border-[#00E5FF]/25">
+                          {getHermesState()}
+                        </span>
                       </div>
-                    )}
+                      <p className="text-[10px] text-[#858091] font-mono pt-0.5">
+                        {runningAgent 
+                          ? (liveExecutionStage === 1 ? 'Analyzing prompt intent...' : liveExecutionStage === 2 ? 'Discovering operational skills...' : liveExecutionStage === 3 ? 'Executing ReAct tool call...' : 'Synthesizing final answer...')
+                          : 'Ready for instructions • Google Gemma 2 ReAct Engine'}
+                      </p>
+                    </div>
                   </div>
 
-                  <div className="flex items-center justify-between">
+                  <div className="flex items-center space-x-2">
+                    {health?.cuda_available && (
+                      <span className="hidden sm:inline-flex items-center space-x-1.5 bg-[#3B0A6B]/30 text-[#00E5FF] border border-[#00E5FF]/30 px-2.5 py-1 rounded-full text-[10px] font-mono">
+                        <span className="w-1 h-1 rounded-full bg-[#00E5FF] shadow-[0_0_6px_#00E5FF]" />
+                        <span>CUDA 12.6</span>
+                      </span>
+                    )}
                     <button
-                      type="submit"
-                      disabled={runningAgent}
-                      className="inline-flex items-center space-x-2 bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-500 hover:to-cyan-500 text-white font-medium px-5 py-2.5 rounded-xl transition-all shadow-lg shadow-blue-500/25 disabled:opacity-50"
+                      onClick={handleNewChat}
+                      className="btn-premium px-2.5 py-1 rounded-lg text-xs text-[#858091] hover:text-[#F5F5FA] hover:bg-white/[0.04] border border-transparent hover:border-white/10 flex items-center space-x-1.5"
+                      title="Start New Agent Session"
                     >
-                      {runningAgent ? (
+                      <Plus className="w-3.5 h-3.5 text-[#00E5FF]" />
+                      <span className="hidden sm:inline">New Session</span>
+                    </button>
+                  </div>
+                </div>
+                {messages.map((msg) => (
+                  <div 
+                    key={msg.id} 
+                    className={`animate-slide-up flex flex-col ${msg.role === 'user' ? 'items-end' : 'items-start'} space-y-2`}
+                  >
+                    
+                    {/* Role Header */}
+                    <div className="flex items-center space-x-2 px-1 text-[11px] text-[#B8B3C7] font-medium">
+                      {msg.role === 'user' ? (
                         <>
-                          <RefreshCw className="w-4 h-4 animate-spin" />
-                          <span>Agent Reasoning...</span>
+                          <span className="text-[#B8B3C7]">You</span>
+                          <span>•</span>
+                          <span className="font-mono text-[10px] text-[#858091]">{msg.timestamp}</span>
                         </>
                       ) : (
                         <>
-                          <span>Run Agent Loop</span>
-                          <ArrowRight className="w-4 h-4" />
+                          <div className="w-5 h-5 flex items-center justify-center shrink-0">
+                            <HermesCharacter 
+                              size="sm" 
+                              state={speakingMessageId === msg.id ? 'speaking' : 'idle'} 
+                              interactive={false} 
+                            />
+                          </div>
+                          <span className="text-[#F5F5FA] font-semibold">Hermes Agent</span>
+                          <span>•</span>
+                          <span className="font-mono text-[10px] text-[#858091]">{msg.timestamp}</span>
                         </>
                       )}
-                    </button>
-                    <div className="flex flex-wrap items-center gap-2 text-xs text-slate-500">
-                      <span>Quick Prompts:</span>
-                      <button 
-                        type="button" 
-                        onClick={() => setAgentPrompt("Generate an image of a futuristic AI hospital dashboard with glowing vitals in 8k cinematic lighting")} 
-                        className="px-2.5 py-1 rounded-lg bg-cyan-950/70 border border-cyan-800/60 text-cyan-300 hover:bg-cyan-900 transition-colors flex items-center space-x-1"
-                      >
-                        <ImageIcon className="w-3 h-3 text-cyan-400" />
-                        <span>AI Image Gen</span>
-                      </button>
-                      <button 
-                        type="button" 
-                        onClick={() => setAgentPrompt("Draw a flowchart of our autonomous agent platform architecture and data flow")} 
-                        className="px-2.5 py-1 rounded-lg bg-blue-950/70 border border-blue-800/60 text-blue-300 hover:bg-blue-900 transition-colors"
-                      >
-                        <span>Flowchart Diagram</span>
-                      </button>
-                      <button 
-                        type="button" 
-                        onClick={() => setAgentPrompt("Calculate 250 * 18.5 and check system GPU telemetry")} 
-                        className="px-2.5 py-1 rounded-lg bg-slate-900 border border-slate-800 text-slate-300 hover:bg-slate-800 transition-colors"
-                      >
-                        <span>Math + Telemetry</span>
-                      </button>
                     </div>
+
+                    {/* User Prompt Message Bubble (Royal Amethyst Surface with white hover sheen) */}
+                    {msg.role === 'user' && (
+                      <div className="max-w-xl rounded-2xl bg-[#3B0A6B]/25 border border-[#3B0A6B]/45 hover:border-white/20 transition-all px-4.5 py-3 text-sm text-[#F5F5FA] leading-relaxed shadow-[0_4px_24px_rgba(0,0,0,0.6)]">
+                        {msg.attachedFile && (
+                          <div className="flex items-center space-x-2 px-2.5 py-1 mb-2 rounded-lg bg-[#00E5FF]/10 border border-[#00E5FF]/30 text-xs text-[#00E5FF] w-fit">
+                            <FileText className="w-3.5 h-3.5 text-[#00E5FF]" />
+                            <span className="font-mono text-[11px] truncate max-w-[200px]">{msg.attachedFile.name}</span>
+                            <span className="text-[10px] text-[#B8B3C7] font-mono">({Math.round(msg.attachedFile.size / 1024)} KB)</span>
+                          </div>
+                        )}
+                        {msg.content}
+                      </div>
+                    )}
+
+                    {/* Hermes Assistant Response Area */}
+                    {msg.role === 'assistant' && (
+                      <div className="w-full max-w-4xl space-y-3.5">
+                        
+                        {/* Elegant Expandable Activity Stepper Element */}
+                        {msg.steps && msg.steps.length > 0 && (
+                          <div className="rounded-2xl bg-[#080310] border border-[#3B0A6B]/40 hover:border-white/15 overflow-hidden transition-all duration-200 shadow-sm">
+                            
+                            {/* Summary Activity Pill */}
+                            <button
+                              onClick={() => setExpandedTraceId(expandedTraceId === msg.id ? null : msg.id)}
+                              className="w-full px-4 py-2.5 flex items-center justify-between text-xs text-[#B8B3C7] hover:text-[#F5F5FA] bg-[#050505]/40 hover:bg-[#3B0A6B]/20 transition-colors"
+                            >
+                              <div className="flex items-center space-x-2">
+                                <CheckCircle2 className="w-3.5 h-3.5 text-[#00E5FF]" />
+                                <span className="font-medium text-[#F5F5FA]">
+                                  Agent completed {msg.steps.length} {msg.steps.length === 1 ? 'activity' : 'activities'}
+                                </span>
+                                <span className="hidden sm:inline text-[#858091] text-[11px] font-mono">
+                                  ({msg.steps.map(s => s.action ? s.action : 'reasoning').join(' ➔ ')})
+                                </span>
+                              </div>
+                              
+                              <div className="flex items-center space-x-2 text-[11px]">
+                                <span className="font-mono text-[#00E5FF] bg-[#3B0A6B]/30 px-2 py-0.5 rounded-full border border-[#3B0A6B]/40">
+                                  {msg.duration_ms} ms
+                                </span>
+                                {expandedTraceId === msg.id ? (
+                                  <ChevronUp className="w-3.5 h-3.5 text-[#858091]" />
+                                ) : (
+                                  <ChevronDown className="w-3.5 h-3.5 text-[#858091]" />
+                                )}
+                              </div>
+                            </button>
+
+                            {/* Expandable Activity Details */}
+                            {expandedTraceId === msg.id && (
+                              <div className="p-4 border-t border-[#3B0A6B]/30 space-y-3 animate-slide-up bg-[#050505] text-xs">
+                                {msg.steps.map((s, sIdx) => (
+                                  <div key={sIdx} className="space-y-2 p-3 rounded-xl bg-[#080310] border border-[#3B0A6B]/35 hover:border-white/15 transition-all">
+                                    {/* Activity Header */}
+                                    <div className="flex items-center justify-between">
+                                      <div className="flex items-center space-x-2">
+                                        <div className="w-5 h-5 rounded-md bg-[#3B0A6B] text-[#FFFFFF] border border-[#00E5FF]/40 flex items-center justify-center font-mono text-[10px] font-bold">
+                                          {sIdx + 1}
+                                        </div>
+                                        <span className="font-semibold text-[#F5F5FA]">
+                                          {s.action ? `Calling tool: ${s.action}` : 'Reasoning & Planning'}
+                                        </span>
+                                      </div>
+                                      <span className="text-[10px] text-[#00E5FF] font-mono">Completed</span>
+                                    </div>
+
+                                    {/* Natural Language Thought */}
+                                    <p className="text-[#B8B3C7] leading-relaxed text-[11px] pl-7">
+                                      {s.thought}
+                                    </p>
+
+                                    {/* Action Input (if any) */}
+                                    {s.action && (
+                                      <div className="ml-7 p-2 bg-[#050505] rounded-lg border border-[#3B0A6B]/40 text-[11px] font-mono text-[#B8B3C7]">
+                                        <span className="text-[#858091]">Input: </span>
+                                        <span className="text-[#00E5FF]">{s.action_input}</span>
+                                      </div>
+                                    )}
+
+                                    {/* Observation Output (if any) */}
+                                    {s.observation && (
+                                      <div className="ml-7 p-2.5 bg-[#050505] rounded-lg border border-[#00E5FF]/30 text-[#00E5FF] text-[11px] font-mono whitespace-pre-wrap leading-relaxed max-h-40 overflow-y-auto custom-scrollbar">
+                                        <span className="text-[#858091] block text-[9px] uppercase font-bold tracking-wider mb-0.5">Observation:</span>
+                                        {s.observation}
+                                      </div>
+                                    )}
+                                  </div>
+                                ))}
+                              </div>
+                            )}
+                          </div>
+                        )}
+
+                        {/* Spacious, Highly Readable Final Answer */}
+                        <div className="space-y-3 pt-1">
+                          {renderAssistantContent(msg.content)}
+
+                          {/* Assistant Footer Action Toolbar with White Hover Highlights */}
+                          <div className="flex items-center justify-between pt-2 text-xs border-t border-[#3B0A6B]/20">
+                            <span className="text-[10px] text-[#858091] font-mono">
+                              Google Gemma 2 • Hermes ReAct Harness
+                            </span>
+                            
+                            <div className="flex items-center space-x-1.5">
+                              {/* Voice Read Aloud Toggle */}
+                              <button
+                                onClick={() => handleSpeakMessage(msg.id, msg.content)}
+                                className={`btn-premium px-2.5 py-1 rounded-lg border flex items-center space-x-1 text-[11px] transition-all ${
+                                  speakingMessageId === msg.id && isSpeaking
+                                    ? 'bg-[#00E5FF]/20 text-[#00E5FF] border-[#00E5FF]/60 shadow-[0_0_15px_rgba(0,229,255,0.3)]'
+                                    : 'bg-[#080310] hover:bg-white/[0.05] text-[#B8B3C7] hover:text-[#00E5FF] border-[#3B0A6B]/35 hover:border-white/20'
+                                }`}
+                                title={speakingMessageId === msg.id && isSpeaking ? "Stop Voice" : "Hear Hermes Speak"}
+                              >
+                                {speakingMessageId === msg.id && isSpeaking ? (
+                                  <>
+                                    <VolumeX className="w-3 h-3 text-[#00E5FF]" />
+                                    <span>Mute</span>
+                                  </>
+                                ) : (
+                                  <>
+                                    <Volume2 className="w-3 h-3 text-[#00E5FF]" />
+                                    <span>Speak</span>
+                                  </>
+                                )}
+                              </button>
+
+                              <button
+                                onClick={() => handleCopy(msg.id, msg.content)}
+                                className="btn-premium px-2.5 py-1 rounded-lg bg-[#080310] hover:bg-white/[0.05] text-[#B8B3C7] hover:text-[#00E5FF] border border-[#3B0A6B]/35 hover:border-white/20 flex items-center space-x-1.5 text-[11px]"
+                                title="Copy Response"
+                              >
+                                {copiedId === msg.id ? (
+                                  <>
+                                    <Check className="w-3 h-3 text-[#00E5FF]" />
+                                    <span className="text-[#00E5FF]">Copied</span>
+                                  </>
+                                ) : (
+                                  <>
+                                    <Copy className="w-3 h-3 text-[#B8B3C7]" />
+                                    <span>Copy</span>
+                                  </>
+                                )}
+                              </button>
+
+                              <button
+                                onClick={() => handleSendMessage(messages[messages.length - 2]?.content || "Retry")}
+                                className="btn-premium p-1.5 rounded-lg bg-[#080310] hover:bg-white/[0.05] text-[#B8B3C7] hover:text-[#00E5FF] border border-[#3B0A6B]/35 hover:border-white/20"
+                                title="Regenerate"
+                              >
+                                <RotateCcw className="w-3 h-3" />
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+
+                      </div>
+                    )}
+
                   </div>
-                </form>
+                ))}
 
-                {/* Reasoning Trace Steps */}
-                {agentResponse && (
-                  <div className="mt-6 border-t border-slate-800/80 pt-6 space-y-4">
-                    <div className="flex items-center justify-between">
-                      <span className="text-xs font-bold uppercase tracking-wider text-slate-400">
-                        Reasoning Steps & Tool Traces
-                      </span>
-                      <span className="text-xs text-emerald-400 font-mono">
-                        Latency: {agentResponse.duration_ms || 0} ms • Engine: {agentResponse.model_engine || 'Gemma'}
-                      </span>
+                {/* VISUAL LIVE AGENT WORKFLOW IN PROGRESS */}
+                {runningAgent && (
+                  <div className="animate-slide-up flex items-start space-x-4 max-w-2xl pt-2">
+                    {/* Live Reactive Hermes Character (MD size) */}
+                    <div className="shrink-0 -mt-1">
+                      <HermesCharacter
+                        size="md"
+                        state={getHermesState()}
+                        interactive={false}
+                      />
                     </div>
-
-                    {agentResponse.steps?.map((s, idx) => (
-                      <div key={idx} className="bg-slate-950 border border-slate-800 rounded-xl p-4 text-xs space-y-2">
-                        <div className="flex items-center space-x-2 text-cyan-400 font-semibold">
-                          <Zap className="w-3.5 h-3.5" />
-                          <span>Thought: {s.thought}</span>
-                        </div>
-                        {s.action && (
-                          <div className="p-2 bg-slate-900 rounded-lg text-slate-300 font-mono flex items-center justify-between">
-                            <span>Action: <strong className="text-amber-400">{s.action}</strong></span>
-                            <span className="text-slate-500">Input: {s.action_input}</span>
-                          </div>
-                        )}
-                        {s.observation && (
-                          <div className="p-2.5 bg-slate-900/60 border border-slate-800 rounded-lg text-emerald-300 font-mono">
-                            <span className="text-slate-400 block text-[10px] uppercase font-bold mb-1">Observation:</span>
-                            {s.observation}
-                          </div>
-                        )}
+                    
+                    {/* Progressive Agent Activity Stepper */}
+                    <div className="p-4 rounded-2xl bg-[#080310] border border-[#3B0A6B]/45 shadow-[0_0_30px_rgba(59,10,107,0.35)] space-y-3 flex-1 text-xs card-interactive">
+                      <div className="flex items-center space-x-2 text-[#00E5FF] font-medium">
+                        <Sparkles className="w-3.5 h-3.5 animate-spin text-[#00E5FF]" />
+                        <span>Hermes is executing agent workflow...</span>
                       </div>
-                    ))}
 
-                    {/* Final Answer Card with Multimodal Outputs & Rich Export Controls */}
-                    <div className="p-6 bg-gradient-to-br from-blue-950/40 via-slate-950 to-slate-950 border border-blue-900/50 rounded-2xl space-y-4 shadow-2xl">
-                      <div className="flex flex-wrap items-center justify-between gap-3 border-b border-blue-900/40 pb-3">
-                        <div className="flex items-center space-x-2">
-                          <Sparkles className="w-4 h-4 text-cyan-400" />
-                          <span className="text-xs font-bold uppercase tracking-wider text-cyan-300">
-                            Final Agent Output (Google Gemma + Hermes)
-                          </span>
+                      {/* Live Workflow Steps Visualizer */}
+                      <div className="space-y-2 pt-1 font-sans">
+                        <div className={`flex items-center space-x-2.5 transition-opacity ${liveExecutionStage >= 1 ? 'opacity-100 text-[#F5F5FA]' : 'opacity-40 text-[#858091]'}`}>
+                          {liveExecutionStage > 1 ? (
+                            <CheckCircle2 className="w-3.5 h-3.5 text-[#00E5FF] shrink-0" />
+                          ) : (
+                            <CircleDot className="w-3.5 h-3.5 text-[#00E5FF] animate-pulse shrink-0" />
+                          )}
+                          <span>Analyzing your request & planning strategy</span>
                         </div>
-                        <div className="flex flex-wrap items-center gap-1.5">
-                          <button
-                            onClick={handleCopyAnswer}
-                            className="px-2.5 py-1 text-xs rounded-lg bg-slate-900 hover:bg-slate-800 text-slate-300 border border-slate-800 flex items-center space-x-1.5 transition-colors"
-                            title="Copy output text"
-                          >
-                            {copied ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5 text-slate-400" />}
-                            <span>{copied ? 'Copied!' : 'Copy'}</span>
-                          </button>
-                          <button
-                            onClick={handleDownloadPDF}
-                            className="px-2.5 py-1 text-xs rounded-lg bg-rose-950/40 hover:bg-rose-900/60 text-rose-300 border border-rose-800/60 flex items-center space-x-1.5 transition-colors"
-                            title="Save / Print PDF Report"
-                          >
-                            <Printer className="w-3.5 h-3.5 text-rose-400" />
-                            <span>Export PDF</span>
-                          </button>
-                          <button
-                            onClick={handleDownloadReport}
-                            className="px-2.5 py-1 text-xs rounded-lg bg-slate-900 hover:bg-slate-800 text-slate-300 border border-slate-800 flex items-center space-x-1.5 transition-colors"
-                            title="Export Markdown Document"
-                          >
-                            <Download className="w-3.5 h-3.5 text-slate-400" />
-                            <span>Export .md</span>
-                          </button>
-                          <button
-                            onClick={handleDownloadJSON}
-                            className="px-2.5 py-1 text-xs rounded-lg bg-slate-900 hover:bg-slate-800 text-slate-300 border border-slate-800 flex items-center space-x-1.5 transition-colors"
-                            title="Export JSON Telemetry & Steps"
-                          >
-                            <FileDown className="w-3.5 h-3.5 text-slate-400" />
-                            <span>JSON</span>
-                          </button>
+
+                        <div className={`flex items-center space-x-2.5 transition-opacity ${liveExecutionStage >= 2 ? 'opacity-100 text-[#F5F5FA]' : 'opacity-40 text-[#858091]'}`}>
+                          {liveExecutionStage > 2 ? (
+                            <CheckCircle2 className="w-3.5 h-3.5 text-[#00E5FF] shrink-0" />
+                          ) : liveExecutionStage === 2 ? (
+                            <CircleDot className="w-3.5 h-3.5 text-[#00E5FF] animate-pulse shrink-0" />
+                          ) : (
+                            <span className="w-3.5 h-3.5 rounded-full border border-[#858091] shrink-0" />
+                          )}
+                          <span>Discovering Agent Skills & operational playbooks</span>
+                        </div>
+
+                        <div className={`flex items-center space-x-2.5 transition-opacity ${liveExecutionStage >= 3 ? 'opacity-100 text-[#F5F5FA]' : 'opacity-40 text-[#858091]'}`}>
+                          {liveExecutionStage > 3 ? (
+                            <CheckCircle2 className="w-3.5 h-3.5 text-[#00E5FF] shrink-0" />
+                          ) : liveExecutionStage === 3 ? (
+                            <CircleDot className="w-3.5 h-3.5 text-[#00E5FF] animate-pulse shrink-0" />
+                          ) : (
+                            <span className="w-3.5 h-3.5 rounded-full border border-[#858091] shrink-0" />
+                          )}
+                          <span>Executing tool calls & evaluating observations</span>
+                        </div>
+
+                        <div className={`flex items-center space-x-2.5 transition-opacity ${liveExecutionStage >= 4 ? 'opacity-100 text-[#F5F5FA]' : 'opacity-40 text-[#858091]'}`}>
+                          {liveExecutionStage === 4 ? (
+                            <CircleDot className="w-3.5 h-3.5 text-[#00E5FF] animate-pulse shrink-0" />
+                          ) : (
+                            <span className="w-3.5 h-3.5 rounded-full border border-[#858091] shrink-0" />
+                          )}
+                          <span>Processing & synthesizing final answer</span>
                         </div>
                       </div>
 
-                      {/* Render Formatted Markdown, Code Blocks, and AI Images */}
-                      <div className="text-sm text-slate-200 leading-relaxed pt-1">
-                        <MarkdownAnswerView content={agentResponse.final_answer} />
-                      </div>
                     </div>
                   </div>
                 )}
-              </div>
-            </div>
 
-            {/* Sidebar: Telemetry & Active Skills */}
-            <div className="space-y-6">
-              <div className="bg-slate-900/50 border border-slate-800 rounded-2xl p-6 shadow-xl">
-                <h3 className="text-base font-semibold text-white flex items-center space-x-2 mb-4">
-                  <Cpu className="w-5 h-5 text-blue-400" />
-                  <span>Hardware & GPU Status</span>
-                </h3>
-                <div className="space-y-3">
-                  <div className="p-3 bg-slate-950 border border-slate-800/60 rounded-xl">
-                    <span className="text-xs text-slate-400 block mb-1">Local Device</span>
-                    <p className="text-sm font-semibold text-white">
-                      {health?.gpu?.device_name || 'NVIDIA Quadro P2000'}
-                    </p>
-                    <span className="text-xs text-emerald-400">CUDA 12.4 Acceleration</span>
-                  </div>
-                  <div className="p-3 bg-slate-950 border border-slate-800/60 rounded-xl">
-                    <span className="text-xs text-slate-400 block mb-1">Cloud GPU Engine</span>
-                    <p className="text-sm font-semibold text-cyan-400">Kaggle 2x Tesla T4 (32GB)</p>
-                  </div>
-                </div>
+                <div ref={messagesEndRef} />
               </div>
+            )}
 
-              <div className="bg-slate-900/50 border border-slate-800 rounded-2xl p-6 shadow-xl">
-                <div className="flex items-center justify-between mb-4">
-                  <h3 className="text-base font-semibold text-white flex items-center space-x-2">
-                    <Wrench className="w-5 h-5 text-purple-400" />
-                    <span>Active Skills ({skills.length})</span>
-                  </h3>
-                  <button
-                    onClick={() => setShowSkillModal(true)}
-                    className="p-1 rounded-lg bg-purple-500/20 text-purple-300 hover:bg-purple-500/30 transition-colors"
-                    title="Add Custom Skill"
-                  >
-                    <Plus className="w-4 h-4" />
-                  </button>
-                </div>
-
-                <div className="space-y-2">
-                  {skills.map((s) => (
-                    <div 
-                      key={s.name}
-                      onClick={() => { setSelectedSkill(s); fetchSkillDetail(s.name); setActiveTab('skills'); }}
-                      className="p-2.5 bg-slate-950 hover:bg-slate-900 border border-slate-800/60 rounded-xl cursor-pointer transition-colors flex items-center justify-between text-xs"
-                    >
-                      <span className="font-mono text-cyan-300">{s.name}</span>
-                      <span className="text-[10px] text-slate-500">v{s.version}</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
           </div>
-        )}
+        </div>
 
-        {/* TAB 2: AGENT SKILLS HUB (SKILL.md) */}
-        {activeTab === 'skills' && (
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            <div className="space-y-4">
-              <div className="flex items-center justify-between">
-                <h3 className="text-base font-semibold text-white flex items-center space-x-2">
-                  <FileCode className="w-5 h-5 text-cyan-400" />
-                  <span>Discovered Skills ({skills.length})</span>
-                </h3>
+        {/* ================================================================== */}
+        {/* 3. FLOATING COMPOSER DOCK (Tactile White Highlights & Cyan CTA)     */}
+        {/* ================================================================== */}
+        <div className="relative z-20 max-w-4xl mx-auto w-full px-4 pb-4">
+          <div className="ai-composer-glass rounded-3xl p-3 sm:p-3.5 shadow-2xl">
+            
+            {/* Attached File Indicator */}
+            {attachedFile && (
+              <div className="flex items-center justify-between px-3 py-1.5 mb-2 rounded-xl bg-[#3B0A6B]/30 border border-[#00E5FF]/40 text-xs animate-slide-up">
+                <div className="flex items-center space-x-2 truncate">
+                  <FileText className="w-4 h-4 text-[#00E5FF] shrink-0" />
+                  <span className="text-[#F5F5FA] font-medium text-xs truncate max-w-[280px]">{attachedFile.name}</span>
+                  <span className="text-[10px] text-[#00E5FF] font-mono">({Math.round(attachedFile.size / 1024)} KB ready)</span>
+                </div>
                 <button
-                  onClick={() => setShowSkillModal(true)}
-                  className="px-3 py-1.5 rounded-xl text-xs font-medium bg-purple-600/20 text-purple-300 border border-purple-500/30 hover:bg-purple-600/30 transition-all flex items-center space-x-1"
+                  type="button"
+                  onClick={() => setAttachedFile(null)}
+                  className="p-1 hover:bg-white/10 rounded-md text-[#858091] hover:text-[#F5F5FA] transition-all"
+                  title="Remove attached file"
                 >
-                  <Plus className="w-3.5 h-3.5" />
-                  <span>New Skill</span>
+                  <X className="w-3.5 h-3.5" />
                 </button>
               </div>
-              <p className="text-xs text-slate-400">
-                Adhering to the Agent Skill Open Standard. Metadata is indexed at startup; operational instructions load on-demand.
-              </p>
+            )}
 
-              <div className="space-y-3">
-                {skills.map((s) => (
-                  <div
-                    key={s.name}
-                    onClick={() => fetchSkillDetail(s.name)}
-                    className={`p-4 rounded-xl border cursor-pointer transition-all ${
-                      selectedSkill?.name === s.name
-                        ? 'bg-blue-600/10 border-blue-500/50 shadow-lg shadow-blue-500/10'
-                        : 'bg-slate-900/50 border-slate-800 hover:border-slate-700'
-                    }`}
-                  >
-                    <div className="flex items-center justify-between mb-1">
-                      <h4 className="text-sm font-semibold text-white font-mono">{s.name}</h4>
-                      <span className="text-[10px] bg-slate-800 px-2 py-0.5 rounded text-slate-400 font-mono">
-                        v{s.version}
-                      </span>
-                    </div>
-                    <p className="text-xs text-slate-400 line-clamp-2">{s.description}</p>
-                    <div className="mt-3 flex flex-wrap gap-1">
-                      {s.tags?.map((tag) => (
-                        <span key={tag} className="text-[10px] bg-slate-950 text-cyan-400 px-2 py-0.5 rounded-full border border-slate-800">
-                          #{tag}
-                        </span>
-                      ))}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
+            {/* Multiline Prompt Textarea */}
+            <textarea
+              ref={textareaRef}
+              rows={2}
+              value={promptInput}
+              onChange={(e) => setPromptInput(e.target.value)}
+              onFocus={() => setIsInputFocused(true)}
+              onBlur={() => setIsInputFocused(false)}
+              onKeyDown={handleKeyDown}
+              placeholder="Ask Hermes anything, run tools, or execute skills... (Enter to send)"
+              className="w-full bg-transparent text-sm text-[#F5F5FA] placeholder-[#858091] focus:outline-none resize-none leading-relaxed font-normal px-2 pt-1"
+            />
 
-            {/* Right 2 cols: Inspect SKILL.md */}
-            <div className="lg:col-span-2">
-              {selectedSkill ? (
-                <div className="bg-slate-900/50 border border-slate-800 rounded-2xl p-6 shadow-xl space-y-6">
-                  <div className="flex items-center justify-between border-b border-slate-800 pb-4">
-                    <div>
-                      <h3 className="text-lg font-bold text-white font-mono flex items-center space-x-2">
-                        <span>{selectedSkill.name}</span>
-                        <span className="text-xs text-slate-400 font-normal">/ SKILL.md</span>
-                      </h3>
-                      <p className="text-xs text-slate-400 mt-1">{selectedSkill.description}</p>
-                    </div>
-                    <button
-                      onClick={() => {
-                        setAgentPrompt(`Please use the ${selectedSkill.name} skill for our task.`);
-                        setActiveTab('agent');
-                      }}
-                      className="px-3.5 py-2 rounded-xl text-xs font-semibold bg-cyan-600/20 text-cyan-300 border border-cyan-500/30 hover:bg-cyan-600/30 transition-all flex items-center space-x-1.5"
-                    >
-                      <Zap className="w-3.5 h-3.5" />
-                      <span>Test in Agent</span>
-                    </button>
-                  </div>
+            {/* Composer Toolbar (Skills Selector, Hardware Chip, Electric Cyan Send Button) */}
+            <div className="flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-[#3B0A6B]/35 mt-1">
+              
+              <div className="flex items-center space-x-2 text-xs">
+                {/* Skill Quick Selector Pill */}
+                <button
+                  type="button"
+                  onClick={() => { setContextTab('skills'); setContextPanelOpen(true); }}
+                  className="btn-premium px-2.5 py-1 rounded-full bg-[#3B0A6B]/25 hover:bg-[#3B0A6B]/45 border border-[#3B0A6B]/40 text-[#00E5FF] hover:border-white/20 flex items-center space-x-1.5 text-[11px]"
+                >
+                  <Wrench className="w-3 h-3 text-[#00E5FF]" />
+                  <span>Skills ({skills.length})</span>
+                </button>
 
-                  <div>
-                    <h4 className="text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">
-                      Operational Instructions Body (Markdown)
-                    </h4>
-                    <pre className="bg-slate-950 border border-slate-800 rounded-xl p-5 text-xs font-mono text-slate-300 whitespace-pre-wrap leading-relaxed max-h-[450px] overflow-y-auto">
-                      {selectedSkill.instructions || 'Loading instructions...'}
-                    </pre>
-                  </div>
-                </div>
-              ) : (
-                <div className="bg-slate-900/30 border border-dashed border-slate-800 rounded-2xl p-12 text-center text-slate-500 text-sm">
-                  Select a skill on the left to inspect its operational instructions.
-                </div>
-              )}
-            </div>
-          </div>
-        )}
+                {/* File Ingestion Button & Hidden File Input */}
+                <input
+                  type="file"
+                  ref={fileInputRef}
+                  onChange={handleFileUpload}
+                  className="hidden"
+                  accept=".txt,.csv,.json,.py,.js,.jsx,.ts,.tsx,.html,.md,.log,.yaml,.yml"
+                />
+                <button
+                  type="button"
+                  onClick={() => fileInputRef.current?.click()}
+                  disabled={uploadingFile || runningAgent}
+                  className="btn-premium px-2.5 py-1 rounded-full bg-[#3B0A6B]/25 hover:bg-[#3B0A6B]/45 border border-[#3B0A6B]/40 text-[#B8B3C7] hover:text-[#00E5FF] hover:border-white/20 flex items-center space-x-1.5 text-[11px]"
+                  title="Upload CSV, JSON, Python, Code or Data for Hermes Agent analysis"
+                >
+                  {uploadingFile ? (
+                    <RefreshCw className="w-3 h-3 text-[#00E5FF] animate-spin" />
+                  ) : (
+                    <Paperclip className="w-3 h-3 text-[#00E5FF]" />
+                  )}
+                  <span>{uploadingFile ? 'Uploading...' : 'Attach File'}</span>
+                </button>
 
-        {/* TAB 3: HACKATHON TECH STACK OVERVIEW */}
-        {activeTab === 'stack' && (
-          <div className="bg-slate-900/50 border border-slate-800 rounded-2xl p-6 shadow-xl space-y-8">
-            <div>
-              <h2 className="text-xl font-bold text-white flex items-center space-x-2">
-                <Layers className="w-5 h-5 text-blue-400" />
-                <span>Hackathon Core Architecture & Resources</span>
-              </h2>
-              <p className="text-sm text-slate-400 mt-1">
-                Integrated workflow matching the hackathon tracks (Google Gemma, Hermes Agent & Agent Skills).
-              </p>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-              <div className="p-5 bg-slate-950 border border-blue-500/30 rounded-xl">
-                <div className="w-8 h-8 rounded-lg bg-blue-500/20 text-blue-400 flex items-center justify-center font-bold mb-3">
-                  01
-                </div>
-                <h3 className="font-semibold text-white">Google Gemma Models</h3>
-                <p className="text-xs text-slate-400 mt-2">
-                  Official Google open-weight models (Gemma 2, Gemma 4) accessed via Google AI Studio, Gemini API, or open-weight inference endpoints.
-                </p>
-              </div>
-
-              <div className="p-5 bg-slate-950 border border-purple-500/30 rounded-xl">
-                <div className="w-8 h-8 rounded-lg bg-purple-500/20 text-purple-400 flex items-center justify-center font-bold mb-3">
-                  02
-                </div>
-                <h3 className="font-semibold text-white">Hermes Agent Harness</h3>
-                <p className="text-xs text-slate-400 mt-2">
-                  Autonomous agent harness developed by Nous Research for long-running workflows, tool invocation, and persistent memory loops.
-                </p>
-              </div>
-
-              <div className="p-5 bg-slate-950 border border-cyan-500/30 rounded-xl">
-                <div className="w-8 h-8 rounded-lg bg-cyan-500/20 text-cyan-400 flex items-center justify-center font-bold mb-3">
-                  03
-                </div>
-                <h3 className="font-semibold text-white">Agent Skills (SKILL.md)</h3>
-                <p className="text-xs text-slate-400 mt-2">
-                  Open standard format using YAML frontmatter and progressive disclosure to provide procedural operational playbooks without context bloat.
-                </p>
-              </div>
-
-              <div className="p-5 bg-slate-950 border border-emerald-500/30 rounded-xl">
-                <div className="w-8 h-8 rounded-lg bg-emerald-500/20 text-emerald-400 flex items-center justify-center font-bold mb-3">
-                  04
-                </div>
-                <h3 className="font-semibold text-white">Cloud GPU Acceleration</h3>
-                <p className="text-xs text-slate-400 mt-2">
-                  Kaggle 2x Tesla T4 GPUs (32 GB VRAM) for cloud execution + local CUDA 12.4 acceleration.
-                </p>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* TAB 4: 4-PERSON TEAM ROLES & SQUADS */}
-        {activeTab === 'team' && (
-          <div className="bg-slate-900/50 border border-slate-800 rounded-2xl p-6 shadow-xl space-y-6">
-            <div>
-              <h2 className="text-xl font-bold text-white flex items-center space-x-2">
-                <Users className="w-5 h-5 text-cyan-400" />
-                <span>Team Engineering Squads & Ownership</span>
-              </h2>
-              <p className="text-sm text-slate-400 mt-1">
-                Divided into two focused cross-functional pairs: Frontend Squad and Backend & AI Engine Squad.
-              </p>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {/* SQUAD 1: FRONTEND POD */}
-              <div className="p-6 bg-slate-950 border border-blue-500/30 rounded-2xl space-y-4">
-                <div className="flex items-center justify-between">
-                  <span className="text-xs font-bold uppercase tracking-wider text-blue-400">Pod 1 • Frontend & UI/UX</span>
-                  <span className="text-[10px] font-mono bg-blue-500/10 text-cyan-300 px-2.5 py-0.5 rounded-full border border-blue-500/20">
-                    Branch: feature/frontend
+                {/* Status Pill */}
+                {health?.cuda_available && (
+                  <span className="hidden sm:inline-flex items-center space-x-1 text-[11px] text-[#00E5FF] font-mono">
+                    <span className="w-1.5 h-1.5 rounded-full bg-[#00E5FF] shadow-[0_0_6px_#00E5FF]" />
+                    <span>CUDA Active</span>
                   </span>
-                </div>
-                <h3 className="text-lg font-bold text-white">Frontend Engineering Squad</h3>
-                
-                <div className="flex flex-wrap gap-2 pt-1">
-                  <span className="text-xs font-mono bg-slate-900 text-blue-400 px-2.5 py-1 rounded-lg border border-slate-800">
-                    @vedxnt-b (Frontend Lead)
-                  </span>
-                  <span className="text-xs font-mono bg-slate-900 text-blue-400 px-2.5 py-1 rounded-lg border border-slate-800">
-                    @piyushmatodepatil (UI/UX Lead)
-                  </span>
-                </div>
-
-                <div className="pt-2 text-xs text-slate-400 space-y-2">
-                  <p className="font-semibold text-slate-300">Deliverables & Responsibilities:</p>
-                  <ul className="space-y-1.5 list-disc list-inside">
-                    <li>Build interactive React 19 + Tailwind CSS user interface</li>
-                    <li>Real-time reasoning trace visualization (Thought ➔ Action ➔ Observation)</li>
-                    <li>SKILL.md visual inspector with live raw YAML/Markdown view</li>
-                    <li>Wire frontend API calls to backend (<code className="text-slate-300">/api/agent/chat</code>, <code className="text-slate-300">/api/skills</code>)</li>
-                    <li>Ensure dark-mode responsiveness & high-impact visual design for judges</li>
-                  </ul>
-                </div>
+                )}
               </div>
 
-              {/* SQUAD 2: BACKEND & AI ENGINE POD */}
-              <div className="p-6 bg-slate-950 border border-purple-500/30 rounded-2xl space-y-4">
-                <div className="flex items-center justify-between">
-                  <span className="text-xs font-bold uppercase tracking-wider text-purple-400">Pod 2 • Backend & AI Engine</span>
-                  <span className="text-[10px] font-mono bg-purple-500/10 text-purple-300 px-2.5 py-0.5 rounded-full border border-purple-500/20">
-                    Branch: feature/backend-ai
-                  </span>
-                </div>
-                <h3 className="text-lg font-bold text-white">Backend & AI Engine Squad</h3>
-
-                <div className="flex flex-wrap gap-2 pt-1">
-                  <span className="text-xs font-mono bg-slate-900 text-purple-400 px-2.5 py-1 rounded-lg border border-slate-800">
-                    @gunwantjawle-ux (Backend Systems Lead)
-                  </span>
-                  <span className="text-xs font-mono bg-slate-900 text-purple-400 px-2.5 py-1 rounded-lg border border-slate-800">
-                    @Abhishekdabi33 (AI Engine & Project Lead)
-                  </span>
-                </div>
-
-                <div className="pt-2 text-xs text-slate-400 space-y-2">
-                  <p className="font-semibold text-slate-300">Deliverables & Responsibilities:</p>
-                  <ul className="space-y-1.5 list-disc list-inside">
-                    <li>Maintain FastAPI REST server routing, schemas & CORS</li>
-                    <li>Autonomous Hermes Agent ReAct loop & tool execution engine</li>
-                    <li>Google Gemma integration (Google AI Studio API + Kaggle 2x T4 GPUs)</li>
-                    <li>Author domain-specific operational <code className="text-slate-300">SKILL.md</code> playbooks in <code className="text-slate-300">skills/</code></li>
-                    <li>Overall repository sync, pitch deck & 3-minute demo video recording</li>
-                  </ul>
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
-      </main>
-
-      {/* CREATE CUSTOM SKILL MODAL (Instant Hackathon Adaptation) */}
-      {showSkillModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 backdrop-blur-sm p-4">
-          <div className="bg-slate-900 border border-slate-800 rounded-2xl max-w-lg w-full p-6 shadow-2xl space-y-4">
-            <div className="flex items-center justify-between border-b border-slate-800 pb-3">
+              {/* Action Buttons & Primary CTA (Electric Cyan Button with Jet Black Text) */}
               <div className="flex items-center space-x-2">
-                <FileCode className="w-5 h-5 text-purple-400" />
-                <h3 className="font-bold text-white text-base">Create Custom SKILL.md Playbook</h3>
+                <span className="hidden sm:inline text-[10px] text-[#858091] font-mono">
+                  Shift+Enter for newline
+                </span>
+
+                <button
+                  onClick={() => handleSendMessage()}
+                  disabled={runningAgent || (!promptInput.trim() && !attachedFile)}
+                  className="btn-premium sheen-travel w-9 h-9 rounded-2xl bg-[#00E5FF] hover:bg-[#33ebff] text-[#050505] font-bold flex items-center justify-center shadow-[0_0_24px_rgba(0,229,255,0.5)] disabled:opacity-30 disabled:cursor-not-allowed disabled:shadow-none"
+                  title="Send message (Enter)"
+                >
+                  {runningAgent ? (
+                    <RefreshCw className="w-4 h-4 animate-spin text-[#050505]" />
+                  ) : (
+                    <ArrowUp className="w-4.5 h-4.5 text-[#050505]" />
+                  )}
+                </button>
               </div>
-              <button 
-                onClick={() => setShowSkillModal(false)}
-                className="text-slate-400 hover:text-white p-1"
+
+            </div>
+
+          </div>
+          
+          <p className="text-center text-[10px] text-[#858091] pt-2 font-mono">
+            Hermes ReAct Engine v2.0 • Google Gemma Open-Weights • Jet Black × Royal Amethyst × Electric Cyan
+          </p>
+        </div>
+
+      </div>
+
+      {/* ==================================================================== */}
+      {/* 4. RIGHT CONTEXT PANEL                                               */}
+      {/* ==================================================================== */}
+      <div 
+        className={`${
+          contextPanelOpen ? 'w-full sm:w-96' : 'w-0'
+        } transition-all duration-300 ease-in-out shrink-0 h-full context-drawer-glass flex flex-col justify-between overflow-hidden relative z-40 border-l border-[#3B0A6B]/30`}
+      >
+        <div className="flex flex-col h-full p-4 space-y-4">
+          
+          {/* Drawer Header & Tab Selector */}
+          <div className="flex items-center justify-between border-b border-[#3B0A6B]/25 pb-3">
+            <div className="flex items-center space-x-1 bg-[#050505] p-1 rounded-xl border border-[#3B0A6B]/30">
+              <button
+                onClick={() => setContextTab('device')}
+                className={`btn-premium px-3 py-1 rounded-lg text-xs font-medium transition-all ${
+                  contextTab === 'device'
+                    ? 'bg-[#3B0A6B] text-[#FFFFFF] border border-[#00E5FF]/40 shadow-[0_0_12px_rgba(0,229,255,0.2)]'
+                    : 'text-[#B8B3C7] hover:text-[#00E5FF] hover:border-white/10'
+                }`}
               >
-                <X className="w-5 h-5" />
+                Device Specs
+              </button>
+              <button
+                onClick={() => setContextTab('skills')}
+                className={`btn-premium px-3 py-1 rounded-lg text-xs font-medium transition-all ${
+                  contextTab === 'skills'
+                    ? 'bg-[#3B0A6B] text-[#FFFFFF] border border-[#00E5FF]/40 shadow-[0_0_12px_rgba(0,229,255,0.2)]'
+                    : 'text-[#B8B3C7] hover:text-[#00E5FF] hover:border-white/10'
+                }`}
+              >
+                Skills ({skills.length})
+              </button>
+              <button
+                onClick={() => setContextTab('project')}
+                className={`btn-premium px-3 py-1 rounded-lg text-xs font-medium transition-all ${
+                  contextTab === 'project'
+                    ? 'bg-[#3B0A6B] text-[#FFFFFF] border border-[#00E5FF]/40 shadow-[0_0_12px_rgba(0,229,255,0.2)]'
+                    : 'text-[#B8B3C7] hover:text-[#00E5FF] hover:border-white/10'
+                }`}
+              >
+                Team & Pods
               </button>
             </div>
 
-            <form onSubmit={handleCreateSkillSubmit} className="space-y-4">
-              <div>
-                <label className="block text-xs font-semibold text-slate-400 mb-1">Skill Identifier Name</label>
-                <input
-                  type="text"
-                  placeholder="e.g. hackathon-advisor"
-                  value={newSkillName}
-                  onChange={(e) => setNewSkillName(e.target.value)}
-                  className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-slate-200 focus:outline-none focus:ring-1 focus:ring-purple-500 font-mono"
-                  required
-                />
-              </div>
-
-              <div>
-                <label className="block text-xs font-semibold text-slate-400 mb-1">Short Description (For Discovery)</label>
-                <input
-                  type="text"
-                  placeholder="e.g. Specialized playbook for auditing Hackathon problem requirements."
-                  value={newSkillDesc}
-                  onChange={(e) => setNewSkillDesc(e.target.value)}
-                  className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-slate-200 focus:outline-none focus:ring-1 focus:ring-purple-500"
-                  required
-                />
-              </div>
-
-              <div>
-                <label className="block text-xs font-semibold text-slate-400 mb-1">Operational Instructions (Markdown Body)</label>
-                <textarea
-                  rows={6}
-                  placeholder="# Operational Instructions&#10;1. Step one...&#10;2. Step two..."
-                  value={newSkillInstructions}
-                  onChange={(e) => setNewSkillInstructions(e.target.value)}
-                  className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-slate-200 focus:outline-none focus:ring-1 focus:ring-purple-500 font-mono"
-                  required
-                />
-              </div>
-
-              <div className="flex justify-end space-x-2 pt-2">
-                <button
-                  type="button"
-                  onClick={() => setShowSkillModal(false)}
-                  className="px-4 py-2 rounded-xl text-xs font-medium text-slate-400 hover:bg-slate-800 transition-colors"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  disabled={creatingSkill}
-                  className="px-4 py-2 rounded-xl text-xs font-medium bg-purple-600 hover:bg-purple-500 text-white transition-colors disabled:opacity-50 flex items-center space-x-1.5"
-                >
-                  {creatingSkill ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : <Plus className="w-3.5 h-3.5" />}
-                  <span>Save & Index Skill</span>
-                </button>
-              </div>
-            </form>
+            <button
+              onClick={() => setContextPanelOpen(false)}
+              className="btn-premium text-[#858091] hover:text-[#00E5FF] p-1.5 rounded-xl hover:bg-[#3B0A6B]/30 transition-colors border border-transparent hover:border-white/10"
+              title="Close Panel"
+            >
+              <X className="w-4 h-4" />
+            </button>
           </div>
+
+          {/* Drawer Content */}
+          <div className="flex-1 overflow-y-auto custom-scrollbar space-y-4 text-xs">
+            
+            {/* TAB 1: DEVICE SPECS & TELEMETRY */}
+            {contextTab === 'device' && (
+              <div className="space-y-4 animate-slide-up">
+                <div className="flex items-center justify-between">
+                  <span className="font-semibold text-[#F5F5FA] tracking-tight flex items-center space-x-2">
+                    <Cpu className="w-4 h-4 text-[#00E5FF]" />
+                    <span>Host Compute Environment</span>
+                  </span>
+                  <button
+                    onClick={() => fetchHealth()}
+                    disabled={loadingHealth}
+                    className="btn-premium p-1.5 rounded-lg text-[#858091] hover:text-[#00E5FF] hover:bg-[#3B0A6B]/30 transition-colors border border-transparent hover:border-white/10"
+                    title="Refresh Telemetry"
+                  >
+                    <RefreshCw className={`w-3.5 h-3.5 ${loadingHealth ? 'animate-spin text-[#00E5FF]' : ''}`} />
+                  </button>
+                </div>
+
+                {/* GPU Card */}
+                <div className="p-3.5 rounded-2xl bg-[#080310] border border-[#3B0A6B]/35 space-y-2.5 shadow-[0_4px_20px_rgba(0,0,0,0.5)] card-interactive">
+                  <div className="flex items-center justify-between">
+                    <span className="text-[10px] uppercase font-semibold text-[#858091] tracking-wider font-mono">GPU Device</span>
+                    <span className="text-[10px] font-mono text-[#00E5FF] bg-[#3B0A6B]/30 px-2 py-0.5 rounded-full border border-[#00E5FF]/30 shadow-[0_0_8px_rgba(0,229,255,0.2)]">
+                      CUDA 12.6
+                    </span>
+                  </div>
+                  <p className="text-sm font-semibold text-[#F5F5FA]">
+                    {gpuInfo?.device_name || 'NVIDIA GeForce RTX 2050'}
+                  </p>
+                  
+                  {/* VRAM Bar */}
+                  <div className="space-y-1">
+                    <div className="flex justify-between text-[11px] text-[#B8B3C7] font-mono">
+                      <span>Available VRAM:</span>
+                      <span className="text-[#00E5FF] font-semibold">{gpuInfo?.available_vram_mb || 4095.5} MB</span>
+                    </div>
+                    <div className="w-full h-1.5 rounded-full bg-[#3B0A6B]/30 overflow-hidden border border-[#3B0A6B]/40">
+                      <div 
+                        className="h-full rounded-full bg-gradient-to-r from-[#3B0A6B] to-[#00E5FF]"
+                        style={{ width: `${Math.max(4, Math.min(100, ((gpuInfo?.allocated_vram_mb || 0) / (gpuInfo?.max_vram_mb || 4095.5)) * 100))}%` }}
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* CPU & Memory Card */}
+                <div className="p-3.5 rounded-2xl bg-[#080310] border border-[#3B0A6B]/35 space-y-2.5 shadow-[0_4px_20px_rgba(0,0,0,0.5)] card-interactive">
+                  <span className="text-[10px] uppercase font-semibold text-[#858091] tracking-wider block font-mono">Processor & Memory</span>
+                  
+                  <div className="grid grid-cols-2 gap-2 text-[11px]">
+                    <div className="p-2.5 bg-[#050505] rounded-xl border border-[#3B0A6B]/30">
+                      <span className="text-[#858091] block text-[9px] uppercase font-mono">CPU Cores</span>
+                      <span className="font-semibold text-[#F5F5FA] font-mono">{cpuInfo?.cores || 12} Logical</span>
+                    </div>
+                    <div className="p-2.5 bg-[#050505] rounded-xl border border-[#3B0A6B]/30">
+                      <span className="text-[#858091] block text-[9px] uppercase font-mono">RAM Total</span>
+                      <span className="font-semibold text-[#00E5FF] font-mono">{ramInfo?.total_gb || 7.73} GB</span>
+                    </div>
+                  </div>
+
+                  <div className="p-2.5 bg-[#050505] rounded-xl border border-[#3B0A6B]/30 space-y-1">
+                    <div className="flex justify-between text-[10px] text-[#B8B3C7] font-mono">
+                      <span>RAM Utilization:</span>
+                      <span className="text-[#00E5FF] font-semibold">{ramInfo?.percent_used || 90}%</span>
+                    </div>
+                    <div className="w-full h-1.5 rounded-full bg-[#3B0A6B]/30 overflow-hidden border border-[#3B0A6B]/40">
+                      <div 
+                        className="h-full rounded-full bg-gradient-to-r from-[#3B0A6B] to-[#00E5FF]" 
+                        style={{ width: `${ramInfo?.percent_used || 90}%` }}
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Software Stack */}
+                <div className="p-3.5 rounded-2xl bg-[#080310] border border-[#3B0A6B]/35 space-y-2 text-[11px] shadow-[0_4px_20px_rgba(0,0,0,0.5)] card-interactive">
+                  <span className="text-[10px] uppercase font-semibold text-[#858091] tracking-wider block font-mono">Software Environment</span>
+                  <div className="flex justify-between py-1 border-b border-[#3B0A6B]/20">
+                    <span className="text-[#858091]">OS:</span>
+                    <span className="font-mono text-[#F5F5FA]">{deviceConfig?.os || 'Windows 11'}</span>
+                  </div>
+                  <div className="flex justify-between py-1 border-b border-[#3B0A6B]/20">
+                    <span className="text-[#858091]">Python:</span>
+                    <span className="font-mono text-[#F5F5FA]">{health?.python_version || '3.13.14'}</span>
+                  </div>
+                  <div className="flex justify-between py-1 border-b border-[#3B0A6B]/20">
+                    <span className="text-[#858091]">PyTorch:</span>
+                    <span className="font-mono text-[#F5F5FA]">{health?.torch_version || '2.14.1+cu126'}</span>
+                  </div>
+                  <div className="flex justify-between py-1">
+                    <span className="text-[#858091]">Model Engine:</span>
+                    <span className="font-medium text-[#00E5FF]">Google Gemma 2 (2B/9B)</span>
+                  </div>
+                </div>
+
+              </div>
+            )}
+
+            {/* TAB 2: AGENT SKILLS HUB (SKILL.md) */}
+            {contextTab === 'skills' && (
+              <div className="space-y-4 animate-slide-up">
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <span className="font-semibold text-[#F5F5FA] tracking-tight flex items-center space-x-2">
+                    <FileCode className="w-4 h-4 text-[#00E5FF]" />
+                    <span>Agent Skills ({skills.length})</span>
+                  </span>
+                    <button
+                      type="button"
+                      onClick={() => setShowSkillModal(!showSkillModal)}
+                      className="btn-premium px-2 py-0.5 rounded-lg bg-[#3B0A6B]/30 hover:bg-[#00E5FF]/20 text-[#00E5FF] border border-[#3B0A6B]/40 hover:border-[#00E5FF]/50 flex items-center space-x-1 text-[11px]"
+                    >
+                      <Plus className="w-3 h-3 text-[#00E5FF]" />
+                      <span>New Skill</span>
+                    </button>
+                  </div>
+                  
+                  {/* Skill Search Input */}
+                  <div className="relative">
+                    <Search className="w-3.5 h-3.5 text-[#858091] absolute left-3 top-1/2 -translate-y-1/2" />
+                    <input
+                      type="text"
+                      value={skillSearch}
+                      onChange={(e) => setSkillSearch(e.target.value)}
+                      placeholder="Search skills..."
+                      className="w-full bg-[#050505] border border-[#3B0A6B]/40 rounded-xl pl-8 pr-3 py-1.5 text-xs text-[#F5F5FA] placeholder-[#858091] focus:outline-none focus:border-[#00E5FF] focus:shadow-[0_0_12px_rgba(0,229,255,0.25)] transition-all hover:border-white/20"
+                    />
+                  </div>
+                </div>
+
+                  {/* Custom Skill Authoring Modal / Form */}
+                  {showSkillModal && (
+                    <form onSubmit={handleCreateSkill} className="p-3.5 rounded-2xl bg-[#080310] border border-[#00E5FF]/40 space-y-2.5 shadow-[0_4px_20px_rgba(0,0,0,0.6)] animate-slide-up">
+                      <div className="flex items-center justify-between border-b border-[#3B0A6B]/30 pb-1.5">
+                        <span className="text-xs font-semibold text-[#F5F5FA] flex items-center space-x-1">
+                          <PlusCircle className="w-3.5 h-3.5 text-[#00E5FF]" />
+                          <span>Author New SKILL.md</span>
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() => setShowSkillModal(false)}
+                          className="text-[#858091] hover:text-[#F5F5FA]"
+                        >
+                          <X className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
+
+                      <div>
+                        <label className="text-[10px] text-[#858091] uppercase font-bold block mb-1">Skill Name (Slug)</label>
+                        <input
+                          type="text"
+                          required
+                          value={newSkillData.name}
+                          onChange={(e) => setNewSkillData({ ...newSkillData, name: e.target.value })}
+                          placeholder="e.g. security-auditor"
+                          className="w-full bg-[#050505] border border-[#3B0A6B]/40 rounded-lg px-2.5 py-1 text-xs text-[#F5F5FA] focus:outline-none focus:border-[#00E5FF]"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="text-[10px] text-[#858091] uppercase font-bold block mb-1">Description</label>
+                        <input
+                          type="text"
+                          required
+                          value={newSkillData.description}
+                          onChange={(e) => setNewSkillData({ ...newSkillData, description: e.target.value })}
+                          placeholder="Single sentence purpose for agent discovery"
+                          className="w-full bg-[#050505] border border-[#3B0A6B]/40 rounded-lg px-2.5 py-1 text-xs text-[#F5F5FA] focus:outline-none focus:border-[#00E5FF]"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="text-[10px] text-[#858091] uppercase font-bold block mb-1">Tags (comma separated)</label>
+                        <input
+                          type="text"
+                          value={newSkillData.tags}
+                          onChange={(e) => setNewSkillData({ ...newSkillData, tags: e.target.value })}
+                          placeholder="e.g. audit, security, python"
+                          className="w-full bg-[#050505] border border-[#3B0A6B]/40 rounded-lg px-2.5 py-1 text-xs text-[#F5F5FA] focus:outline-none focus:border-[#00E5FF]"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="text-[10px] text-[#858091] uppercase font-bold block mb-1">Operational Instructions (Markdown)</label>
+                        <textarea
+                          rows={4}
+                          required
+                          value={newSkillData.instructions}
+                          onChange={(e) => setNewSkillData({ ...newSkillData, instructions: e.target.value })}
+                          placeholder={"## Instructions\n1. Analyze codebase vulnerability points...\n2. Return structured audit report..."}
+                          className="w-full bg-[#050505] border border-[#3B0A6B]/40 rounded-lg px-2.5 py-1.5 text-xs text-[#F5F5FA] focus:outline-none focus:border-[#00E5FF] resize-none font-mono"
+                        />
+                      </div>
+
+                      <div className="flex items-center justify-end space-x-2 pt-1">
+                        <button
+                          type="button"
+                          onClick={() => setShowSkillModal(false)}
+                          className="btn-premium px-2.5 py-1 rounded-lg border border-[#3B0A6B]/40 text-[#B8B3C7] text-xs hover:bg-white/5"
+                        >
+                          Cancel
+                        </button>
+                        <button
+                          type="submit"
+                          disabled={savingSkill}
+                          className="btn-premium px-3 py-1 rounded-lg bg-[#00E5FF] hover:bg-[#33ebff] text-[#050505] font-semibold text-xs shadow-[0_0_12px_rgba(0,229,255,0.4)] disabled:opacity-50"
+                        >
+                          {savingSkill ? 'Deploying...' : 'Deploy Skill'}
+                        </button>
+                      </div>
+                    </form>
+                  )}
+
+                {/* Skills List */}
+                <div className="space-y-2">
+                  {filteredSkills.map((s) => (
+                    <div
+                      key={s.name}
+                      onClick={() => fetchSkillDetail(s.name)}
+                      className={`p-3 rounded-xl border cursor-pointer transition-all card-interactive ${
+                        selectedSkill?.name === s.name
+                          ? 'bg-[#3B0A6B]/40 border-[#00E5FF]/60 text-[#F5F5FA] shadow-[0_0_15px_rgba(0,229,255,0.15)]'
+                          : 'bg-[#080310] border-[#3B0A6B]/25 hover:border-white/20 hover:bg-[#3B0A6B]/20 text-[#B8B3C7]'
+                      }`}
+                    >
+                      <div className="flex items-center justify-between mb-1">
+                        <span className="font-mono font-semibold text-xs text-[#F5F5FA]">{s.name}</span>
+                        <span className="text-[9px] font-mono bg-[#3B0A6B]/30 border border-[#3B0A6B]/50 px-1.5 py-0.2 rounded-full text-[#00E5FF]">
+                          v{s.version}
+                        </span>
+                      </div>
+                      <p className="text-[11px] text-[#B8B3C7] line-clamp-2 leading-relaxed">{s.description}</p>
+                    </div>
+                  ))}
+                </div>
+
+                {/* Selected Skill Preview */}
+                {selectedSkill && (
+                  <div className="p-3.5 rounded-2xl bg-[#080310] border border-[#3B0A6B]/40 space-y-2.5 shadow-[0_4px_20px_rgba(0,0,0,0.5)] card-interactive">
+                    <div className="flex items-center justify-between">
+                      <span className="font-mono font-semibold text-xs text-[#F5F5FA]">{selectedSkill.name}/SKILL.md</span>
+                      <button
+                        onClick={() => {
+                          setPromptInput(`Please execute the ${selectedSkill.name} skill for our task.`);
+                          setContextPanelOpen(false);
+                        }}
+                        className="btn-premium sheen-travel text-[10px] px-2.5 py-1 rounded-lg bg-[#00E5FF] hover:bg-[#33ebff] text-[#050505] font-semibold shadow-[0_0_12px_rgba(0,229,255,0.3)] transition-all"
+                      >
+                        Use in Chat
+                      </button>
+                    </div>
+                    <pre className="text-[10px] font-mono text-[#F5F5FA] max-h-40 overflow-y-auto whitespace-pre-wrap leading-relaxed p-2.5 bg-[#050505] rounded-xl border border-[#3B0A6B]/30 custom-scrollbar">
+                      {selectedSkill.instructions || 'Loading instructions...'}
+                    </pre>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* TAB 3: TEAM & PODS */}
+            {contextTab === 'project' && (
+              <div className="space-y-4 animate-slide-up">
+                <span className="font-semibold text-[#F5F5FA] tracking-tight flex items-center space-x-2">
+                  <Users className="w-4 h-4 text-[#00E5FF]" />
+                  <span>4-Person Hackathon Engineering Pods</span>
+                </span>
+
+                {/* Pod 1 */}
+                <div className="p-3.5 rounded-2xl bg-[#080310] border border-[#3B0A6B]/35 space-y-2 shadow-[0_4px_20px_rgba(0,0,0,0.5)] card-interactive">
+                  <div className="flex items-center justify-between">
+                    <span className="text-[10px] uppercase font-bold text-[#00E5FF] font-mono">Pod 1: Frontend Squad</span>
+                    <span className="text-[9px] font-mono bg-[#3B0A6B]/30 text-[#00E5FF] px-2 py-0.5 rounded-full border border-[#00E5FF]/30 shadow-[0_0_8px_rgba(0,229,255,0.15)]">
+                      feature/frontend
+                    </span>
+                  </div>
+                  <div className="space-y-1 text-[11px] font-mono">
+                    <div className="text-[#F5F5FA]">@vedxnt-b <span className="text-[#858091]">(Lead)</span></div>
+                    <div className="text-[#F5F5FA]">@piyushmatodepatil <span className="text-[#858091]">(UI/UX)</span></div>
+                  </div>
+                </div>
+
+                {/* Pod 2 */}
+                <div className="p-3.5 rounded-2xl bg-[#080310] border border-[#3B0A6B]/35 space-y-2 shadow-[0_4px_20px_rgba(0,0,0,0.5)] card-interactive">
+                  <div className="flex items-center justify-between">
+                    <span className="text-[10px] uppercase font-bold text-[#00E5FF] font-mono">Pod 2: Backend & AI Engine</span>
+                    <span className="text-[9px] font-mono bg-[#3B0A6B]/30 text-[#00E5FF] px-2 py-0.5 rounded-full border border-[#00E5FF]/30 shadow-[0_0_8px_rgba(0,229,255,0.15)]">
+                      feature/backend-ai
+                    </span>
+                  </div>
+                  <div className="space-y-1 text-[11px] font-mono">
+                    <div className="text-[#F5F5FA]">@gunwantjawle-ux <span className="text-[#858091]">(Systems)</span></div>
+                    <div className="text-[#F5F5FA]">@Abhishekdabi33 <span className="text-[#858091]">(AI Engine)</span></div>
+                  </div>
+                </div>
+
+                {/* Hackathon Core Stack */}
+                <div className="p-3.5 rounded-2xl bg-[#080310] border border-[#3B0A6B]/35 space-y-2 text-[11px] shadow-[0_4px_20px_rgba(0,0,0,0.5)] card-interactive">
+                  <span className="text-[10px] uppercase font-semibold text-[#858091] tracking-wider block font-mono">Hackathon Core Stack</span>
+                  <div className="flex justify-between py-1 border-b border-[#3B0A6B]/20">
+                    <span className="text-[#858091]">Model Engine:</span>
+                    <span className="text-[#F5F5FA]">Google Gemma 2 (2B / 9B)</span>
+                  </div>
+                  <div className="flex justify-between py-1 border-b border-[#3B0A6B]/20">
+                    <span className="text-[#858091]">Agent Harness:</span>
+                    <span className="text-[#F5F5FA]">Nous Hermes ReAct Loop</span>
+                  </div>
+                  <div className="flex justify-between py-1 border-b border-[#3B0A6B]/20">
+                    <span className="text-[#858091]">Agent Skills:</span>
+                    <span className="text-[#F5F5FA]">SKILL.md Open Standard</span>
+                  </div>
+                  <div className="flex justify-between py-1">
+                    <span className="text-[#858091]">GPU Acceleration:</span>
+                    <span className="text-[#00E5FF] font-semibold">RTX 2050 (4GB) + Kaggle T4</span>
+                  </div>
+                </div>
+              </div>
+            )}
+
+          </div>
+
         </div>
-      )}
+      </div>
+
     </div>
   );
 }
