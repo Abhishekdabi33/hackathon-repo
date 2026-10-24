@@ -9,6 +9,7 @@ if str(ROOT_DIR) not in sys.path:
 import re
 import json
 import time
+import urllib.parse
 from typing import Dict, List, Any, Optional
 from skills_engine.skill_loader import SkillManager
 from ai_engine.gemma_client import GemmaClient
@@ -18,7 +19,7 @@ class HermesAgent:
     Hermes Autonomous Agent Harness.
     Implements:
     - ReAct (Reasoning + Acting) Agent Execution Loop
-    - Tool Orchestration & Execution
+    - Tool Orchestration & Multimodal Output Execution (Image, Diagram, Telemetry)
     - Dynamic Agent Skill (SKILL.md) Activation
     - Execution History & Memory Traces
     """
@@ -29,7 +30,9 @@ class HermesAgent:
         self.tools = {
             "calculator": self._tool_calculator,
             "skill_executor": self._tool_execute_skill,
-            "system_telemetry": self._tool_system_telemetry
+            "system_telemetry": self._tool_system_telemetry,
+            "image_generator": self._tool_image_generator,
+            "diagram_generator": self._tool_diagram_generator
         }
 
     # Built-in Tools
@@ -58,7 +61,27 @@ class HermesAgent:
         gpu_name = torch.cuda.get_device_name(0) if cuda_ok else "N/A"
         return f"Telemetry: CUDA Available: {cuda_ok}, GPU: {gpu_name}, PyTorch Version: {torch.__version__}"
 
-    def run(self, user_prompt: str, max_steps: int = 3) -> Dict[str, Any]:
+    def _tool_image_generator(self, prompt: str) -> str:
+        """Generates high-resolution AI visual image markdown matching the user's brief."""
+        clean_prompt = prompt.lower().replace("generate", "").replace("create", "").replace("an image of", "").replace("image of", "").replace("picture of", "").replace("draw", "").strip()
+        encoded = urllib.parse.quote(clean_prompt or "futuristic artificial intelligence technology glowing network 8k resolution cinematic")
+        image_url = f"https://image.pollinations.ai/prompt/{encoded}?width=1024&height=768&nologo=true&enhance=true&model=flux"
+        return f"![{clean_prompt or 'AI Visual'}]({image_url})"
+
+    def _tool_diagram_generator(self, topic: str) -> str:
+        """Generates structured visual Mermaid architecture flowcharts."""
+        clean_topic = topic.replace("diagram", "").replace("flowchart", "").strip() or "Hackathon Architecture"
+        return (
+            "```mermaid\n"
+            "flowchart TD\n"
+            f'    User["User Query: {clean_topic[:30]}"] --> Agent["Hermes Reasoning Engine"]\n'
+            '    Agent --> Skills["SKILL.md Domain Rules"]\n'
+            '    Agent --> Cloud["Kaggle 2x Tesla T4 GPUs (Gemma 2)"]\n'
+            '    Cloud --> Output["Multimodal Delivery (PDF, Image, Markdown)"]\n'
+            "```"
+        )
+
+    def run(self, user_prompt: str, max_steps: int = 3, file_content: Optional[str] = None, file_name: Optional[str] = None) -> Dict[str, Any]:
         """
         Executes autonomous agent reasoning loop.
         Traces each Thought, Action, and Observation step.
@@ -74,14 +97,36 @@ class HermesAgent:
             "Format your thought process as: Thought -> Action -> Observation -> Final Answer."
         )
 
+        # Context augmentation if file is attached
+        effective_prompt = user_prompt
+        if file_content:
+            file_snippet = file_content[:1500] if len(file_content) > 1500 else file_content
+            effective_prompt = (
+                f"Attached File: {file_name or 'data_file'}\n"
+                f"File Content Preview:\n```\n{file_snippet}\n```\n\n"
+                f"User Instructions: {user_prompt}"
+            )
+
         # Step 1: Analyze user request and detect appropriate skill or tool
-        thought = f"Analyzing request: '{user_prompt}'. Checking if an Agent Skill or tool is required."
+        thought = f"Analyzing request: '{user_prompt}'."
+        if file_name:
+            thought += f" Ingested file attachment: '{file_name}'."
+        thought += " Checking if an Agent Skill or tool is required."
+
         action = None
         action_input = None
         observation = None
 
         lower_prompt = user_prompt.lower()
-        if any(w in lower_prompt for w in ["calculate", "math", "+", "-", "*", "/"]):
+        if any(w in lower_prompt for w in ["image", "picture", "photo", "draw", "visual", "illustration", "generate an image", "create an image"]):
+            action = "image_generator"
+            action_input = user_prompt
+            observation = self._tool_image_generator(action_input)
+        elif any(w in lower_prompt for w in ["diagram", "flowchart", "workflow", "architecture"]):
+            action = "diagram_generator"
+            action_input = user_prompt
+            observation = self._tool_diagram_generator(action_input)
+        elif any(w in lower_prompt for w in ["calculate", "math", "+", "-", "*", "/"]):
             math_match = re.search(r"[\d\s\+\-\*\/\(\)\.]+", user_prompt)
             if math_match and len(math_match.group(0).strip()) > 2:
                 action = "calculator"
@@ -114,20 +159,38 @@ class HermesAgent:
 
         # Step 2: Final Synthesis using Gemma Client
         final_prompt = (
-            f"User Query: {user_prompt}\n"
+            f"User Query & Context:\n{effective_prompt}\n\n"
             f"Tool Executed: {action} with input '{action_input}'\n"
             f"Observation: {observation}\n"
             "Provide the final comprehensive response to the user."
         )
 
         gemma_response = self.client.generate(final_prompt, system_instruction=system_instruction)
+        answer_text = gemma_response.get("text", "").strip()
+
+        # Seamlessly inject generated multimodal artifact if not already in answer
+        if action == "image_generator" and observation and "![" in observation:
+            if "![" not in answer_text:
+                answer_text = f"{observation}\n\n{answer_text}"
+        elif action == "diagram_generator" and observation and "```mermaid" in observation:
+            if "```mermaid" not in answer_text:
+                answer_text = f"{answer_text}\n\n{observation}"
+
+        # Clean fallback if model returned blank
+        if not answer_text:
+            if action == "image_generator":
+                answer_text = f"{observation}\n\nHere is your generated visual asset based on: *{user_prompt}*."
+            elif action == "diagram_generator":
+                answer_text = f"Here is the generated architecture diagram for your request:\n\n{observation}"
+            else:
+                answer_text = f"Executed {action} successfully.\n\nObservation: {observation}"
 
         execution_record = {
             "query": user_prompt,
             "agent": "Hermes Agent Harness",
             "model_engine": gemma_response.get("model", "gemma"),
             "steps": steps,
-            "final_answer": gemma_response.get("text", ""),
+            "final_answer": answer_text,
             "duration_ms": round((time.time() - start_time) * 1000, 2),
             "status": "completed"
         }

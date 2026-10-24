@@ -32,7 +32,12 @@ import {
   Volume2,
   VolumeX,
   Trash2,
-  Share2
+  Share2,
+  Paperclip,
+  FileText,
+  ExternalLink,
+  PlusCircle,
+  Download
 } from 'lucide-react';
 import HermesCharacter from './components/HermesCharacter';
 import TiltCard from './components/TiltCard';
@@ -92,6 +97,12 @@ export default function App() {
   const messagesEndRef = useRef(null);
   const textareaRef = useRef(null);
   const mainCanvasRef = useRef(null);
+  const fileInputRef = useRef(null);
+  const [attachedFile, setAttachedFile] = useState(null);
+  const [uploadingFile, setUploadingFile] = useState(false);
+  const [showSkillModal, setShowSkillModal] = useState(false);
+  const [newSkillData, setNewSkillData] = useState({ name: '', description: '', instructions: '', tags: '' });
+  const [savingSkill, setSavingSkill] = useState(false);
 
   // Speech read-aloud functionality
   const handleSpeakMessage = (msgId, text) => {
@@ -217,27 +228,101 @@ export default function App() {
   }, []);
 
   // Send message to Hermes Agent ReAct loop
+    // Handle File Upload to Backend
+  const handleFileUpload = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setUploadingFile(true);
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+      const res = await fetch('/api/upload', {
+        method: 'POST',
+        body: formData,
+      });
+      const data = await res.json();
+      if (res.ok) {
+        setAttachedFile({
+          name: data.filename,
+          size: data.size_bytes,
+          content: data.content
+        });
+      } else {
+        alert(data.detail || 'Failed to upload file');
+      }
+    } catch (err) {
+      console.error('File upload error:', err);
+      alert('File upload error: ' + err.message);
+    } finally {
+      setUploadingFile(false);
+      if (fileInputRef.current) fileInputRef.current.value = '';
+    }
+  };
+
+  // Handle Custom Skill Creation
+  const handleCreateSkill = async (e) => {
+    e.preventDefault();
+    if (!newSkillData.name.trim() || !newSkillData.instructions.trim()) return;
+    setSavingSkill(true);
+    try {
+      const tagsArray = newSkillData.tags.split(',').map(t => t.trim()).filter(Boolean);
+      const res = await fetch('/api/skills/create', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: newSkillData.name.trim(),
+          description: newSkillData.description.trim() || 'Custom agent skill',
+          instructions: newSkillData.instructions.trim(),
+          tags: tagsArray
+        })
+      });
+      const data = await res.json();
+      if (res.ok) {
+        setShowSkillModal(false);
+        setNewSkillData({ name: '', description: '', instructions: '', tags: '' });
+        await fetchSkills();
+        if (data.skill) setSelectedSkill(data.skill);
+      } else {
+        alert(data.detail || 'Failed to create skill');
+      }
+    } catch (err) {
+      console.error('Skill creation error:', err);
+      alert('Skill creation error: ' + err.message);
+    } finally {
+      setSavingSkill(false);
+    }
+  };
+
+  // Send message to Hermes Agent ReAct loop
   const handleSendMessage = async (textToSend) => {
     const text = textToSend || promptInput;
-    if (!text.trim() || runningAgent) return;
+    if ((!text.trim() && !attachedFile) || runningAgent) return;
 
+    const currentAttached = attachedFile;
     const userMsgId = Date.now().toString();
     const newUserMsg = {
       id: userMsgId,
       role: 'user',
-      content: text.trim(),
+      content: text.trim() || (currentAttached ? `Analyze attached file: ${currentAttached.name}` : ''),
+      attachedFile: currentAttached ? { name: currentAttached.name, size: currentAttached.size } : null,
       timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
     };
 
     setMessages((prev) => [...prev, newUserMsg]);
     setPromptInput('');
+    setAttachedFile(null);
     setRunningAgent(true);
 
     try {
       const res = await fetch('/api/agent/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ message: text.trim(), max_steps: 3 })
+        body: JSON.stringify({
+          message: text.trim() || `Analyze the attached file: ${currentAttached?.name}`,
+          file_name: currentAttached?.name || null,
+          file_content: currentAttached?.content || null,
+          max_steps: 3
+        })
       });
 
       const data = await res.json();
@@ -276,6 +361,94 @@ export default function App() {
       setRunningAgent(false);
       fetchHealth();
     }
+  };
+
+  // Multimodal assistant output renderer (Images, Diagrams, Formatting)
+  const renderAssistantContent = (text) => {
+    if (!text) return null;
+    const imgRegex = /!\[(.*?)\]\((https?:\/\/[^\s\)]+)\)/g;
+    const parts = [];
+    let lastIndex = 0;
+    let match;
+
+    while ((match = imgRegex.exec(text)) !== null) {
+      const [fullMatch, alt, url] = match;
+      const matchIndex = match.index;
+      
+      if (matchIndex > lastIndex) {
+        parts.push({
+          type: 'text',
+          content: text.substring(lastIndex, matchIndex)
+        });
+      }
+
+      parts.push({
+        type: 'image',
+        alt: alt || 'Generated Visual',
+        url: url
+      });
+
+      lastIndex = matchIndex + fullMatch.length;
+    }
+
+    if (lastIndex < text.length) {
+      parts.push({
+        type: 'text',
+        content: text.substring(lastIndex)
+      });
+    }
+
+    if (parts.length === 0) {
+      return (
+        <p className="text-sm sm:text-base text-[#F5F5FA] whitespace-pre-wrap leading-relaxed font-normal">
+          {text}
+        </p>
+      );
+    }
+
+    return (
+      <div className="space-y-3.5">
+        {parts.map((p, idx) => {
+          if (p.type === 'text') {
+            return (
+              <p key={idx} className="text-sm sm:text-base text-[#F5F5FA] whitespace-pre-wrap leading-relaxed font-normal">
+                {p.content}
+              </p>
+            );
+          }
+          if (p.type === 'image') {
+            return (
+              <div key={idx} className="rounded-2xl overflow-hidden border border-[#3B0A6B]/50 bg-[#080310] shadow-[0_8px_30px_rgba(0,0,0,0.6)] group transition-all hover:border-[#00E5FF]/60 hover:shadow-[0_0_25px_rgba(0,229,255,0.2)]">
+                <div className="relative overflow-hidden bg-[#050505] flex items-center justify-center min-h-[220px]">
+                  <img
+                    src={p.url}
+                    alt={p.alt}
+                    loading="lazy"
+                    className="w-full max-h-[460px] object-contain transition-transform duration-500 group-hover:scale-[1.02]"
+                  />
+                </div>
+                <div className="px-3.5 py-2.5 bg-[#080310] border-t border-[#3B0A6B]/30 flex items-center justify-between text-xs">
+                  <div className="flex items-center space-x-2 truncate">
+                    <span className="w-1.5 h-1.5 rounded-full bg-[#00E5FF] shadow-[0_0_6px_#00E5FF]" />
+                    <span className="text-[#F5F5FA] font-medium truncate">{p.alt}</span>
+                  </div>
+                  <a
+                    href={p.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="btn-premium px-2 py-1 rounded-lg bg-[#3B0A6B]/30 hover:bg-[#00E5FF]/20 text-[#00E5FF] border border-[#3B0A6B]/40 hover:border-[#00E5FF]/50 flex items-center space-x-1 text-[11px] shrink-0"
+                  >
+                    <span>View Full Size</span>
+                    <ExternalLink className="w-3 h-3" />
+                  </a>
+                </div>
+              </div>
+            );
+          }
+          return null;
+        })}
+      </div>
+    );
   };
 
   const handleKeyDown = (e) => {
@@ -724,6 +897,13 @@ export default function App() {
                     {/* User Prompt Message Bubble (Royal Amethyst Surface with white hover sheen) */}
                     {msg.role === 'user' && (
                       <div className="max-w-xl rounded-2xl bg-[#3B0A6B]/25 border border-[#3B0A6B]/45 hover:border-white/20 transition-all px-4.5 py-3 text-sm text-[#F5F5FA] leading-relaxed shadow-[0_4px_24px_rgba(0,0,0,0.6)]">
+                        {msg.attachedFile && (
+                          <div className="flex items-center space-x-2 px-2.5 py-1 mb-2 rounded-lg bg-[#00E5FF]/10 border border-[#00E5FF]/30 text-xs text-[#00E5FF] w-fit">
+                            <FileText className="w-3.5 h-3.5 text-[#00E5FF]" />
+                            <span className="font-mono text-[11px] truncate max-w-[200px]">{msg.attachedFile.name}</span>
+                            <span className="text-[10px] text-[#B8B3C7] font-mono">({Math.round(msg.attachedFile.size / 1024)} KB)</span>
+                          </div>
+                        )}
                         {msg.content}
                       </div>
                     )}
@@ -810,9 +990,7 @@ export default function App() {
 
                         {/* Spacious, Highly Readable Final Answer */}
                         <div className="space-y-3 pt-1">
-                          <p className="text-sm sm:text-base text-[#F5F5FA] whitespace-pre-wrap leading-relaxed font-normal">
-                            {msg.content}
-                          </p>
+                          {renderAssistantContent(msg.content)}
 
                           {/* Assistant Footer Action Toolbar with White Hover Highlights */}
                           <div className="flex items-center justify-between pt-2 text-xs border-t border-[#3B0A6B]/20">
@@ -958,6 +1136,25 @@ export default function App() {
         <div className="relative z-20 max-w-4xl mx-auto w-full px-4 pb-4">
           <div className="ai-composer-glass rounded-3xl p-3 sm:p-3.5 shadow-2xl">
             
+            {/* Attached File Indicator */}
+            {attachedFile && (
+              <div className="flex items-center justify-between px-3 py-1.5 mb-2 rounded-xl bg-[#3B0A6B]/30 border border-[#00E5FF]/40 text-xs animate-slide-up">
+                <div className="flex items-center space-x-2 truncate">
+                  <FileText className="w-4 h-4 text-[#00E5FF] shrink-0" />
+                  <span className="text-[#F5F5FA] font-medium text-xs truncate max-w-[280px]">{attachedFile.name}</span>
+                  <span className="text-[10px] text-[#00E5FF] font-mono">({Math.round(attachedFile.size / 1024)} KB ready)</span>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setAttachedFile(null)}
+                  className="p-1 hover:bg-white/10 rounded-md text-[#858091] hover:text-[#F5F5FA] transition-all"
+                  title="Remove attached file"
+                >
+                  <X className="w-3.5 h-3.5" />
+                </button>
+              </div>
+            )}
+
             {/* Multiline Prompt Textarea */}
             <textarea
               ref={textareaRef}
@@ -985,6 +1182,29 @@ export default function App() {
                   <span>Skills ({skills.length})</span>
                 </button>
 
+                {/* File Ingestion Button & Hidden File Input */}
+                <input
+                  type="file"
+                  ref={fileInputRef}
+                  onChange={handleFileUpload}
+                  className="hidden"
+                  accept=".txt,.csv,.json,.py,.js,.jsx,.ts,.tsx,.html,.md,.log,.yaml,.yml"
+                />
+                <button
+                  type="button"
+                  onClick={() => fileInputRef.current?.click()}
+                  disabled={uploadingFile || runningAgent}
+                  className="btn-premium px-2.5 py-1 rounded-full bg-[#3B0A6B]/25 hover:bg-[#3B0A6B]/45 border border-[#3B0A6B]/40 text-[#B8B3C7] hover:text-[#00E5FF] hover:border-white/20 flex items-center space-x-1.5 text-[11px]"
+                  title="Upload CSV, JSON, Python, Code or Data for Hermes Agent analysis"
+                >
+                  {uploadingFile ? (
+                    <RefreshCw className="w-3 h-3 text-[#00E5FF] animate-spin" />
+                  ) : (
+                    <Paperclip className="w-3 h-3 text-[#00E5FF]" />
+                  )}
+                  <span>{uploadingFile ? 'Uploading...' : 'Attach File'}</span>
+                </button>
+
                 {/* Status Pill */}
                 {health?.cuda_available && (
                   <span className="hidden sm:inline-flex items-center space-x-1 text-[11px] text-[#00E5FF] font-mono">
@@ -1002,7 +1222,7 @@ export default function App() {
 
                 <button
                   onClick={() => handleSendMessage()}
-                  disabled={runningAgent || !promptInput.trim()}
+                  disabled={runningAgent || (!promptInput.trim() && !attachedFile)}
                   className="btn-premium sheen-travel w-9 h-9 rounded-2xl bg-[#00E5FF] hover:bg-[#33ebff] text-[#050505] font-bold flex items-center justify-center shadow-[0_0_24px_rgba(0,229,255,0.5)] disabled:opacity-30 disabled:cursor-not-allowed disabled:shadow-none"
                   title="Send message (Enter)"
                 >
@@ -1184,10 +1404,20 @@ export default function App() {
             {contextTab === 'skills' && (
               <div className="space-y-4 animate-slide-up">
                 <div className="space-y-2">
-                  <span className="font-semibold text-[#F5F5FA] tracking-tight flex items-center space-x-2">
+                  <div className="flex items-center justify-between">
+                    <span className="font-semibold text-[#F5F5FA] tracking-tight flex items-center space-x-2">
                     <FileCode className="w-4 h-4 text-[#00E5FF]" />
                     <span>Agent Skills ({skills.length})</span>
                   </span>
+                    <button
+                      type="button"
+                      onClick={() => setShowSkillModal(!showSkillModal)}
+                      className="btn-premium px-2 py-0.5 rounded-lg bg-[#3B0A6B]/30 hover:bg-[#00E5FF]/20 text-[#00E5FF] border border-[#3B0A6B]/40 hover:border-[#00E5FF]/50 flex items-center space-x-1 text-[11px]"
+                    >
+                      <Plus className="w-3 h-3 text-[#00E5FF]" />
+                      <span>New Skill</span>
+                    </button>
+                  </div>
                   
                   {/* Skill Search Input */}
                   <div className="relative">
@@ -1201,6 +1431,89 @@ export default function App() {
                     />
                   </div>
                 </div>
+
+                  {/* Custom Skill Authoring Modal / Form */}
+                  {showSkillModal && (
+                    <form onSubmit={handleCreateSkill} className="p-3.5 rounded-2xl bg-[#080310] border border-[#00E5FF]/40 space-y-2.5 shadow-[0_4px_20px_rgba(0,0,0,0.6)] animate-slide-up">
+                      <div className="flex items-center justify-between border-b border-[#3B0A6B]/30 pb-1.5">
+                        <span className="text-xs font-semibold text-[#F5F5FA] flex items-center space-x-1">
+                          <PlusCircle className="w-3.5 h-3.5 text-[#00E5FF]" />
+                          <span>Author New SKILL.md</span>
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() => setShowSkillModal(false)}
+                          className="text-[#858091] hover:text-[#F5F5FA]"
+                        >
+                          <X className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
+
+                      <div>
+                        <label className="text-[10px] text-[#858091] uppercase font-bold block mb-1">Skill Name (Slug)</label>
+                        <input
+                          type="text"
+                          required
+                          value={newSkillData.name}
+                          onChange={(e) => setNewSkillData({ ...newSkillData, name: e.target.value })}
+                          placeholder="e.g. security-auditor"
+                          className="w-full bg-[#050505] border border-[#3B0A6B]/40 rounded-lg px-2.5 py-1 text-xs text-[#F5F5FA] focus:outline-none focus:border-[#00E5FF]"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="text-[10px] text-[#858091] uppercase font-bold block mb-1">Description</label>
+                        <input
+                          type="text"
+                          required
+                          value={newSkillData.description}
+                          onChange={(e) => setNewSkillData({ ...newSkillData, description: e.target.value })}
+                          placeholder="Single sentence purpose for agent discovery"
+                          className="w-full bg-[#050505] border border-[#3B0A6B]/40 rounded-lg px-2.5 py-1 text-xs text-[#F5F5FA] focus:outline-none focus:border-[#00E5FF]"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="text-[10px] text-[#858091] uppercase font-bold block mb-1">Tags (comma separated)</label>
+                        <input
+                          type="text"
+                          value={newSkillData.tags}
+                          onChange={(e) => setNewSkillData({ ...newSkillData, tags: e.target.value })}
+                          placeholder="e.g. audit, security, python"
+                          className="w-full bg-[#050505] border border-[#3B0A6B]/40 rounded-lg px-2.5 py-1 text-xs text-[#F5F5FA] focus:outline-none focus:border-[#00E5FF]"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="text-[10px] text-[#858091] uppercase font-bold block mb-1">Operational Instructions (Markdown)</label>
+                        <textarea
+                          rows={4}
+                          required
+                          value={newSkillData.instructions}
+                          onChange={(e) => setNewSkillData({ ...newSkillData, instructions: e.target.value })}
+                          placeholder={"## Instructions\n1. Analyze codebase vulnerability points...\n2. Return structured audit report..."}
+                          className="w-full bg-[#050505] border border-[#3B0A6B]/40 rounded-lg px-2.5 py-1.5 text-xs text-[#F5F5FA] focus:outline-none focus:border-[#00E5FF] resize-none font-mono"
+                        />
+                      </div>
+
+                      <div className="flex items-center justify-end space-x-2 pt-1">
+                        <button
+                          type="button"
+                          onClick={() => setShowSkillModal(false)}
+                          className="btn-premium px-2.5 py-1 rounded-lg border border-[#3B0A6B]/40 text-[#B8B3C7] text-xs hover:bg-white/5"
+                        >
+                          Cancel
+                        </button>
+                        <button
+                          type="submit"
+                          disabled={savingSkill}
+                          className="btn-premium px-3 py-1 rounded-lg bg-[#00E5FF] hover:bg-[#33ebff] text-[#050505] font-semibold text-xs shadow-[0_0_12px_rgba(0,229,255,0.4)] disabled:opacity-50"
+                        >
+                          {savingSkill ? 'Deploying...' : 'Deploy Skill'}
+                        </button>
+                      </div>
+                    </form>
+                  )}
 
                 {/* Skills List */}
                 <div className="space-y-2">
