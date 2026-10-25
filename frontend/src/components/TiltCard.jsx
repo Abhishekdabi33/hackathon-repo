@@ -1,18 +1,11 @@
 import React, { useRef, useEffect } from 'react';
 
 /**
- * TiltCard - 60FPS Tactile Interactive Glass Card with Localized Cursor Spotlight
- * Palette: Deep Obsidian (#0A0A0C) × Silver/White Specular × Subtle Amethyst & Cyan
- * 
- * Features:
- * - High-precision local coordinate tracking (exact pixels, no percentage distortion)
- * - requestAnimationFrame lerping without React re-renders on mousemove
- * - Multi-layer blended spotlight: subtle white reflection + cyan accent + royal amethyst depth
- * - Clipped neatly to rounded corners with overflow-hidden
- * - Gentle elevation and realistic 3D shadow shifting with tilt
- * - Delicate white top-edge reflection
- * - Pauses RAF loop when idle/resting to conserve resources
- * - Respects prefers-reduced-motion
+ * TiltCard - Monochrome Glassmorphic Card
+ * Design Tokens:
+ * - Surface: bg-white/[0.03] to bg-white/[0.06]
+ * - Borders: border-white/10 (normal) to border-white/20 (hover)
+ * - Localized Glow: low-opacity white radial glow rgba(255, 255, 255, 0.05)
  */
 export default function TiltCard({
   children,
@@ -62,28 +55,26 @@ export default function TiltCard({
       p.currentLightY += (p.targetLightY - p.currentLightY) * lerpPos;
       p.currentOpacity += (p.targetOpacity - p.currentOpacity) * lerpAlpha;
 
-      // Apply transforms
       if (!p.isReducedMotion) {
-        const transY = p.isHovered && !p.isActive ? -3 : p.isActive ? 1 : 0;
-        const scale = p.isActive ? 0.985 : 1;
-        const transZ = p.isHovered ? 6 : 0;
+        const transY = p.isHovered && !p.isActive ? -2 : p.isActive ? 1 : 0;
+        const scale = p.isActive ? 0.988 : 1;
+        const transZ = p.isHovered ? 5 : 0;
 
         card.style.transform = `perspective(1000px) rotateX(${p.currentRotX.toFixed(2)}deg) rotateY(${p.currentRotY.toFixed(2)}deg) translateY(${transY}px) translateZ(${transZ}px) scale(${scale})`;
 
-        const shadowX = -p.currentRotY * 1.4;
-        const shadowY = p.currentRotX * 1.4 + (p.isHovered ? 12 : 4);
-        const shadowBlur = p.isHovered ? 24 : 12;
+        const shadowX = -p.currentRotY * 1.2;
+        const shadowY = p.currentRotX * 1.2 + (p.isHovered ? 10 : 3);
+        const shadowBlur = p.isHovered ? 20 : 10;
         card.style.boxShadow = p.isHovered
-          ? `${shadowX.toFixed(1)}px ${shadowY.toFixed(1)}px ${shadowBlur}px -6px rgba(0, 0, 0, 0.85), 0 0 16px rgba(59, 10, 107, 0.25), 0 0 10px rgba(0, 229, 255, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.18)`
-          : '0 4px 14px -2px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.06)';
+          ? `${shadowX.toFixed(1)}px ${shadowY.toFixed(1)}px ${shadowBlur}px -4px rgba(0, 0, 0, 0.85), inset 0 1px 0 rgba(255, 255, 255, 0.15)`
+          : '0 4px 14px -2px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.05)';
       }
 
-      // Apply localized spotlight
+      // Low-opacity white localized spotlight
       highlight.style.opacity = Math.max(0, Math.min(1, p.currentOpacity)).toFixed(3);
       highlight.style.background = `
-        radial-gradient(circle 60px at ${p.currentLightX.toFixed(1)}px ${p.currentLightY.toFixed(1)}px, rgba(255, 255, 255, 0.085) 0%, transparent 80%),
-        radial-gradient(circle 140px at ${p.currentLightX.toFixed(1)}px ${p.currentLightY.toFixed(1)}px, rgba(0, 229, 255, 0.075) 0%, rgba(0, 229, 255, 0.015) 55%, transparent 85%),
-        radial-gradient(circle 260px at ${p.currentLightX.toFixed(1)}px ${p.currentLightY.toFixed(1)}px, rgba(59, 10, 107, 0.22) 0%, rgba(59, 10, 107, 0.06) 50%, transparent 80%)
+        radial-gradient(circle 70px at ${p.currentLightX.toFixed(1)}px ${p.currentLightY.toFixed(1)}px, rgba(255, 255, 255, 0.06) 0%, transparent 80%),
+        radial-gradient(circle 180px at ${p.currentLightX.toFixed(1)}px ${p.currentLightY.toFixed(1)}px, rgba(255, 255, 255, 0.02) 0%, transparent 75%)
       `;
 
       const deltaRot = Math.abs(p.targetRotX - p.currentRotX) + Math.abs(p.targetRotY - p.currentRotY);
@@ -182,14 +173,14 @@ export default function TiltCard({
     <div
       ref={cardRef}
       onClick={onClick}
-      className={`relative overflow-hidden group select-none transition-colors duration-200 ${className}`}
+      className={`relative overflow-hidden group select-none transition-colors duration-200 bg-white/[0.03] hover:bg-white/[0.06] border border-white/10 hover:border-white/20 ${className}`}
       style={{
         transformStyle: 'preserve-3d',
         willChange: 'transform, box-shadow'
       }}
       {...props}
     >
-      {/* Specular Localized Spotlight Overlay */}
+      {/* Specular Localized Low-Opacity White Spotlight */}
       <div
         ref={highlightRef}
         aria-hidden="true"
@@ -197,13 +188,13 @@ export default function TiltCard({
         style={{ opacity: 0 }}
       />
 
-      {/* Delicate Top-Edge Specular Highlight Line */}
+      {/* Top-Edge Highlight Line */}
       <div 
         aria-hidden="true"
-        className="absolute top-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-white/20 to-transparent pointer-events-none z-10" 
+        className="absolute top-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-white/15 to-transparent pointer-events-none z-10" 
       />
 
-      {/* Card Inner Content */}
+      {/* Card Content */}
       <div className="relative z-0 h-full flex flex-col justify-between">
         {children}
       </div>

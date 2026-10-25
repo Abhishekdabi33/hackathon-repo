@@ -1,27 +1,16 @@
 import React, { useEffect, useRef } from 'react';
 
 /**
- * WorkspaceSpotlight - Smooth 60FPS Ambient Cursor Spotlight
- * Palette: Deep Obsidian (#0A0A0C) × Silver/White Specular × Subtle Amethyst & Cyan
- * 
- * Features:
- * - Fluid requestAnimationFrame lerp interpolation (no React re-renders)
- * - Accurate local coordinate calculation relative to the main canvas
- * - Refined 3-tier blended gradient:
- *   1. Soft silver-white specular core (immediate pointer reflection)
- *   2. Restrained electric cyan edge tint
- *   3. Broad, cinematic royal amethyst ambient glow
- * - Completely transparent falloff into Deep Obsidian (#0A0A0C) with zero banding
- * - Gentle fade-in on enter, smooth dimming on idle/leave
- * - pointer-events: none, layered safely behind interactive glass panels
- * - Respects prefers-reduced-motion and touch devices
+ * WorkspaceSpotlight - Low-Opacity White Radial Spotlight
+ * Design Tokens:
+ * - Low-opacity white radial glows: rgba(255, 255, 255, 0.05)
+ * - Deep obsidian falloff: #070709
  */
 export default function WorkspaceSpotlight({ containerRef, className = '' }) {
   const spotlightRef = useRef(null);
   const animFrameRef = useRef(null);
   const idleTimerRef = useRef(null);
 
-  // High-performance physics state without React re-renders
   const stateRef = useRef({
     targetX: 0,
     targetY: 0,
@@ -34,7 +23,6 @@ export default function WorkspaceSpotlight({ containerRef, className = '' }) {
   });
 
   useEffect(() => {
-    // Detect touch-only or coarse pointer devices
     const isTouch = window.matchMedia('(pointer: coarse)').matches;
     const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     stateRef.current.isTouchDevice = isTouch || prefersReducedMotion;
@@ -44,22 +32,20 @@ export default function WorkspaceSpotlight({ containerRef, className = '' }) {
     if (!spotlightEl) return;
 
     if (stateRef.current.isTouchDevice) {
-      // Touch or reduced-motion: set a static subtle ambient gradient
-      spotlightEl.style.opacity = '0.35';
+      spotlightEl.style.opacity = '0.3';
       spotlightEl.style.background = `
-        radial-gradient(circle 520px at 50% 22%, rgba(59, 10, 107, 0.15) 0%, rgba(0, 229, 255, 0.02) 45%, transparent 80%)
+        radial-gradient(circle 500px at 50% 22%, rgba(255, 255, 255, 0.04) 0%, transparent 75%)
       `;
       return;
     }
 
-    // Set initial position to center top
     const initRect = container.getBoundingClientRect();
     stateRef.current.currentX = initRect.width / 2;
     stateRef.current.currentY = Math.min(240, initRect.height / 3);
     stateRef.current.targetX = stateRef.current.currentX;
     stateRef.current.targetY = stateRef.current.currentY;
-    stateRef.current.currentOpacity = 0.45;
-    stateRef.current.targetOpacity = 0.45;
+    stateRef.current.currentOpacity = 0.4;
+    stateRef.current.targetOpacity = 0.4;
 
     const handlePointerMove = (e) => {
       const rect = container.getBoundingClientRect();
@@ -71,11 +57,10 @@ export default function WorkspaceSpotlight({ containerRef, className = '' }) {
       stateRef.current.targetOpacity = 1;
       stateRef.current.isInside = true;
 
-      // Reset idle timer (dims spotlight gently when idle for 3.5s)
       if (idleTimerRef.current) clearTimeout(idleTimerRef.current);
       idleTimerRef.current = setTimeout(() => {
         if (stateRef.current.isInside) {
-          stateRef.current.targetOpacity = 0.45;
+          stateRef.current.targetOpacity = 0.4;
         }
       }, 3500);
     };
@@ -93,11 +78,10 @@ export default function WorkspaceSpotlight({ containerRef, className = '' }) {
       stateRef.current.isInside = false;
     };
 
-    // 60FPS Render Loop using lerp interpolation
     const updateMotion = () => {
       const s = stateRef.current;
-      const lerpPos = 0.13;      // Smooth yet responsive position tracking
-      const lerpAlpha = 0.075;   // Gentle opacity deceleration
+      const lerpPos = 0.14;
+      const lerpAlpha = 0.08;
 
       s.currentX += (s.targetX - s.currentX) * lerpPos;
       s.currentY += (s.targetY - s.currentY) * lerpPos;
@@ -106,9 +90,9 @@ export default function WorkspaceSpotlight({ containerRef, className = '' }) {
       if (spotlightEl) {
         spotlightEl.style.opacity = Math.max(0, Math.min(1, s.currentOpacity)).toFixed(3);
         spotlightEl.style.background = `
-          radial-gradient(circle 90px at ${s.currentX.toFixed(1)}px ${s.currentY.toFixed(1)}px, rgba(255, 255, 255, 0.042) 0%, transparent 80%),
-          radial-gradient(circle 280px at ${s.currentX.toFixed(1)}px ${s.currentY.toFixed(1)}px, rgba(0, 229, 255, 0.042) 0%, rgba(0, 229, 255, 0.01) 50%, transparent 80%),
-          radial-gradient(circle 640px at ${s.currentX.toFixed(1)}px ${s.currentY.toFixed(1)}px, rgba(59, 10, 107, 0.18) 0%, rgba(59, 10, 107, 0.065) 45%, rgba(10, 10, 12, 0.02) 70%, transparent 95%)
+          radial-gradient(circle 85px at ${s.currentX.toFixed(1)}px ${s.currentY.toFixed(1)}px, rgba(255, 255, 255, 0.05) 0%, transparent 80%),
+          radial-gradient(circle 280px at ${s.currentX.toFixed(1)}px ${s.currentY.toFixed(1)}px, rgba(255, 255, 255, 0.025) 0%, transparent 75%),
+          radial-gradient(circle 600px at ${s.currentX.toFixed(1)}px ${s.currentY.toFixed(1)}px, rgba(255, 255, 255, 0.012) 0%, transparent 85%)
         `;
       }
 

@@ -1,15 +1,11 @@
 import React, { useEffect, useRef } from 'react';
 
 /**
- * CinematicBackground - Atmospheric Deep Obsidian & Ambient Stardust Canvas
- * Palette: Deep Obsidian (#0A0A0C) × Pure White / Silver × Subtle Amethyst & Cyan
- * 
- * Features:
- * - 60FPS lightweight particle mesh with zero impact on UI responsiveness
- * - Delicate silver-white nodes with ultra-subtle connecting filaments
- * - Subtle ambient radial glows centered behind the avatar
- * - Seamless parallax response on feed scroll
- * - Respects prefers-reduced-motion (disables animation gracefully)
+ * CinematicBackground - Deep Obsidian Black (#070709) with Low-Opacity White Radial Glow
+ * Design Tokens:
+ * - Background Primary Base: #070709
+ * - Subtle Radial Glow: rgba(255, 255, 255, 0.05)
+ * - Delicate monochrome stardust plexus node effect
  */
 export default function CinematicBackground({ scrollOffset = 0, className = '' }) {
   const canvasRef = useRef(null);
@@ -39,50 +35,44 @@ export default function CinematicBackground({ scrollOffset = 0, className = '' }
       return () => window.removeEventListener('resize', handleResize);
     }
 
-    // Initialize 36 lightweight ambient particles
-    const particleCount = Math.min(36, Math.floor(width / 38));
+    // 32 lightweight monochrome particles
+    const particleCount = Math.min(32, Math.floor(width / 42));
     const particles = [];
 
     for (let i = 0; i < particleCount; i++) {
       particles.push({
         x: Math.random() * width,
         y: Math.random() * height,
-        vx: (Math.random() - 0.5) * 0.22,
-        vy: (Math.random() - 0.5) * 0.22,
-        radius: Math.random() * 1.2 + 0.6,
-        alpha: Math.random() * 0.25 + 0.1,
-        // 80% subtle silver/white, 12% faint amethyst, 8% faint cyan
-        color: i % 10 === 0 
-          ? 'rgba(0, 229, 255,' 
-          : i % 8 === 0 
-            ? 'rgba(150, 60, 230,' 
-            : 'rgba(255, 255, 255,'
+        vx: (Math.random() - 0.5) * 0.18,
+        vy: (Math.random() - 0.5) * 0.18,
+        radius: Math.random() * 1.1 + 0.5,
+        alpha: Math.random() * 0.20 + 0.06
       });
     }
 
     const render = () => {
       ctx.clearRect(0, 0, width, height);
 
-      // Render delicate connecting lines between nearby particles
+      // Render subtle connecting lines between nearby particles
       for (let i = 0; i < particles.length; i++) {
         for (let j = i + 1; j < particles.length; j++) {
           const dx = particles[i].x - particles[j].x;
           const dy = particles[i].y - particles[j].y;
           const dist = Math.sqrt(dx * dx + dy * dy);
 
-          if (dist < 110) {
-            const lineAlpha = (1 - dist / 110) * 0.055;
+          if (dist < 105) {
+            const lineAlpha = (1 - dist / 105) * 0.045;
             ctx.beginPath();
             ctx.moveTo(particles[i].x, particles[i].y);
             ctx.lineTo(particles[j].x, particles[j].y);
             ctx.strokeStyle = `rgba(255, 255, 255, ${lineAlpha})`;
-            ctx.lineWidth = 0.65;
+            ctx.lineWidth = 0.6;
             ctx.stroke();
           }
         }
       }
 
-      // Update & render particles
+      // Render monochrome stardust particles
       for (let i = 0; i < particles.length; i++) {
         const p = particles[i];
         p.x += p.vx;
@@ -95,7 +85,7 @@ export default function CinematicBackground({ scrollOffset = 0, className = '' }
 
         ctx.beginPath();
         ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
-        ctx.fillStyle = `${p.color} ${p.alpha})`;
+        ctx.fillStyle = `rgba(255, 255, 255, ${p.alpha})`;
         ctx.fill();
       }
 
@@ -115,37 +105,37 @@ export default function CinematicBackground({ scrollOffset = 0, className = '' }
       aria-hidden="true" 
       className={`absolute inset-0 pointer-events-none overflow-hidden z-0 ${className}`}
     >
-      {/* 1. Deep Obsidian Base Canvas */}
-      <div className="absolute inset-0 bg-[#0A0A0C]" />
+      {/* 1. Primary Base: #070709 (Deep Obsidian Black) */}
+      <div className="absolute inset-0 bg-[#070709]" />
 
-      {/* 2. Atmospheric Radial Illumination behind Avatar with subtle Parallax */}
+      {/* 2. Low-Opacity White Radial Glow centered behind avatar with Parallax */}
       <div 
-        style={{ transform: `translate(-50%, ${scrollOffset * 0.12}px)` }}
-        className="absolute top-0 left-1/2 w-[820px] h-[480px] pointer-events-none will-change-transform opacity-70"
+        style={{ transform: `translate(-50%, ${scrollOffset * 0.1}px)` }}
+        className="absolute top-0 left-1/2 w-[800px] h-[480px] pointer-events-none will-change-transform opacity-100"
       >
         <div 
           className="w-full h-full"
           style={{
             background: `
-              radial-gradient(ellipse 65% 55% at 50% 25%, rgba(255, 255, 255, 0.035) 0%, transparent 60%),
-              radial-gradient(ellipse 80% 65% at 50% 32%, rgba(0, 229, 255, 0.04) 0%, rgba(0, 229, 255, 0.01) 40%, transparent 70%),
-              radial-gradient(ellipse 95% 80% at 50% 38%, rgba(59, 10, 107, 0.22) 0%, rgba(59, 10, 107, 0.08) 50%, transparent 85%)
+              radial-gradient(ellipse 60% 50% at 50% 25%, rgba(255, 255, 255, 0.05) 0%, transparent 60%),
+              radial-gradient(ellipse 80% 65% at 50% 32%, rgba(255, 255, 255, 0.025) 0%, transparent 70%),
+              radial-gradient(ellipse 95% 85% at 50% 38%, rgba(255, 255, 255, 0.01) 0%, transparent 85%)
             `
           }}
         />
       </div>
 
-      {/* 3. Delicate Ambient Stardust Canvas */}
+      {/* 3. Subtle Animated Plexus Nodes Canvas */}
       <canvas
         ref={canvasRef}
-        className="absolute inset-0 w-full h-full opacity-60"
+        className="absolute inset-0 w-full h-full opacity-50"
       />
 
-      {/* 4. Subtle Vignette Border Mask */}
+      {/* 4. Soft Vignette Mask */}
       <div 
         className="absolute inset-0 pointer-events-none"
         style={{
-          background: 'radial-gradient(circle at 50% 50%, transparent 65%, rgba(10, 10, 12, 0.6) 100%)'
+          background: 'radial-gradient(circle at 50% 50%, transparent 70%, rgba(7, 7, 9, 0.65) 100%)'
         }}
       />
     </div>
