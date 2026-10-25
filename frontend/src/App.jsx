@@ -44,12 +44,16 @@ import HermesCharacter from './components/HermesCharacter';
 import TiltCard from './components/TiltCard';
 import WorkspaceSpotlight from './components/WorkspaceSpotlight';
 import CinematicBackground from './components/CinematicBackground';
+import { LandingPage } from './components/LandingPage';
+
 
 export default function App() {
   // Navigation & Workspace State
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [contextPanelOpen, setContextPanelOpen] = useState(false);
-  const [contextTab, setContextTab] = useState('device'); // 'device' | 'skills' | 'project'
+  const [contextTab, setContextTab] = useState('device');
+  const [currentView, setCurrentView] = useState('app'); // 'app' | 'landing'
+ // 'device' | 'skills' | 'project'
   
   // Chat Conversation State (Clean Conversational AI)
   const [messages, setMessages] = useState([]);
@@ -515,6 +519,10 @@ export default function App() {
   const storageInfo = deviceConfig?.storage || null;
   const modelInfo = deviceConfig?.model || null;
 
+  if (currentView === 'landing') {
+    return <LandingPage onLaunchApp={() => setCurrentView('app')} />;
+  }
+
   return (
     <div className="flex h-screen w-screen overflow-hidden bg-[#070709] text-[#FFFFFF] font-sans antialiased selection:bg-[#3B0A6B]/50 selection:text-[#ffffff]">
       
@@ -702,10 +710,24 @@ export default function App() {
           {/* Center: Navigation Pill Links (Home, The Feed, Analytics, Profile) in a rounded dark container */}
           <nav aria-label="Main Navigation" className="hidden md:flex items-center space-x-1 p-1 rounded-full bg-[#09090b]/80 border border-white/10 backdrop-blur-xl shadow-inner">
             <button
-              onClick={handleNewChat}
-              className="px-4 py-1.5 rounded-full text-xs font-medium text-white bg-white/[0.08] border border-white/15 shadow-sm transition-all"
+              onClick={() => { setCurrentView('app'); handleNewChat(); }}
+              className={`px-4 py-1.5 rounded-full text-xs font-medium transition-all ${
+                currentView === 'app' 
+                  ? 'text-white bg-white/[0.08] border border-white/15 shadow-sm' 
+                  : 'text-[#a1a1aa] hover:text-white hover:bg-white/[0.04]'
+              }`}
             >
-              Home
+              Workspace
+            </button>
+            <button
+              onClick={() => setCurrentView('landing')}
+              className={`px-4 py-1.5 rounded-full text-xs font-medium transition-all ${
+                currentView === 'landing' 
+                  ? 'text-white bg-white/[0.08] border border-white/15 shadow-sm' 
+                  : 'text-[#a1a1aa] hover:text-white hover:bg-white/[0.04]'
+              }`}
+            >
+              Landing Page
             </button>
             <button
               onClick={() => { setContextTab('skills'); setContextPanelOpen(true); }}

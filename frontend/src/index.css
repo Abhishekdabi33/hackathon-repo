@@ -8,6 +8,18 @@
   :root {
     color-scheme: dark;
 
+    /* Standard shadcn/Tailwind design tokens */
+    --background: #070709;
+    --foreground: #ffffff;
+    --primary: #ffffff;
+    --primary-foreground: #000000;
+    --secondary: #3B0A6B;
+    --secondary-foreground: #ffffff;
+    --muted: #09090b;
+    --muted-foreground: #a1a1aa;
+    --border: rgba(255, 255, 255, 0.10);
+    --destructive: #ef4444;
+
     /* Color Palette & Design Tokens */
     --color-obsidian-base: #070709;
     --color-surface-glass: rgba(255, 255, 255, 0.03);
