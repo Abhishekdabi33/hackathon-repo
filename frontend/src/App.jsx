@@ -42,6 +42,7 @@ import {
 import HermesCharacter from './components/HermesCharacter';
 import TiltCard from './components/TiltCard';
 import WorkspaceSpotlight from './components/WorkspaceSpotlight';
+import CinematicBackground from './components/CinematicBackground';
 
 export default function App() {
   // Navigation & Workspace State
@@ -514,7 +515,7 @@ export default function App() {
   const modelInfo = deviceConfig?.model || null;
 
   return (
-    <div className="flex h-screen w-screen overflow-hidden bg-[#050505] text-[#F5F5FA] font-sans antialiased selection:bg-[#3B0A6B]/50 selection:text-[#00E5FF]">
+    <div className="flex h-screen w-screen overflow-hidden bg-[#0A0A0C] text-[#FFFFFF] font-sans antialiased selection:bg-[#3B0A6B]/50 selection:text-[#00E5FF]">
       
       {/* ==================================================================== */}
       {/* 1. LEFT SIDEBAR                                                      */}
@@ -657,34 +658,43 @@ export default function App() {
       {/* ==================================================================== */}
       <div 
         ref={mainCanvasRef}
-        className="flex-1 flex flex-col h-full min-w-0 relative overflow-hidden bg-[#050505]"
+        className="flex-1 flex flex-col h-full min-w-0 relative overflow-hidden bg-[#0A0A0C]"
       >
         {/* Layered Cursor Spotlight: Soft White Core + Cyan Highlight + Amethyst Ambient Glow */}
         <WorkspaceSpotlight containerRef={mainCanvasRef} />
         
-        {/* Royal Amethyst Ambient Illumination with 3D Parallax */}
-        <div 
-          style={{ transform: `translate(-50%, ${scrollOffset * 0.12}px)` }}
-          className="absolute top-0 left-1/2 w-[760px] h-[360px] amethyst-ambient-aura pointer-events-none z-0 will-change-transform" 
-        />
+        {/* Cinematic Atmospheric Deep Obsidian Environment */}
+        <CinematicBackground scrollOffset={scrollOffset} />
 
         {/* Top Minimal Navbar with Specular Line */}
-        <header className="h-14 border-b border-[#3B0A6B]/30 bg-[#050505]/90 backdrop-blur-xl flex items-center justify-between px-4 sm:px-6 relative z-10 shrink-0 specular-line">
+        <header className="h-14 glass-nav flex items-center justify-between px-4 sm:px-6 relative z-20 shrink-0 specular-line">
+          {/* Left Brand & Compact Avatar Identity */}
           <div className="flex items-center space-x-3">
             <button
               onClick={() => setSidebarOpen(!sidebarOpen)}
-              className="btn-premium text-[#B8B3C7] hover:text-[#00E5FF] p-1.5 rounded-xl hover:bg-white/[0.04] border border-transparent hover:border-white/10"
+              className="btn-premium text-[#A1A1AA] hover:text-white p-1.5 rounded-xl hover:bg-white/[0.04] border border-transparent hover:border-white/10"
               title={sidebarOpen ? "Collapse Sidebar" : "Expand Sidebar"}
             >
               <Menu className="w-4 h-4" />
             </button>
 
-            {/* Hermes Dynamic Companion Badge in Top Bar */}
-            <div className="flex items-center space-x-2 px-3 py-1 rounded-full bg-[#080310] border border-[#3B0A6B]/45 hover:border-white/20 transition-all shadow-[0_0_15px_rgba(59,10,107,0.3)]">
+            {/* Geometric Brand Logo */}
+            <div className="flex items-center space-x-2.5">
+              <div className="w-7 h-7 rounded-lg bg-white/[0.04] border border-white/10 flex items-center justify-center shadow-inner">
+                <Bot className="w-4 h-4 text-white" />
+              </div>
+              <div className="flex items-center space-x-1.5">
+                <span className="font-bold text-xs tracking-[0.2em] uppercase text-white">HERMES</span>
+                <span className="text-[10px] text-[#A1A1AA] font-mono tracking-wider">• AI</span>
+              </div>
+            </div>
+
+            {/* Hermes Dynamic Companion Status Badge */}
+            <div className="hidden sm:flex items-center space-x-2 px-2.5 py-1 rounded-full bg-white/[0.03] border border-white/10 hover:border-white/20 transition-all shadow-sm">
               <HermesCharacter size="sm" state={getHermesState()} interactive={false} />
               <div className="flex flex-col text-left">
                 <div className="flex items-center space-x-1.5">
-                  <span className="text-[11px] font-semibold text-[#F5F5FA] tracking-tight leading-none">
+                  <span className="text-[11px] font-semibold text-white tracking-tight leading-none">
                     Hermes
                   </span>
                   <span className="w-1.5 h-1.5 rounded-full bg-[#00E5FF] animate-status-breathe" />
@@ -694,25 +704,43 @@ export default function App() {
                 </span>
               </div>
             </div>
-
-            {/* Model Identity Pill */}
-            <div className="hidden md:flex items-center space-x-2 px-3 py-1 rounded-full bg-[#3B0A6B]/20 border border-[#3B0A6B]/45 shadow-sm">
-              <span className="text-xs font-medium text-[#F5F5FA] tracking-tight">
-                Google Gemma 2
-              </span>
-              <span className="text-[9px] font-mono text-[#00E5FF] bg-[#3B0A6B]/40 border border-[#00E5FF]/20 px-1.5 py-0.2 rounded-full">
-                ReAct Agent
-              </span>
-            </div>
           </div>
+
+          {/* Center Navigation Pill: Minimal & Premium Glass Capsule */}
+          <nav aria-label="Main Navigation" className="hidden md:flex items-center space-x-1 px-1.5 py-1 rounded-full glass-pill">
+            <button
+              onClick={() => {}}
+              className="px-3 py-1 rounded-full text-xs font-medium text-white bg-white/[0.08] border border-white/15 shadow-sm transition-all"
+            >
+              Workspace
+            </button>
+            <button
+              onClick={() => { setContextTab('skills'); setContextPanelOpen(true); }}
+              className="px-3 py-1 rounded-full text-xs font-medium text-[#A1A1AA] hover:text-white hover:bg-white/[0.04] transition-all"
+            >
+              Skills ({skills.length})
+            </button>
+            <button
+              onClick={() => { setContextTab('device'); setContextPanelOpen(true); }}
+              className="px-3 py-1 rounded-full text-xs font-medium text-[#A1A1AA] hover:text-white hover:bg-white/[0.04] transition-all"
+            >
+              Telemetry
+            </button>
+            <button
+              onClick={() => { setContextTab('project'); setContextPanelOpen(true); }}
+              className="px-3 py-1 rounded-full text-xs font-medium text-[#A1A1AA] hover:text-white hover:bg-white/[0.04] transition-all"
+            >
+              Pods
+            </button>
+          </nav>
 
           {/* Right Header Controls */}
           <div className="flex items-center space-x-2">
             {/* CUDA Status Pill */}
             {health?.cuda_available && (
-              <span className="hidden sm:inline-flex items-center space-x-1.5 bg-[#3B0A6B]/25 text-[#00E5FF] border border-[#00E5FF]/30 px-2.5 py-1 rounded-full text-[10px] font-mono shadow-[0_0_12px_rgba(0,229,255,0.15)]">
+              <span className="hidden lg:inline-flex items-center space-x-1.5 bg-white/[0.03] text-[#A1A1AA] border border-white/10 px-2.5 py-1 rounded-full text-[10px] font-mono shadow-sm">
                 <span className="w-1.5 h-1.5 rounded-full bg-[#00E5FF] shadow-[0_0_6px_#00E5FF]" />
-                <span>RTX 2050 CUDA 12.6</span>
+                <span>RTX 2050 CUDA</span>
               </span>
             )}
 
@@ -720,11 +748,11 @@ export default function App() {
             {messages.length > 0 && (
               <button
                 onClick={handleNewChat}
-                className="btn-premium px-2.5 py-1.5 rounded-xl text-xs text-[#858091] hover:text-[#F5F5FA] hover:bg-white/[0.04] border border-transparent hover:border-white/10 flex items-center space-x-1.5"
-                title="Reset conversation"
+                className="btn-premium px-2.5 py-1.5 rounded-xl bg-white/[0.03] hover:bg-white/[0.06] text-[#A1A1AA] hover:text-white border border-white/10 flex items-center space-x-1.5 text-xs transition-all"
+                title="Start a clean session"
               >
-                <Trash2 className="w-3.5 h-3.5" />
-                <span className="hidden sm:inline">Reset</span>
+                <RotateCcw className="w-3.5 h-3.5" />
+                <span className="hidden sm:inline">New Session</span>
               </button>
             )}
 
@@ -733,13 +761,13 @@ export default function App() {
               onClick={() => setContextPanelOpen(!contextPanelOpen)}
               className={`btn-premium sheen-travel px-3 py-1.5 rounded-xl text-xs font-medium flex items-center space-x-2 border transition-all ${
                 contextPanelOpen
-                  ? 'bg-[#3B0A6B] text-[#FFFFFF] border-[#00E5FF]/60 shadow-[0_0_20px_rgba(0,229,255,0.3)]'
-                  : 'bg-[#080310] text-[#B8B3C7] hover:text-[#00E5FF] hover:border-white/20 border-[#3B0A6B]/35'
+                  ? 'bg-white/[0.10] text-white border-white/30 shadow-sm'
+                  : 'bg-white/[0.03] text-[#A1A1AA] hover:text-white hover:border-white/20 border-white/10'
               }`}
               title="Toggle Workspace Inspector"
             >
               <Sliders className="w-3.5 h-3.5 text-[#00E5FF]" />
-              <span className="hidden sm:inline">Workspace Specs</span>
+              <span className="hidden sm:inline">Specs</span>
             </button>
           </div>
         </header>
@@ -769,16 +797,16 @@ export default function App() {
                 </div>
 
                 {/* Hero Greeting Typography */}
-                <div className="space-y-2 max-w-xl">
-                  <div className="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-[#3B0A6B]/25 border border-[#3B0A6B]/40 text-[#00E5FF] text-[10px] font-mono tracking-widest uppercase mb-1">
+                <div className="space-y-3 max-w-2xl mx-auto px-4">
+                  <div className="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-white/[0.03] border border-white/10 text-[#00E5FF] text-[10px] font-mono tracking-widest uppercase mb-1 shadow-sm">
                     <Sparkles className="w-3 h-3 text-[#00E5FF]" />
-                    <span>Neural Agent Workspace</span>
+                    <span>Next-Generation AI Companion</span>
                   </div>
-                  <h2 className="text-2xl sm:text-3xl font-bold text-[#F5F5FA] tracking-tight">
-                    What can Hermes orchestrate for you?
-                  </h2>
-                  <p className="text-xs sm:text-sm text-[#B8B3C7] leading-relaxed font-normal">
-                    Autonomous agent harness powered by Google Gemma open weights. Ready to explore playbooks, invoke dynamic tools, and evaluate observations.
+                  <h1 className="text-3xl sm:text-5xl font-extrabold text-white tracking-tight leading-tight">
+                    Your Intelligent AI. Built for the Future.
+                  </h1>
+                  <p className="text-xs sm:text-sm text-[#A1A1AA] leading-relaxed font-normal max-w-lg mx-auto">
+                    Autonomous companion harness powered by Google Gemma open weights. Ready to explore playbooks, execute dynamic skills, analyze files, and synthesize insights.
                   </p>
                 </div>
 
@@ -790,13 +818,13 @@ export default function App() {
                       <TiltCard
                         key={idx}
                         onClick={() => handleSendMessage(card.prompt)}
-                        className="p-4 rounded-2xl bg-[#080310] border border-[#3B0A6B]/40 cursor-pointer space-y-2.5 transition-colors duration-200"
+                        className="p-4 rounded-2xl bg-white/[0.025] hover:bg-white/[0.045] border border-white/10 hover:border-white/20 cursor-pointer space-y-2.5 transition-all shadow-sm"
                       >
                         <div className="flex items-center justify-between">
-                          <span className="text-[9px] font-mono uppercase tracking-wider text-[#00E5FF] bg-[#3B0A6B]/30 px-2 py-0.5 rounded-md border border-[#3B0A6B]/40">
+                          <span className="text-[9px] font-mono uppercase tracking-wider text-[#00E5FF] bg-white/[0.04] px-2 py-0.5 rounded-md border border-white/10">
                             {card.category}
                           </span>
-                          <div className="w-6 h-6 rounded-lg bg-[#3B0A6B]/35 text-[#00E5FF] flex items-center justify-center transition-transform duration-200 group-hover:scale-110">
+                          <div className="w-6 h-6 rounded-lg bg-white/[0.04] border border-white/10 text-[#00E5FF] flex items-center justify-center transition-transform duration-200 group-hover:scale-110">
                             <IconComponent className="w-3.5 h-3.5" />
                           </div>
                         </div>
@@ -896,7 +924,7 @@ export default function App() {
 
                     {/* User Prompt Message Bubble (Royal Amethyst Surface with white hover sheen) */}
                     {msg.role === 'user' && (
-                      <div className="max-w-xl rounded-2xl bg-[#3B0A6B]/25 border border-[#3B0A6B]/45 hover:border-white/20 transition-all px-4.5 py-3 text-sm text-[#F5F5FA] leading-relaxed shadow-[0_4px_24px_rgba(0,0,0,0.6)]">
+                      <div className="max-w-xl rounded-2xl bg-white/[0.04] border border-white/10 hover:border-white/20 transition-all px-4.5 py-3 text-sm text-white leading-relaxed shadow-sm">
                         {msg.attachedFile && (
                           <div className="flex items-center space-x-2 px-2.5 py-1 mb-2 rounded-lg bg-[#00E5FF]/10 border border-[#00E5FF]/30 text-xs text-[#00E5FF] w-fit">
                             <FileText className="w-3.5 h-3.5 text-[#00E5FF]" />
@@ -1134,7 +1162,7 @@ export default function App() {
         {/* 3. FLOATING COMPOSER DOCK (Tactile White Highlights & Cyan CTA)     */}
         {/* ================================================================== */}
         <div className="relative z-20 max-w-4xl mx-auto w-full px-4 pb-4">
-          <div className="ai-composer-glass rounded-3xl p-3 sm:p-3.5 shadow-2xl">
+          <div className="glass-composer rounded-3xl p-3 sm:p-3.5 shadow-2xl">
             
             {/* Attached File Indicator */}
             {attachedFile && (
@@ -1164,7 +1192,7 @@ export default function App() {
               onFocus={() => setIsInputFocused(true)}
               onBlur={() => setIsInputFocused(false)}
               onKeyDown={handleKeyDown}
-              placeholder="Ask Hermes anything, run tools, or execute skills... (Enter to send)"
+              placeholder="Ask anything or type a prompt..."
               className="w-full bg-transparent text-sm text-[#F5F5FA] placeholder-[#858091] focus:outline-none resize-none leading-relaxed font-normal px-2 pt-1"
             />
 

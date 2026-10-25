@@ -1,17 +1,19 @@
 import React, { useEffect, useRef } from 'react';
 
 /**
- * WorkspaceSpotlight - Smooth 60FPS Cursor Spotlight
- * Palette: Jet Black (#050505) × Royal Amethyst (#3B0A6B) × Electric Cyan (#00E5FF)
+ * WorkspaceSpotlight - Smooth 60FPS Ambient Cursor Spotlight
+ * Palette: Deep Obsidian (#0A0A0C) × Silver/White Specular × Subtle Amethyst & Cyan
  * 
  * Features:
  * - Fluid requestAnimationFrame lerp interpolation (no React re-renders)
  * - Accurate local coordinate calculation relative to the main canvas
- * - Multi-layer blended gradient: subtle white specular core + soft cyan tint + broad amethyst ambient glow
- * - Completely transparent falloff into Jet Black with zero banding or visible borders
+ * - Refined 3-tier blended gradient:
+ *   1. Soft silver-white specular core (immediate pointer reflection)
+ *   2. Restrained electric cyan edge tint
+ *   3. Broad, cinematic royal amethyst ambient glow
+ * - Completely transparent falloff into Deep Obsidian (#0A0A0C) with zero banding
  * - Gentle fade-in on enter, smooth dimming on idle/leave
- * - pointer-events: none, safely layered behind interactive elements
- * - Handles window resize, scrolling, and container position changes
+ * - pointer-events: none, layered safely behind interactive glass panels
  * - Respects prefers-reduced-motion and touch devices
  */
 export default function WorkspaceSpotlight({ containerRef, className = '' }) {
@@ -28,8 +30,7 @@ export default function WorkspaceSpotlight({ containerRef, className = '' }) {
     targetOpacity: 0,
     currentOpacity: 0,
     isInside: false,
-    isTouchDevice: false,
-    initialized: false
+    isTouchDevice: false
   });
 
   useEffect(() => {
@@ -46,7 +47,7 @@ export default function WorkspaceSpotlight({ containerRef, className = '' }) {
       // Touch or reduced-motion: set a static subtle ambient gradient
       spotlightEl.style.opacity = '0.35';
       spotlightEl.style.background = `
-        radial-gradient(circle 500px at 50% 20%, rgba(59, 10, 107, 0.18) 0%, rgba(0, 229, 255, 0.025) 45%, transparent 80%)
+        radial-gradient(circle 520px at 50% 22%, rgba(59, 10, 107, 0.15) 0%, rgba(0, 229, 255, 0.02) 45%, transparent 80%)
       `;
       return;
     }
@@ -57,15 +58,14 @@ export default function WorkspaceSpotlight({ containerRef, className = '' }) {
     stateRef.current.currentY = Math.min(240, initRect.height / 3);
     stateRef.current.targetX = stateRef.current.currentX;
     stateRef.current.targetY = stateRef.current.currentY;
-    stateRef.current.currentOpacity = 0.4;
-    stateRef.current.targetOpacity = 0.4;
+    stateRef.current.currentOpacity = 0.45;
+    stateRef.current.targetOpacity = 0.45;
 
     const handlePointerMove = (e) => {
       const rect = container.getBoundingClientRect();
       const localX = e.clientX - rect.left;
       const localY = e.clientY - rect.top;
 
-      // Keep within bounds with slight padding allowance
       stateRef.current.targetX = localX;
       stateRef.current.targetY = localY;
       stateRef.current.targetOpacity = 1;
@@ -89,14 +89,14 @@ export default function WorkspaceSpotlight({ containerRef, className = '' }) {
     };
 
     const handlePointerLeave = () => {
-      stateRef.current.targetOpacity = 0.15;
+      stateRef.current.targetOpacity = 0.2;
       stateRef.current.isInside = false;
     };
 
     // 60FPS Render Loop using lerp interpolation
     const updateMotion = () => {
       const s = stateRef.current;
-      const lerpPos = 0.13;     // Smooth yet responsive position tracking
+      const lerpPos = 0.13;      // Smooth yet responsive position tracking
       const lerpAlpha = 0.075;   // Gentle opacity deceleration
 
       s.currentX += (s.targetX - s.currentX) * lerpPos;
@@ -106,9 +106,9 @@ export default function WorkspaceSpotlight({ containerRef, className = '' }) {
       if (spotlightEl) {
         spotlightEl.style.opacity = Math.max(0, Math.min(1, s.currentOpacity)).toFixed(3);
         spotlightEl.style.background = `
-          radial-gradient(circle 85px at ${s.currentX.toFixed(1)}px ${s.currentY.toFixed(1)}px, rgba(255, 255, 255, 0.038) 0%, transparent 80%),
-          radial-gradient(circle 260px at ${s.currentX.toFixed(1)}px ${s.currentY.toFixed(1)}px, rgba(0, 229, 255, 0.048) 0%, rgba(0, 229, 255, 0.012) 50%, transparent 80%),
-          radial-gradient(circle 620px at ${s.currentX.toFixed(1)}px ${s.currentY.toFixed(1)}px, rgba(59, 10, 107, 0.22) 0%, rgba(59, 10, 107, 0.075) 45%, rgba(14, 4, 26, 0.02) 70%, transparent 95%)
+          radial-gradient(circle 90px at ${s.currentX.toFixed(1)}px ${s.currentY.toFixed(1)}px, rgba(255, 255, 255, 0.042) 0%, transparent 80%),
+          radial-gradient(circle 280px at ${s.currentX.toFixed(1)}px ${s.currentY.toFixed(1)}px, rgba(0, 229, 255, 0.042) 0%, rgba(0, 229, 255, 0.01) 50%, transparent 80%),
+          radial-gradient(circle 640px at ${s.currentX.toFixed(1)}px ${s.currentY.toFixed(1)}px, rgba(59, 10, 107, 0.18) 0%, rgba(59, 10, 107, 0.065) 45%, rgba(10, 10, 12, 0.02) 70%, transparent 95%)
         `;
       }
 

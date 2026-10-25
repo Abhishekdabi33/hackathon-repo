@@ -214,7 +214,7 @@ export default function HermesCharacter({
 
       // Update Dynamic Cursor Lighting hotspot on visor
       if (cursorLightRef.current) {
-        cursorLightRef.current.style.background = `radial-gradient(circle 85px at ${p.currentLightX.toFixed(1)}% ${p.currentLightY.toFixed(1)}%, rgba(0, 229, 255, 0.32) 0%, rgba(59, 10, 107, 0.16) 45%, transparent 75%)`;
+        cursorLightRef.current.style.background = `radial-gradient(circle 60px at ${p.currentLightX.toFixed(1)}% ${p.currentLightY.toFixed(1)}%, rgba(255, 255, 255, 0.28) 0%, rgba(0, 229, 255, 0.18) 35%, rgba(59, 10, 107, 0.12) 60%, transparent 80%)`;
       }
 
       animId = requestAnimationFrame(updatePhysics);
@@ -488,7 +488,8 @@ export default function HermesCharacter({
 
             {/* Shell Royal Amethyst & Cyan Specular Rim */}
             <linearGradient id="hermesShellStroke" x1="0%" y1="0%" x2="100%" y2="100%">
-              <stop offset="0%" stopColor="rgba(0, 229, 255, 0.55)" />
+              <stop offset="0%" stopColor="rgba(255, 255, 255, 0.45)" />
+              <stop offset="25%" stopColor="rgba(0, 229, 255, 0.45)" />
               <stop offset="45%" stopColor="rgba(59, 10, 107, 0.65)" />
               <stop offset="100%" stopColor="rgba(0, 229, 255, 0.15)" />
             </linearGradient>

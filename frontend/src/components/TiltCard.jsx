@@ -1,8 +1,8 @@
 import React, { useRef, useEffect } from 'react';
 
 /**
- * TiltCard - 60FPS Tactile Interactive Card with Localized Cursor Spotlight
- * Palette: Jet Black (#050505) × Royal Amethyst (#3B0A6B) × Electric Cyan (#00E5FF)
+ * TiltCard - 60FPS Tactile Interactive Glass Card with Localized Cursor Spotlight
+ * Palette: Deep Obsidian (#0A0A0C) × Silver/White Specular × Subtle Amethyst & Cyan
  * 
  * Features:
  * - High-precision local coordinate tracking (exact pixels, no percentage distortion)
@@ -18,7 +18,7 @@ export default function TiltCard({
   children,
   onClick,
   className = '',
-  maxTilt = 3.4,
+  maxTilt = 3.2,
   ...props
 }) {
   const cardRef = useRef(null);
@@ -49,7 +49,6 @@ export default function TiltCard({
     const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     physicsRef.current.isReducedMotion = prefersReducedMotion;
 
-    // Render loop
     let isRunning = false;
 
     const tick = () => {
@@ -71,23 +70,22 @@ export default function TiltCard({
 
         card.style.transform = `perspective(1000px) rotateX(${p.currentRotX.toFixed(2)}deg) rotateY(${p.currentRotY.toFixed(2)}deg) translateY(${transY}px) translateZ(${transZ}px) scale(${scale})`;
 
-        const shadowX = -p.currentRotY * 1.5;
-        const shadowY = p.currentRotX * 1.5 + (p.isHovered ? 12 : 4);
-        const shadowBlur = p.isHovered ? 26 : 14;
+        const shadowX = -p.currentRotY * 1.4;
+        const shadowY = p.currentRotX * 1.4 + (p.isHovered ? 12 : 4);
+        const shadowBlur = p.isHovered ? 24 : 12;
         card.style.boxShadow = p.isHovered
-          ? `${shadowX.toFixed(1)}px ${shadowY.toFixed(1)}px ${shadowBlur}px -6px rgba(0, 0, 0, 0.85), 0 0 20px rgba(59, 10, 107, 0.35), 0 0 10px rgba(0, 229, 255, 0.12)`
-          : '0 4px 14px -2px rgba(0, 0, 0, 0.6)';
+          ? `${shadowX.toFixed(1)}px ${shadowY.toFixed(1)}px ${shadowBlur}px -6px rgba(0, 0, 0, 0.85), 0 0 16px rgba(59, 10, 107, 0.25), 0 0 10px rgba(0, 229, 255, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.18)`
+          : '0 4px 14px -2px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.06)';
       }
 
       // Apply localized spotlight
       highlight.style.opacity = Math.max(0, Math.min(1, p.currentOpacity)).toFixed(3);
       highlight.style.background = `
-        radial-gradient(circle 60px at ${p.currentLightX.toFixed(1)}px ${p.currentLightY.toFixed(1)}px, rgba(255, 255, 255, 0.075) 0%, transparent 80%),
-        radial-gradient(circle 140px at ${p.currentLightX.toFixed(1)}px ${p.currentLightY.toFixed(1)}px, rgba(0, 229, 255, 0.09) 0%, rgba(0, 229, 255, 0.015) 55%, transparent 85%),
-        radial-gradient(circle 260px at ${p.currentLightX.toFixed(1)}px ${p.currentLightY.toFixed(1)}px, rgba(59, 10, 107, 0.28) 0%, rgba(59, 10, 107, 0.08) 50%, transparent 80%)
+        radial-gradient(circle 60px at ${p.currentLightX.toFixed(1)}px ${p.currentLightY.toFixed(1)}px, rgba(255, 255, 255, 0.085) 0%, transparent 80%),
+        radial-gradient(circle 140px at ${p.currentLightX.toFixed(1)}px ${p.currentLightY.toFixed(1)}px, rgba(0, 229, 255, 0.075) 0%, rgba(0, 229, 255, 0.015) 55%, transparent 85%),
+        radial-gradient(circle 260px at ${p.currentLightX.toFixed(1)}px ${p.currentLightY.toFixed(1)}px, rgba(59, 10, 107, 0.22) 0%, rgba(59, 10, 107, 0.06) 50%, transparent 80%)
       `;
 
-      // Keep running if hovered or still transitioning back to resting pose
       const deltaRot = Math.abs(p.targetRotX - p.currentRotX) + Math.abs(p.targetRotY - p.currentRotY);
       const deltaOpacity = Math.abs(p.targetOpacity - p.currentOpacity);
 
@@ -98,76 +96,84 @@ export default function TiltCard({
       }
     };
 
-    const startLoop = () => {
+    const handlePointerMove = (e) => {
+      const rect = card.getBoundingClientRect();
+      const localX = e.clientX - rect.left;
+      const localY = e.clientY - rect.top;
+
+      const normX = (localX / rect.width - 0.5) * 2;
+      const normY = (localY / rect.height - 0.5) * 2;
+
+      const p = physicsRef.current;
+      p.targetRotY = normX * maxTilt;
+      p.targetRotX = -normY * maxTilt;
+      p.targetLightX = localX;
+      p.targetLightY = localY;
+      p.targetOpacity = 1;
+      p.isHovered = true;
+
       if (!isRunning) {
         isRunning = true;
         rafRef.current = requestAnimationFrame(tick);
       }
     };
 
-    const handlePointerMove = (e) => {
-      const rect = card.getBoundingClientRect();
-      const localX = e.clientX - rect.left;
-      const localY = e.clientY - rect.top;
-
-      const p = physicsRef.current;
-      p.targetLightX = localX;
-      p.targetLightY = localY;
-
-      const centerX = rect.width / 2;
-      const centerY = rect.height / 2;
-      p.targetRotX = -((localY - centerY) / centerY) * maxTilt;
-      p.targetRotY = ((localX - centerX) / centerX) * maxTilt;
-      p.targetOpacity = 1;
-      p.isHovered = true;
-
-      startLoop();
-    };
-
     const handlePointerEnter = (e) => {
       const rect = card.getBoundingClientRect();
       const p = physicsRef.current;
+      p.isHovered = true;
       p.targetLightX = e.clientX - rect.left;
       p.targetLightY = e.clientY - rect.top;
-      p.currentLightX = p.targetLightX;
-      p.currentLightY = p.targetLightY;
       p.targetOpacity = 1;
-      p.isHovered = true;
-      startLoop();
+
+      if (!isRunning) {
+        isRunning = true;
+        rafRef.current = requestAnimationFrame(tick);
+      }
     };
 
     const handlePointerLeave = () => {
       const p = physicsRef.current;
+      p.isHovered = false;
+      p.isActive = false;
       p.targetRotX = 0;
       p.targetRotY = 0;
       p.targetOpacity = 0;
-      p.isHovered = false;
-      p.isActive = false;
-      startLoop();
+
+      if (!isRunning) {
+        isRunning = true;
+        rafRef.current = requestAnimationFrame(tick);
+      }
     };
 
     const handlePointerDown = () => {
       physicsRef.current.isActive = true;
-      startLoop();
+      if (!isRunning) {
+        isRunning = true;
+        rafRef.current = requestAnimationFrame(tick);
+      }
     };
 
     const handlePointerUp = () => {
       physicsRef.current.isActive = false;
-      startLoop();
+      if (!isRunning) {
+        isRunning = true;
+        rafRef.current = requestAnimationFrame(tick);
+      }
     };
 
     card.addEventListener('pointermove', handlePointerMove, { passive: true });
     card.addEventListener('pointerenter', handlePointerEnter, { passive: true });
     card.addEventListener('pointerleave', handlePointerLeave, { passive: true });
     card.addEventListener('pointerdown', handlePointerDown, { passive: true });
-    card.addEventListener('pointerup', handlePointerUp, { passive: true });
+    window.addEventListener('pointerup', handlePointerUp, { passive: true });
 
     return () => {
       card.removeEventListener('pointermove', handlePointerMove);
       card.removeEventListener('pointerenter', handlePointerEnter);
       card.removeEventListener('pointerleave', handlePointerLeave);
       card.removeEventListener('pointerdown', handlePointerDown);
-      card.removeEventListener('pointerup', handlePointerUp);
+      window.removeEventListener('pointerup', handlePointerUp);
       if (rafRef.current) cancelAnimationFrame(rafRef.current);
     };
   }, [maxTilt]);
@@ -176,37 +182,29 @@ export default function TiltCard({
     <div
       ref={cardRef}
       onClick={onClick}
-      className={`relative overflow-hidden group select-none ${className}`}
+      className={`relative overflow-hidden group select-none transition-colors duration-200 ${className}`}
       style={{
         transformStyle: 'preserve-3d',
-        transition: 'border-color 0.22s cubic-bezier(0.22, 1, 0.36, 1)'
+        willChange: 'transform, box-shadow'
       }}
       {...props}
     >
-      {/* Delicate White Top Edge Highlight */}
-      <div 
-        className="absolute top-0 left-0 right-0 h-[1px] pointer-events-none transition-opacity duration-300 z-20"
-        style={{
-          background: 'linear-gradient(90deg, transparent 5%, rgba(255, 255, 255, 0.25) 50%, transparent 95%)'
-        }}
-      />
-
-      {/* Dynamic Localized Cursor Radial Spotlight */}
+      {/* Specular Localized Spotlight Overlay */}
       <div
         ref={highlightRef}
         aria-hidden="true"
-        className="absolute inset-0 pointer-events-none z-10 will-change-[background,opacity]"
-        style={{
-          opacity: 0,
-          transition: 'opacity 0.25s cubic-bezier(0.22, 1, 0.36, 1)'
-        }}
+        className="absolute inset-0 pointer-events-none rounded-[inherit] transition-opacity duration-300 z-10"
+        style={{ opacity: 0 }}
       />
-      
-      {/* Card Content with subtle 3D translation */}
+
+      {/* Delicate Top-Edge Specular Highlight Line */}
       <div 
-        className="relative z-20 h-full"
-        style={{ transform: 'translateZ(4px)' }}
-      >
+        aria-hidden="true"
+        className="absolute top-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-white/20 to-transparent pointer-events-none z-10" 
+      />
+
+      {/* Card Inner Content */}
+      <div className="relative z-0 h-full flex flex-col justify-between">
         {children}
       </div>
     </div>
