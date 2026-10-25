@@ -17,13 +17,17 @@ if (Test-Path ".\.venv\Scripts\Activate.ps1") {
 
 # 2. Start Backend in a background process / new window
 Write-Host "[API] Starting FastAPI Backend on http://localhost:8000..." -ForegroundColor Green
-$backendProcess = Start-Process powershell -ArgumentList "-NoExit", "-Command", "cd '$PWD'; .\.venv\Scripts\python.exe -m uvicorn backend.app.main:app --host 127.0.0.1 --port 8000 --reload" -PassThru
+$backendProcess = Start-Process powershell -ArgumentList "-NoExit", "-Command", "cd '$PWD'; .\.venv\Scripts\python.exe scripts\run_backend.py" -PassThru
 
 # 3. Start Frontend
 Write-Host "[UI] Starting Frontend on http://localhost:5173..." -ForegroundColor Green
-$frontendProcess = Start-Process powershell -ArgumentList "-NoExit", "-Command", "cd '$PWD\frontend'; & 'C:\Users\vedan\AppData\Roaming\npm\pnpm.cmd' run dev" -PassThru
+$frontendProcess = Start-Process powershell -ArgumentList "-NoExit", "-Command", "cd '$PWD\frontend'; & 'C:\Users\vedan\AppData\Roaming\npm\pnpm.cmd' run dev --host" -PassThru
 
 Write-Host "`n[READY] Both services have been launched!" -ForegroundColor Green
 Write-Host "-> Frontend UI: http://localhost:5173" -ForegroundColor Cyan
 Write-Host "-> Backend API Docs: http://localhost:8000/docs" -ForegroundColor Cyan
 Write-Host "-> Backend Health Check: http://localhost:8000/api/health" -ForegroundColor Cyan
+
+# Automatically open default web browser
+Start-Sleep -Seconds 2
+Start-Process "http://localhost:5173"
