@@ -17,6 +17,7 @@ import {
   ExternalLink
 } from "lucide-react";
 import { CinematicFooter } from "@/components/ui/motion-footer";
+import WorkspaceSpotlight from "./WorkspaceSpotlight";
 
 interface LandingPageProps {
   onLaunchApp?: () => void;
@@ -25,6 +26,9 @@ interface LandingPageProps {
 export function LandingPage({ onLaunchApp }: LandingPageProps) {
   return (
     <div className="relative w-full min-h-screen bg-[#070709] text-white selection:bg-white/20 overflow-x-hidden font-sans">
+      {/* Global Cursor Spotlight Glow over all Landing UI */}
+      <WorkspaceSpotlight className="fixed inset-0 pointer-events-none z-40" />
+
       
       {/* 1. FIXED GLASS HEADER */}
       <header className="fixed top-0 left-0 right-0 z-50 h-16 border-b border-white/10 bg-[#070709]/80 backdrop-blur-xl px-6 md:px-12 flex items-center justify-between">
@@ -123,7 +127,7 @@ export function LandingPage({ onLaunchApp }: LandingPageProps) {
           </div>
 
           {/* LIVE METRICS TICKER BAR */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 w-full max-w-4xl mt-20 p-4 rounded-2xl bg-white/[0.02] border border-white/10 backdrop-blur-md">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 w-full max-w-4xl mt-20 p-4 rounded-2xl bg-white/[0.02] border border-white/10 backdrop-blur-md spotlight-card">
             <div className="p-4 text-left border-r border-white/5 last:border-none">
               <span className="block text-[10px] font-mono uppercase text-zinc-500">Model Engine</span>
               <span className="text-base font-bold text-white font-mono">Gemma 2 (2B/9B)</span>
@@ -157,7 +161,7 @@ export function LandingPage({ onLaunchApp }: LandingPageProps) {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             
             {/* Feature 1 */}
-            <div className="group rounded-3xl bg-white/[0.03] border border-white/10 hover:border-white/20 p-6 flex flex-col justify-between transition-all duration-300 hover:shadow-[0_10px_30px_rgba(255,255,255,0.05)] overflow-hidden relative">
+            <div className="group spotlight-card rounded-3xl bg-white/[0.03] border border-white/10 hover:border-white/20 p-6 flex flex-col justify-between transition-all duration-300 hover:shadow-[0_10px_30px_rgba(255,255,255,0.05)] overflow-hidden relative">
               <div className="h-44 w-full rounded-2xl overflow-hidden mb-6 relative">
                 <img 
                   src="https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=800&q=80" 
@@ -179,7 +183,7 @@ export function LandingPage({ onLaunchApp }: LandingPageProps) {
             </div>
 
             {/* Feature 2 */}
-            <div className="group rounded-3xl bg-white/[0.03] border border-white/10 hover:border-white/20 p-6 flex flex-col justify-between transition-all duration-300 hover:shadow-[0_10px_30px_rgba(255,255,255,0.05)] overflow-hidden relative">
+            <div className="group spotlight-card rounded-3xl bg-white/[0.03] border border-white/10 hover:border-white/20 p-6 flex flex-col justify-between transition-all duration-300 hover:shadow-[0_10px_30px_rgba(255,255,255,0.05)] overflow-hidden relative">
               <div className="h-44 w-full rounded-2xl overflow-hidden mb-6 relative">
                 <img 
                   src="https://images.unsplash.com/photo-1634017839464-5c339ebe3cb4?auto=format&fit=crop&w=800&q=80" 
@@ -201,7 +205,7 @@ export function LandingPage({ onLaunchApp }: LandingPageProps) {
             </div>
 
             {/* Feature 3 */}
-            <div className="group rounded-3xl bg-white/[0.03] border border-white/10 hover:border-white/20 p-6 flex flex-col justify-between transition-all duration-300 hover:shadow-[0_10px_30px_rgba(255,255,255,0.05)] overflow-hidden relative">
+            <div className="group spotlight-card rounded-3xl bg-white/[0.03] border border-white/10 hover:border-white/20 p-6 flex flex-col justify-between transition-all duration-300 hover:shadow-[0_10px_30px_rgba(255,255,255,0.05)] overflow-hidden relative">
               <div className="h-44 w-full rounded-2xl overflow-hidden mb-6 relative">
                 <img 
                   src="https://images.unsplash.com/photo-1558494949-ef010cbdcc31?auto=format&fit=crop&w=800&q=80" 
@@ -227,7 +231,7 @@ export function LandingPage({ onLaunchApp }: LandingPageProps) {
 
         {/* 4. ARCHITECTURE OVERVIEW */}
         <section id="architecture" className="py-16 px-6 max-w-5xl mx-auto">
-          <div className="p-8 md:p-12 rounded-3xl bg-white/[0.02] border border-white/10 backdrop-blur-xl relative overflow-hidden">
+          <div className="p-8 md:p-12 spotlight-card rounded-3xl bg-white/[0.02] border border-white/10 backdrop-blur-xl relative overflow-hidden">
             <div className="absolute -right-20 -top-20 w-80 h-80 bg-white/[0.02] rounded-full blur-3xl pointer-events-none" />
             
             <div className="max-w-2xl space-y-4">

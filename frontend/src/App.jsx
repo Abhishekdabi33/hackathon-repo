@@ -525,6 +525,8 @@ export default function App() {
 
   return (
     <div className="flex h-screen w-screen overflow-hidden bg-[#070709] text-[#FFFFFF] font-sans antialiased selection:bg-[#3B0A6B]/50 selection:text-[#ffffff]">
+      {/* Global Interactive Cursor Spotlight Glow over all Dashboard UI */}
+      <WorkspaceSpotlight className="fixed inset-0 pointer-events-none z-50" />
       
       {/* ==================================================================== */}
       {/* 1. LEFT SIDEBAR                                                      */}
@@ -669,8 +671,6 @@ export default function App() {
         ref={mainCanvasRef}
         className="flex-1 flex flex-col h-full min-w-0 relative overflow-hidden bg-[#070709]"
       >
-        {/* Layered Cursor Spotlight: Soft White Core + Cyan Highlight + Amethyst Ambient Glow */}
-        <WorkspaceSpotlight containerRef={mainCanvasRef} />
         
         {/* Cinematic Atmospheric Deep Obsidian Environment */}
         <CinematicBackground scrollOffset={scrollOffset} />
@@ -1104,7 +1104,7 @@ export default function App() {
                     </div>
                     
                     {/* Progressive Agent Activity Stepper */}
-                    <div className="p-4 rounded-2xl bg-white/[0.03] border border-white/10 shadow-[0_0_30px_rgba(59,10,107,0.35)] space-y-3 flex-1 text-xs card-interactive">
+                    <div className="p-4 rounded-2xl bg-white/[0.03] border border-white/10 shadow-[0_0_30px_rgba(59,10,107,0.35)] space-y-3 flex-1 text-xs card-interactive spotlight-card">
                       <div className="flex items-center space-x-2 text-[#ffffff] font-medium">
                         <Sparkles className="w-3.5 h-3.5 animate-spin text-[#ffffff]" />
                         <span>Hermes is executing agent workflow...</span>
@@ -1322,7 +1322,7 @@ export default function App() {
                 </div>
 
                 {/* GPU Card */}
-                <div className="p-3.5 rounded-2xl bg-white/[0.03] border border-white/10 space-y-2.5 shadow-[0_4px_20px_rgba(0,0,0,0.5)] card-interactive">
+                <div className="p-3.5 rounded-2xl bg-white/[0.03] border border-white/10 space-y-2.5 shadow-[0_4px_20px_rgba(0,0,0,0.5)] card-interactive spotlight-card">
                   <div className="flex items-center justify-between">
                     <span className="text-[10px] uppercase font-semibold text-[#71717a] tracking-wider font-mono">GPU Device</span>
                     <span className="text-[10px] font-mono text-[#ffffff] bg-[#3B0A6B]/30 px-2 py-0.5 rounded-full border border-white/20 shadow-[0_0_8px_rgba(0,229,255,0.2)]">
@@ -1349,7 +1349,7 @@ export default function App() {
                 </div>
 
                 {/* CPU & Memory Card */}
-                <div className="p-3.5 rounded-2xl bg-white/[0.03] border border-white/10 space-y-2.5 shadow-[0_4px_20px_rgba(0,0,0,0.5)] card-interactive">
+                <div className="p-3.5 rounded-2xl bg-white/[0.03] border border-white/10 space-y-2.5 shadow-[0_4px_20px_rgba(0,0,0,0.5)] card-interactive spotlight-card">
                   <span className="text-[10px] uppercase font-semibold text-[#71717a] tracking-wider block font-mono">Processor & Memory</span>
                   
                   <div className="grid grid-cols-2 gap-2 text-[11px]">
@@ -1378,7 +1378,7 @@ export default function App() {
                 </div>
 
                 {/* Software Stack */}
-                <div className="p-3.5 rounded-2xl bg-white/[0.03] border border-white/10 space-y-2 text-[11px] shadow-[0_4px_20px_rgba(0,0,0,0.5)] card-interactive">
+                <div className="p-3.5 rounded-2xl bg-white/[0.03] border border-white/10 space-y-2 text-[11px] shadow-[0_4px_20px_rgba(0,0,0,0.5)] card-interactive spotlight-card">
                   <span className="text-[10px] uppercase font-semibold text-[#71717a] tracking-wider block font-mono">Software Environment</span>
                   <div className="flex justify-between py-1 border-b border-white/10">
                     <span className="text-[#71717a]">OS:</span>
@@ -1522,7 +1522,7 @@ export default function App() {
                     <div
                       key={s.name}
                       onClick={() => fetchSkillDetail(s.name)}
-                      className={`p-3 rounded-xl border cursor-pointer transition-all card-interactive ${
+                      className={`p-3 rounded-xl border cursor-pointer transition-all card-interactive spotlight-card ${
                         selectedSkill?.name === s.name
                           ? 'bg-[#3B0A6B]/40 border-white/20 text-[#ffffff] shadow-[0_0_15px_rgba(0,229,255,0.15)]'
                           : 'bg-[#09090b] border-white/10 hover:border-white/20 hover:bg-[#3B0A6B]/20 text-[#a1a1aa]'
@@ -1541,7 +1541,7 @@ export default function App() {
 
                 {/* Selected Skill Preview */}
                 {selectedSkill && (
-                  <div className="p-3.5 rounded-2xl bg-white/[0.03] border border-white/10 space-y-2.5 shadow-[0_4px_20px_rgba(0,0,0,0.5)] card-interactive">
+                  <div className="p-3.5 rounded-2xl bg-white/[0.03] border border-white/10 space-y-2.5 shadow-[0_4px_20px_rgba(0,0,0,0.5)] card-interactive spotlight-card">
                     <div className="flex items-center justify-between">
                       <span className="font-mono font-semibold text-xs text-[#ffffff]">{selectedSkill.name}/SKILL.md</span>
                       <button
@@ -1571,7 +1571,7 @@ export default function App() {
                 </span>
 
                 {/* Pod 1 */}
-                <div className="p-3.5 rounded-2xl bg-white/[0.03] border border-white/10 space-y-2 shadow-[0_4px_20px_rgba(0,0,0,0.5)] card-interactive">
+                <div className="p-3.5 rounded-2xl bg-white/[0.03] border border-white/10 space-y-2 shadow-[0_4px_20px_rgba(0,0,0,0.5)] card-interactive spotlight-card">
                   <div className="flex items-center justify-between">
                     <span className="text-[10px] uppercase font-bold text-[#ffffff] font-mono">Pod 1: Frontend Squad</span>
                     <span className="text-[9px] font-mono bg-[#3B0A6B]/30 text-[#ffffff] px-2 py-0.5 rounded-full border border-white/20 shadow-[0_0_8px_rgba(0,229,255,0.15)]">
@@ -1585,7 +1585,7 @@ export default function App() {
                 </div>
 
                 {/* Pod 2 */}
-                <div className="p-3.5 rounded-2xl bg-white/[0.03] border border-white/10 space-y-2 shadow-[0_4px_20px_rgba(0,0,0,0.5)] card-interactive">
+                <div className="p-3.5 rounded-2xl bg-white/[0.03] border border-white/10 space-y-2 shadow-[0_4px_20px_rgba(0,0,0,0.5)] card-interactive spotlight-card">
                   <div className="flex items-center justify-between">
                     <span className="text-[10px] uppercase font-bold text-[#ffffff] font-mono">Pod 2: Backend & AI Engine</span>
                     <span className="text-[9px] font-mono bg-[#3B0A6B]/30 text-[#ffffff] px-2 py-0.5 rounded-full border border-white/20 shadow-[0_0_8px_rgba(0,229,255,0.15)]">
@@ -1599,7 +1599,7 @@ export default function App() {
                 </div>
 
                 {/* Hackathon Core Stack */}
-                <div className="p-3.5 rounded-2xl bg-white/[0.03] border border-white/10 space-y-2 text-[11px] shadow-[0_4px_20px_rgba(0,0,0,0.5)] card-interactive">
+                <div className="p-3.5 rounded-2xl bg-white/[0.03] border border-white/10 space-y-2 text-[11px] shadow-[0_4px_20px_rgba(0,0,0,0.5)] card-interactive spotlight-card">
                   <span className="text-[10px] uppercase font-semibold text-[#71717a] tracking-wider block font-mono">Hackathon Core Stack</span>
                   <div className="flex justify-between py-1 border-b border-white/10">
                     <span className="text-[#71717a]">Model Engine:</span>

@@ -73,7 +73,7 @@ export default function TiltCard({
       // Low-opacity white localized spotlight
       highlight.style.opacity = Math.max(0, Math.min(1, p.currentOpacity)).toFixed(3);
       highlight.style.background = `
-        radial-gradient(circle 70px at ${p.currentLightX.toFixed(1)}px ${p.currentLightY.toFixed(1)}px, rgba(255, 255, 255, 0.06) 0%, transparent 80%),
+        radial-gradient(circle 120px at ${p.currentLightX.toFixed(1)}px ${p.currentLightY.toFixed(1)}px, rgba(255, 255, 255, 0.16) 0%, transparent 80%),
         radial-gradient(circle 180px at ${p.currentLightX.toFixed(1)}px ${p.currentLightY.toFixed(1)}px, rgba(255, 255, 255, 0.02) 0%, transparent 75%)
       `;
 

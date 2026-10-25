@@ -1,24 +1,30 @@
 import React, { useEffect, useRef } from 'react';
 
 /**
- * WorkspaceSpotlight - Low-Opacity White Radial Spotlight
- * Design Tokens:
- * - Low-opacity white radial glows: rgba(255, 255, 255, 0.05)
- * - Deep obsidian falloff: #070709
+ * WorkspaceSpotlight - High-Performance Global & Localized Spotlight Glow
+ * 
+ * Tracks mouse position smoothly across the entire viewport.
+ * Provides:
+ * 1. Global luminous radial spotlight glow following the cursor everywhere across all UI.
+ * 2. Real-time updates of --mouse-x and --mouse-y CSS custom properties on .spotlight-card elements.
  */
-export default function WorkspaceSpotlight({ containerRef, className = '' }) {
+export default function WorkspaceSpotlight({ 
+  containerRef, 
+  className = '',
+  global = true
+}) {
   const spotlightRef = useRef(null);
   const animFrameRef = useRef(null);
   const idleTimerRef = useRef(null);
 
   const stateRef = useRef({
-    targetX: 0,
-    targetY: 0,
-    currentX: 0,
-    currentY: 0,
-    targetOpacity: 0,
-    currentOpacity: 0,
-    isInside: false,
+    targetX: typeof window !== 'undefined' ? window.innerWidth / 2 : 400,
+    targetY: typeof window !== 'undefined' ? window.innerHeight / 3 : 300,
+    currentX: typeof window !== 'undefined' ? window.innerWidth / 2 : 400,
+    currentY: typeof window !== 'undefined' ? window.innerHeight / 3 : 300,
+    targetOpacity: 0.8,
+    currentOpacity: 0.8,
+    isInside: true,
     isTouchDevice: false
   });
 
@@ -27,61 +33,68 @@ export default function WorkspaceSpotlight({ containerRef, className = '' }) {
     const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     stateRef.current.isTouchDevice = isTouch || prefersReducedMotion;
 
-    const container = containerRef?.current || document.body;
     const spotlightEl = spotlightRef.current;
     if (!spotlightEl) return;
 
     if (stateRef.current.isTouchDevice) {
-      spotlightEl.style.opacity = '0.3';
+      spotlightEl.style.opacity = '0.4';
       spotlightEl.style.background = `
-        radial-gradient(circle 500px at 50% 22%, rgba(255, 255, 255, 0.04) 0%, transparent 75%)
+        radial-gradient(circle 500px at 50% 25%, rgba(255, 255, 255, 0.06) 0%, transparent 75%)
       `;
       return;
     }
 
-    const initRect = container.getBoundingClientRect();
-    stateRef.current.currentX = initRect.width / 2;
-    stateRef.current.currentY = Math.min(240, initRect.height / 3);
-    stateRef.current.targetX = stateRef.current.currentX;
-    stateRef.current.targetY = stateRef.current.currentY;
-    stateRef.current.currentOpacity = 0.4;
-    stateRef.current.targetOpacity = 0.4;
+    const targetElement = (containerRef && containerRef.current && !global) 
+      ? containerRef.current 
+      : window;
 
     const handlePointerMove = (e) => {
-      const rect = container.getBoundingClientRect();
-      const localX = e.clientX - rect.left;
-      const localY = e.clientY - rect.top;
+      let localX = e.clientX;
+      let localY = e.clientY;
+
+      if (containerRef && containerRef.current && !global) {
+        const rect = containerRef.current.getBoundingClientRect();
+        localX = e.clientX - rect.left;
+        localY = e.clientY - rect.top;
+      }
 
       stateRef.current.targetX = localX;
       stateRef.current.targetY = localY;
       stateRef.current.targetOpacity = 1;
       stateRef.current.isInside = true;
 
+      // Update localized CSS variables on any hovered .spotlight-card
+      const card = e.target?.closest ? e.target.closest('.spotlight-card') : null;
+      if (card) {
+        const rect = card.getBoundingClientRect();
+        card.style.setProperty('--mouse-x', `${(e.clientX - rect.left).toFixed(1)}px`);
+        card.style.setProperty('--mouse-y', `${(e.clientY - rect.top).toFixed(1)}px`);
+      }
+
       if (idleTimerRef.current) clearTimeout(idleTimerRef.current);
       idleTimerRef.current = setTimeout(() => {
         if (stateRef.current.isInside) {
-          stateRef.current.targetOpacity = 0.4;
+          stateRef.current.targetOpacity = 0.55;
         }
-      }, 3500);
+      }, 3000);
     };
 
     const handlePointerEnter = (e) => {
-      const rect = container.getBoundingClientRect();
-      stateRef.current.targetX = e.clientX - rect.left;
-      stateRef.current.targetY = e.clientY - rect.top;
+      stateRef.current.targetX = e.clientX;
+      stateRef.current.targetY = e.clientY;
       stateRef.current.targetOpacity = 1;
       stateRef.current.isInside = true;
     };
 
     const handlePointerLeave = () => {
-      stateRef.current.targetOpacity = 0.2;
+      stateRef.current.targetOpacity = 0.25;
       stateRef.current.isInside = false;
     };
 
     const updateMotion = () => {
       const s = stateRef.current;
-      const lerpPos = 0.14;
-      const lerpAlpha = 0.08;
+      const lerpPos = 0.16;
+      const lerpAlpha = 0.1;
 
       s.currentX += (s.targetX - s.currentX) * lerpPos;
       s.currentY += (s.targetY - s.currentY) * lerpPos;
@@ -90,39 +103,39 @@ export default function WorkspaceSpotlight({ containerRef, className = '' }) {
       if (spotlightEl) {
         spotlightEl.style.opacity = Math.max(0, Math.min(1, s.currentOpacity)).toFixed(3);
         spotlightEl.style.background = `
-          radial-gradient(circle 85px at ${s.currentX.toFixed(1)}px ${s.currentY.toFixed(1)}px, rgba(255, 255, 255, 0.05) 0%, transparent 80%),
-          radial-gradient(circle 280px at ${s.currentX.toFixed(1)}px ${s.currentY.toFixed(1)}px, rgba(255, 255, 255, 0.025) 0%, transparent 75%),
-          radial-gradient(circle 600px at ${s.currentX.toFixed(1)}px ${s.currentY.toFixed(1)}px, rgba(255, 255, 255, 0.012) 0%, transparent 85%)
+          radial-gradient(circle 120px at ${s.currentX.toFixed(1)}px ${s.currentY.toFixed(1)}px, rgba(255, 255, 255, 0.13) 0%, transparent 75%),
+          radial-gradient(circle 360px at ${s.currentX.toFixed(1)}px ${s.currentY.toFixed(1)}px, rgba(255, 255, 255, 0.06) 0%, rgba(59, 10, 107, 0.05) 50%, transparent 75%),
+          radial-gradient(circle 750px at ${s.currentX.toFixed(1)}px ${s.currentY.toFixed(1)}px, rgba(255, 255, 255, 0.025) 0%, transparent 85%)
         `;
       }
 
       animFrameRef.current = requestAnimationFrame(updateMotion);
     };
 
-    container.addEventListener('pointermove', handlePointerMove, { passive: true });
-    container.addEventListener('pointerenter', handlePointerEnter, { passive: true });
-    container.addEventListener('pointerleave', handlePointerLeave, { passive: true });
+    targetElement.addEventListener('pointermove', handlePointerMove, { passive: true });
+    window.addEventListener('pointerenter', handlePointerEnter, { passive: true });
+    window.addEventListener('pointerleave', handlePointerLeave, { passive: true });
     window.addEventListener('blur', handlePointerLeave);
 
     animFrameRef.current = requestAnimationFrame(updateMotion);
 
     return () => {
-      container.removeEventListener('pointermove', handlePointerMove);
-      container.removeEventListener('pointerenter', handlePointerEnter);
-      container.removeEventListener('pointerleave', handlePointerLeave);
+      targetElement.removeEventListener('pointermove', handlePointerMove);
+      window.removeEventListener('pointerenter', handlePointerEnter);
+      window.removeEventListener('pointerleave', handlePointerLeave);
       window.removeEventListener('blur', handlePointerLeave);
       if (animFrameRef.current) cancelAnimationFrame(animFrameRef.current);
       if (idleTimerRef.current) clearTimeout(idleTimerRef.current);
     };
-  }, [containerRef]);
+  }, [containerRef, global]);
 
   return (
     <div
       ref={spotlightRef}
       aria-hidden="true"
-      className={`absolute inset-0 pointer-events-none z-0 overflow-hidden will-change-transform ${className}`}
+      className={`fixed inset-0 pointer-events-none z-30 overflow-hidden will-change-transform ${className}`}
       style={{
-        transition: 'opacity 0.4s cubic-bezier(0.22, 1, 0.36, 1)'
+        transition: 'opacity 0.3s cubic-bezier(0.22, 1, 0.36, 1)'
       }}
     />
   );
