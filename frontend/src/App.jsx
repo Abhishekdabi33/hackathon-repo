@@ -667,107 +667,90 @@ export default function App() {
         <CinematicBackground scrollOffset={scrollOffset} />
 
         {/* Top Minimal Navbar with Specular Line */}
-        <header className="h-14 glass-nav flex items-center justify-between px-4 sm:px-6 relative z-20 shrink-0 specular-line">
-          {/* Left Brand & Compact Avatar Identity */}
-          <div className="flex items-center space-x-3">
+        <header className="h-16 glass-nav flex items-center justify-between px-6 relative z-20 shrink-0 specular-line">
+          {/* Left: Logo Icon (minimalist circle/dot graphic) with Brand Title in clean uppercase tracking */}
+          <div className="flex items-center space-x-3.5">
             <button
               onClick={() => setSidebarOpen(!sidebarOpen)}
-              className="btn-premium text-[#A1A1AA] hover:text-white p-1.5 rounded-xl hover:bg-white/[0.04] border border-transparent hover:border-white/10"
+              className="btn-premium text-[#a1a1aa] hover:text-white p-1.5 rounded-xl hover:bg-white/[0.04] border border-transparent hover:border-white/10"
               title={sidebarOpen ? "Collapse Sidebar" : "Expand Sidebar"}
             >
               <Menu className="w-4 h-4" />
             </button>
 
-            {/* Geometric Brand Logo */}
+            {/* Minimalist Circle/Dot Graphic Logo */}
             <div className="flex items-center space-x-2.5">
-              <div className="w-7 h-7 rounded-lg bg-white/[0.04] border border-white/10 flex items-center justify-center shadow-inner">
-                <Bot className="w-4 h-4 text-white" />
+              <div className="w-7 h-7 rounded-full bg-white/[0.04] border border-white/15 flex items-center justify-center relative shadow-[0_0_12px_rgba(255,255,255,0.12)]">
+                <span className="w-2.5 h-2.5 rounded-full bg-white shadow-[0_0_8px_#ffffff]" />
               </div>
               <div className="flex items-center space-x-1.5">
-                <span className="font-bold text-xs tracking-[0.2em] uppercase text-white">HERMES</span>
-                <span className="text-[10px] text-[#A1A1AA] font-mono tracking-wider">• AI</span>
+                <span className="font-bold text-xs tracking-[0.25em] text-white uppercase">HERMES</span>
+                <span className="text-[10px] text-[#a1a1aa] font-mono tracking-wider">• AI</span>
               </div>
             </div>
 
-            {/* Hermes Dynamic Companion Status Badge */}
-            <div className="hidden sm:flex items-center space-x-2 px-2.5 py-1 rounded-full bg-white/[0.03] border border-white/10 hover:border-white/20 transition-all shadow-sm">
-              <HermesCharacter size="sm" state={getHermesState()} interactive={false} />
-              <div className="flex flex-col text-left">
-                <div className="flex items-center space-x-1.5">
-                  <span className="text-[11px] font-semibold text-white tracking-tight leading-none">
-                    Hermes
-                  </span>
-                  <span className="w-1.5 h-1.5 rounded-full bg-[#00E5FF] animate-status-breathe" />
-                </div>
-                <span className="text-[9px] font-mono text-[#00E5FF] uppercase leading-none pt-0.5 tracking-wider">
-                  {getHermesState()}
-                </span>
-              </div>
+            {/* Subtle Companion Status Indicator */}
+            <div className="hidden sm:flex items-center space-x-2 px-2.5 py-1 rounded-full bg-white/[0.03] border border-white/10">
+              <span className="w-1.5 h-1.5 rounded-full bg-white shadow-[0_0_6px_#ffffff] animate-status-breathe" />
+              <span className="text-[10px] font-mono text-[#a1a1aa] uppercase tracking-wider">
+                {getHermesState()}
+              </span>
             </div>
           </div>
 
-          {/* Center Navigation Pill: Minimal & Premium Glass Capsule */}
-          <nav aria-label="Main Navigation" className="hidden md:flex items-center space-x-1 px-1.5 py-1 rounded-full glass-pill">
+          {/* Center: Navigation Pill Links (Home, The Feed, Analytics, Profile) in a rounded dark container */}
+          <nav aria-label="Main Navigation" className="hidden md:flex items-center space-x-1 p-1 rounded-full bg-[#09090b]/80 border border-white/10 backdrop-blur-xl shadow-inner">
             <button
-              onClick={() => {}}
-              className="px-3 py-1 rounded-full text-xs font-medium text-white bg-white/[0.08] border border-white/15 shadow-sm transition-all"
+              onClick={handleNewChat}
+              className="px-4 py-1.5 rounded-full text-xs font-medium text-white bg-white/[0.08] border border-white/15 shadow-sm transition-all"
             >
-              Workspace
+              Home
             </button>
             <button
               onClick={() => { setContextTab('skills'); setContextPanelOpen(true); }}
-              className="px-3 py-1 rounded-full text-xs font-medium text-[#A1A1AA] hover:text-white hover:bg-white/[0.04] transition-all"
+              className="px-4 py-1.5 rounded-full text-xs font-medium text-[#a1a1aa] hover:text-white hover:bg-white/[0.04] transition-all"
             >
-              Skills ({skills.length})
+              The Feed
             </button>
             <button
               onClick={() => { setContextTab('device'); setContextPanelOpen(true); }}
-              className="px-3 py-1 rounded-full text-xs font-medium text-[#A1A1AA] hover:text-white hover:bg-white/[0.04] transition-all"
+              className="px-4 py-1.5 rounded-full text-xs font-medium text-[#a1a1aa] hover:text-white hover:bg-white/[0.04] transition-all"
             >
-              Telemetry
+              Analytics
             </button>
             <button
               onClick={() => { setContextTab('project'); setContextPanelOpen(true); }}
-              className="px-3 py-1 rounded-full text-xs font-medium text-[#A1A1AA] hover:text-white hover:bg-white/[0.04] transition-all"
+              className="px-4 py-1.5 rounded-full text-xs font-medium text-[#a1a1aa] hover:text-white hover:bg-white/[0.04] transition-all"
             >
-              Pods
+              Profile
             </button>
           </nav>
 
-          {/* Right Header Controls */}
-          <div className="flex items-center space-x-2">
-            {/* CUDA Status Pill */}
-            {health?.cuda_available && (
-              <span className="hidden lg:inline-flex items-center space-x-1.5 bg-white/[0.03] text-[#A1A1AA] border border-white/10 px-2.5 py-1 rounded-full text-[10px] font-mono shadow-sm">
-                <span className="w-1.5 h-1.5 rounded-full bg-[#00E5FF] shadow-[0_0_6px_#00E5FF]" />
-                <span>RTX 2050 CUDA</span>
-              </span>
-            )}
-
-            {/* New Chat Clear Shortcut if in conversation */}
-            {messages.length > 0 && (
-              <button
-                onClick={handleNewChat}
-                className="btn-premium px-2.5 py-1.5 rounded-xl bg-white/[0.03] hover:bg-white/[0.06] text-[#A1A1AA] hover:text-white border border-white/10 flex items-center space-x-1.5 text-xs transition-all"
-                title="Start a clean session"
-              >
-                <RotateCcw className="w-3.5 h-3.5" />
-                <span className="hidden sm:inline">New Session</span>
-              </button>
-            )}
-
-            {/* Context Workspace Panel Toggle Button */}
-            <button
-              onClick={() => setContextPanelOpen(!contextPanelOpen)}
-              className={`btn-premium sheen-travel px-3 py-1.5 rounded-xl text-xs font-medium flex items-center space-x-2 border transition-all ${
-                contextPanelOpen
-                  ? 'bg-white/[0.10] text-white border-white/30 shadow-sm'
-                  : 'bg-white/[0.03] text-[#A1A1AA] hover:text-white hover:border-white/20 border-white/10'
-              }`}
-              title="Toggle Workspace Inspector"
+          {/* Right: Search bar icon, Notifications bell, and solid white Get Started pill button */}
+          <div className="flex items-center space-x-2.5">
+            <button 
+              onClick={() => {}}
+              className="p-2 rounded-full text-[#a1a1aa] hover:text-white hover:bg-white/[0.04] border border-transparent hover:border-white/10 transition-all"
+              title="Search"
             >
-              <Sliders className="w-3.5 h-3.5 text-[#00E5FF]" />
-              <span className="hidden sm:inline">Specs</span>
+              <Search className="w-4 h-4" />
+            </button>
+            
+            <button 
+              onClick={() => {}}
+              className="p-2 rounded-full text-[#a1a1aa] hover:text-white hover:bg-white/[0.04] border border-transparent hover:border-white/10 relative transition-all"
+              title="Notifications"
+            >
+              <Bell className="w-4 h-4" />
+              <span className="w-1.5 h-1.5 rounded-full bg-white absolute top-1.5 right-1.5 shadow-[0_0_6px_#ffffff]" />
+            </button>
+
+            {/* Solid white Get Started pill button with dark text */}
+            <button 
+              onClick={() => setContextPanelOpen(true)}
+              className="px-4 py-1.5 rounded-full bg-white text-black font-semibold text-xs hover:bg-zinc-200 transition-all shadow-[0_0_16px_rgba(255,255,255,0.25)] hover:shadow-[0_0_24px_rgba(255,255,255,0.45)]"
+            >
+              Get Started
             </button>
           </div>
         </header>
@@ -1159,118 +1142,85 @@ export default function App() {
         </div>
 
         {/* ================================================================== */}
-        {/* 3. FLOATING COMPOSER DOCK (Tactile White Highlights & Cyan CTA)     */}
+        {/* 3. CENTERED ROUNDED-FULL CHAT INPUT PILL CONTAINER                  */}
         {/* ================================================================== */}
-        <div className="relative z-20 max-w-4xl mx-auto w-full px-4 pb-4">
-          <div className="glass-composer rounded-3xl p-3 sm:p-3.5 shadow-2xl">
-            
-            {/* Attached File Indicator */}
-            {attachedFile && (
-              <div className="flex items-center justify-between px-3 py-1.5 mb-2 rounded-xl bg-[#3B0A6B]/30 border border-[#00E5FF]/40 text-xs animate-slide-up">
-                <div className="flex items-center space-x-2 truncate">
-                  <FileText className="w-4 h-4 text-[#00E5FF] shrink-0" />
-                  <span className="text-[#F5F5FA] font-medium text-xs truncate max-w-[280px]">{attachedFile.name}</span>
-                  <span className="text-[10px] text-[#00E5FF] font-mono">({Math.round(attachedFile.size / 1024)} KB ready)</span>
-                </div>
-                <button
-                  type="button"
-                  onClick={() => setAttachedFile(null)}
-                  className="p-1 hover:bg-white/10 rounded-md text-[#858091] hover:text-[#F5F5FA] transition-all"
-                  title="Remove attached file"
-                >
-                  <X className="w-3.5 h-3.5" />
-                </button>
+        <div className="relative z-20 max-w-3xl mx-auto w-full px-4 pb-6">
+          {/* Attached File Floating Indicator */}
+          {attachedFile && (
+            <div className="flex items-center justify-between px-3.5 py-1.5 mb-2 rounded-full bg-[#09090b]/90 border border-white/15 text-xs animate-slide-up w-fit mx-auto shadow-sm">
+              <div className="flex items-center space-x-2 truncate">
+                <FileText className="w-3.5 h-3.5 text-white shrink-0" />
+                <span className="text-white font-medium text-xs truncate max-w-[240px]">{attachedFile.name}</span>
+                <span className="text-[10px] text-[#a1a1aa] font-mono">({Math.round(attachedFile.size / 1024)} KB ready)</span>
               </div>
-            )}
+              <button
+                type="button"
+                onClick={() => setAttachedFile(null)}
+                className="p-1 hover:bg-white/10 rounded-full text-[#a1a1aa] hover:text-white ml-2 transition-all"
+                title="Remove attached file"
+              >
+                <X className="w-3 h-3" />
+              </button>
+            </div>
+          )}
 
-            {/* Multiline Prompt Textarea */}
-            <textarea
+          {/* Rounded Pill Shape Chat Input Box */}
+          <div className="rounded-full bg-[#09090b]/85 backdrop-blur-2xl border border-white/10 hover:border-white/20 focus-within:border-white/30 p-1.5 sm:p-2 flex items-center justify-between shadow-[0_16px_40px_-10px_rgba(0,0,0,0.85)] transition-all">
+            
+            {/* Paperclip File Upload Action Button */}
+            <input
+              type="file"
+              ref={fileInputRef}
+              onChange={handleFileUpload}
+              className="hidden"
+              accept=".txt,.csv,.json,.py,.js,.jsx,.ts,.tsx,.html,.md,.log,.yaml,.yml"
+            />
+            <button
+              type="button"
+              onClick={() => fileInputRef.current?.click()}
+              disabled={uploadingFile || runningAgent}
+              className="w-9 h-9 rounded-full bg-white/[0.03] hover:bg-white/[0.08] text-[#a1a1aa] hover:text-white flex items-center justify-center transition-all shrink-0 ml-1"
+              title="Attach document or dataset"
+            >
+              {uploadingFile ? (
+                <RefreshCw className="w-3.5 h-3.5 animate-spin text-white" />
+              ) : (
+                <Paperclip className="w-3.5 h-3.5" />
+              )}
+            </button>
+
+            {/* Prompt Input Field */}
+            <input
+              type="text"
               ref={textareaRef}
-              rows={2}
               value={promptInput}
               onChange={(e) => setPromptInput(e.target.value)}
               onFocus={() => setIsInputFocused(true)}
               onBlur={() => setIsInputFocused(false)}
               onKeyDown={handleKeyDown}
               placeholder="Ask anything or type a prompt..."
-              className="w-full bg-transparent text-sm text-[#F5F5FA] placeholder-[#858091] focus:outline-none resize-none leading-relaxed font-normal px-2 pt-1"
+              className="flex-1 bg-transparent text-sm text-white placeholder-[#a1a1aa] focus:outline-none px-3 font-normal"
             />
 
-            {/* Composer Toolbar (Skills Selector, Hardware Chip, Electric Cyan Send Button) */}
-            <div className="flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-[#3B0A6B]/35 mt-1">
-              
-              <div className="flex items-center space-x-2 text-xs">
-                {/* Skill Quick Selector Pill */}
-                <button
-                  type="button"
-                  onClick={() => { setContextTab('skills'); setContextPanelOpen(true); }}
-                  className="btn-premium px-2.5 py-1 rounded-full bg-[#3B0A6B]/25 hover:bg-[#3B0A6B]/45 border border-[#3B0A6B]/40 text-[#00E5FF] hover:border-white/20 flex items-center space-x-1.5 text-[11px]"
-                >
-                  <Wrench className="w-3 h-3 text-[#00E5FF]" />
-                  <span>Skills ({skills.length})</span>
-                </button>
-
-                {/* File Ingestion Button & Hidden File Input */}
-                <input
-                  type="file"
-                  ref={fileInputRef}
-                  onChange={handleFileUpload}
-                  className="hidden"
-                  accept=".txt,.csv,.json,.py,.js,.jsx,.ts,.tsx,.html,.md,.log,.yaml,.yml"
-                />
-                <button
-                  type="button"
-                  onClick={() => fileInputRef.current?.click()}
-                  disabled={uploadingFile || runningAgent}
-                  className="btn-premium px-2.5 py-1 rounded-full bg-[#3B0A6B]/25 hover:bg-[#3B0A6B]/45 border border-[#3B0A6B]/40 text-[#B8B3C7] hover:text-[#00E5FF] hover:border-white/20 flex items-center space-x-1.5 text-[11px]"
-                  title="Upload CSV, JSON, Python, Code or Data for Hermes Agent analysis"
-                >
-                  {uploadingFile ? (
-                    <RefreshCw className="w-3 h-3 text-[#00E5FF] animate-spin" />
-                  ) : (
-                    <Paperclip className="w-3 h-3 text-[#00E5FF]" />
-                  )}
-                  <span>{uploadingFile ? 'Uploading...' : 'Attach File'}</span>
-                </button>
-
-                {/* Status Pill */}
-                {health?.cuda_available && (
-                  <span className="hidden sm:inline-flex items-center space-x-1 text-[11px] text-[#00E5FF] font-mono">
-                    <span className="w-1.5 h-1.5 rounded-full bg-[#00E5FF] shadow-[0_0_6px_#00E5FF]" />
-                    <span>CUDA Active</span>
-                  </span>
-                )}
-              </div>
-
-              {/* Action Buttons & Primary CTA (Electric Cyan Button with Jet Black Text) */}
-              <div className="flex items-center space-x-2">
-                <span className="hidden sm:inline text-[10px] text-[#858091] font-mono">
-                  Shift+Enter for newline
-                </span>
-
-                <button
-                  onClick={() => handleSendMessage()}
-                  disabled={runningAgent || (!promptInput.trim() && !attachedFile)}
-                  className="btn-premium sheen-travel w-9 h-9 rounded-2xl bg-[#00E5FF] hover:bg-[#33ebff] text-[#050505] font-bold flex items-center justify-center shadow-[0_0_24px_rgba(0,229,255,0.5)] disabled:opacity-30 disabled:cursor-not-allowed disabled:shadow-none"
-                  title="Send message (Enter)"
-                >
-                  {runningAgent ? (
-                    <RefreshCw className="w-4 h-4 animate-spin text-[#050505]" />
-                  ) : (
-                    <ArrowUp className="w-4.5 h-4.5 text-[#050505]" />
-                  )}
-                </button>
-              </div>
-
-            </div>
-
+            {/* Glowing Action Button on the Right */}
+            <button
+              onClick={() => handleSendMessage()}
+              disabled={runningAgent || (!promptInput.trim() && !attachedFile)}
+              className="w-10 h-10 rounded-full bg-white hover:bg-zinc-200 text-black font-bold flex items-center justify-center shadow-[0_0_20px_rgba(255,255,255,0.4)] hover:shadow-[0_0_28px_rgba(255,255,255,0.65)] disabled:opacity-25 disabled:cursor-not-allowed disabled:shadow-none shrink-0 transition-all"
+              title="Send message (Enter)"
+            >
+              {runningAgent ? (
+                <RefreshCw className="w-4 h-4 animate-spin text-black" />
+              ) : (
+                <ArrowUp className="w-4 h-4 text-black stroke-[2.5]" />
+              )}
+            </button>
           </div>
-          
-          <p className="text-center text-[10px] text-[#858091] pt-2 font-mono">
-            Hermes ReAct Engine v2.0 • Google Gemma Open-Weights • Jet Black × Royal Amethyst × Electric Cyan
-          </p>
         </div>
 
+        <p className="text-center text-[10px] text-[#a1a1aa] pb-2 font-mono">
+          Hermes ReAct Engine v2.0 • Google Gemma Open-Weights • Deep Obsidian Glass
+        </p>
       </div>
 
       {/* ==================================================================== */}
