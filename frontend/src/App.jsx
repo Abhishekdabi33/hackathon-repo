@@ -52,7 +52,7 @@ export default function App() {
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [contextPanelOpen, setContextPanelOpen] = useState(false);
   const [contextTab, setContextTab] = useState('device');
-  const [currentView, setCurrentView] = useState('app'); // 'app' | 'landing'
+  const [currentView, setCurrentView] = useState('landing'); // 'app' | 'landing'
  // 'device' | 'skills' | 'project'
   
   // Chat Conversation State (Clean Conversational AI)
@@ -538,7 +538,7 @@ export default function App() {
           
           {/* Logo & Product Brand */}
           <div className="flex items-center justify-between px-2 pt-1.5 pb-2 border-b border-white/10">
-            <div className="flex items-center space-x-2.5">
+            <div className="flex items-center space-x-2.5 cursor-pointer hover:opacity-85 transition-opacity" onClick={() => setCurrentView('landing')} title="Return to Landing Page">
               <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-[#3B0A6B] to-[#09090b] border border-white/20 flex items-center justify-center shadow-[0_0_15px_rgba(0,229,255,0.2)]">
                 <Bot className="w-4.5 h-4.5 text-[#ffffff]" />
               </div>

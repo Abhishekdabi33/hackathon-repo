@@ -70,7 +70,7 @@ export function LandingPage({ onLaunchApp }: LandingPageProps) {
             onClick={onLaunchApp}
             className="px-4 py-1.5 rounded-full bg-white text-black font-semibold text-xs hover:bg-zinc-200 transition-all shadow-[0_0_16px_rgba(255,255,255,0.25)] flex items-center space-x-1.5"
           >
-            <span>Launch Workspace</span>
+            <span>Get Started</span>
             <ArrowRight className="w-3.5 h-3.5" />
           </button>
         </div>
@@ -110,7 +110,7 @@ export function LandingPage({ onLaunchApp }: LandingPageProps) {
               onClick={onLaunchApp}
               className="w-full sm:w-auto px-8 py-3.5 rounded-full bg-white text-black font-bold text-sm hover:bg-zinc-200 transition-all shadow-[0_0_24px_rgba(255,255,255,0.25)] flex items-center justify-center space-x-2 group"
             >
-              <span>Open Agent Workspace</span>
+              <span>Get Started</span>
               <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
             </button>
             <a
@@ -270,7 +270,7 @@ export function LandingPage({ onLaunchApp }: LandingPageProps) {
 
       {/* 5. CINEMATIC GSAP MOTION FOOTER (Revealed underneath main on scroll) */}
       <div id="footer">
-        <CinematicFooter />
+        <CinematicFooter onGetStarted={onLaunchApp} />
       </div>
 
     </div>

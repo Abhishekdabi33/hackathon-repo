@@ -219,7 +219,7 @@ const MarqueeItem = () => (
   </div>
 );
 
-export function CinematicFooter() {
+export function CinematicFooter({ onGetStarted }: { onGetStarted?: () => void } = {}) {
   const wrapperRef = useRef<HTMLDivElement>(null);
   const giantTextRef = useRef<HTMLDivElement>(null);
   const headingRef = useRef<HTMLHeadingElement>(null);
@@ -323,7 +323,20 @@ export function CinematicFooter() {
 
             {/* Interactive Magnetic Pills Layout */}
             <div ref={linksRef} className="flex flex-col items-center gap-6 w-full">
-              {/* App Store Links (Primary) */}
+              {/* Primary Get Started Button */}
+              {onGetStarted && (
+                <MagneticButton
+                  as="button"
+                  onClick={onGetStarted}
+                  className="px-10 py-5 rounded-full bg-white text-black font-extrabold text-base sm:text-lg flex items-center gap-3 shadow-[0_0_30px_rgba(255,255,255,0.4)] hover:shadow-[0_0_40px_rgba(255,255,255,0.65)] hover:scale-105 transition-all group cursor-pointer"
+                >
+                  <span>Get Started with Hermes Dashboard</span>
+                  <svg className="w-5 h-5 group-hover:translate-x-1.5 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M14 5l7 7m0 0l-7 7m7-7H3" />
+                  </svg>
+                </MagneticButton>
+              )}
+              {/* App Store Links (Secondary) */}
               <div className="flex flex-wrap justify-center gap-4 w-full">
                 <MagneticButton as="a" href="#" className="footer-glass-pill px-10 py-5 rounded-full text-foreground font-bold text-sm md:text-base flex items-center gap-3 group">
                   <svg className="w-6 h-6 text-muted-foreground group-hover:text-foreground transition-colors" viewBox="0 0 24 24" fill="currentColor">
