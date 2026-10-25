@@ -38,7 +38,11 @@ import {
   FileText,
   ExternalLink,
   PlusCircle,
-  Download
+  Download,
+  ImageIcon,
+  FileUp,
+  Monitor,
+  CircleUserRound
 } from 'lucide-react';
 import HermesCharacter from './components/HermesCharacter';
 import TiltCard from './components/TiltCard';
@@ -46,6 +50,25 @@ import WorkspaceSpotlight from './components/WorkspaceSpotlight';
 import CinematicBackground from './components/CinematicBackground';
 import { LandingPage } from './components/LandingPage';
 
+
+// Figma Vector Icon in Lucide format
+const FigmaIcon = ({ className }) => (
+  <svg 
+    className={className} 
+    viewBox="0 0 24 24" 
+    fill="none" 
+    stroke="currentColor" 
+    strokeWidth="2" 
+    strokeLinecap="round" 
+    strokeLinejoin="round"
+  >
+    <path d="M5 5.5A3.5 3.5 0 0 1 8.5 2H12v7H8.5A3.5 3.5 0 0 1 5 5.5z" />
+    <path d="M12 2h3.5a3.5 3.5 0 1 1 0 7H12V2z" />
+    <path d="M12 12.5a3.5 3.5 0 1 1 7 0 3.5 3.5 0 1 1-7 0z" />
+    <path d="M5 19.5A3.5 3.5 0 0 1 8.5 16H12v3.5a3.5 3.5 0 1 1-7 0z" />
+    <path d="M5 12.5A3.5 3.5 0 0 1 8.5 9H12v7H8.5A3.5 3.5 0 0 1 5 12.5z" />
+  </svg>
+);
 
 export default function App() {
   // Navigation & Workspace State
@@ -802,18 +825,158 @@ export default function App() {
                   />
                 </div>
 
-                {/* Hero Greeting Typography */}
-                <div className="space-y-3 max-w-2xl mx-auto px-4">
-                  <div className="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-white/[0.03] border border-white/10 text-[#ffffff] text-[10px] font-mono tracking-widest uppercase mb-1 shadow-sm">
-                    <Sparkles className="w-3 h-3 text-[#ffffff]" />
-                    <span>Next-Generation AI Companion</span>
+                {/* V0-STYLE PROMPT SEARCH BAR DIRECTLY BELOW HERMES CHARACTER */}
+                <div className="w-full max-w-3xl mx-auto pt-1 space-y-4">
+                  {/* Headline */}
+                  <h2 className="text-3xl sm:text-4xl font-extrabold text-white tracking-tight text-center">
+                    What can I help you ship?
+                  </h2>
+
+                  {/* Main Search Bar Card */}
+                  <div className="relative bg-[#0d0d12]/90 rounded-2xl border border-white/10 hover:border-white/20 focus-within:border-white/30 shadow-[0_12px_40px_rgba(0,0,0,0.7)] backdrop-blur-xl spotlight-card transition-all overflow-hidden text-left">
+                    
+                    {/* Attached File Preview if any */}
+                    {attachedFile && (
+                      <div className="flex items-center justify-between px-3.5 py-1.5 m-2.5 mb-0 rounded-xl bg-white/[0.04] border border-white/10 text-xs w-fit shadow-sm">
+                        <div className="flex items-center space-x-2 truncate">
+                          <FileText className="w-3.5 h-3.5 text-white shrink-0" />
+                          <span className="text-white font-medium text-xs truncate max-w-[240px]">{attachedFile.name}</span>
+                          <span className="text-[10px] text-[#a1a1aa] font-mono">({Math.round(attachedFile.size / 1024)} KB ready)</span>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => setAttachedFile(null)}
+                          className="p-1 hover:bg-white/10 rounded-full text-[#a1a1aa] hover:text-white ml-2 transition-all"
+                          title="Remove attached file"
+                        >
+                          <X className="w-3 h-3" />
+                        </button>
+                      </div>
+                    )}
+
+                    {/* Textarea */}
+                    <div className="p-3 sm:p-4 pb-2">
+                      <textarea
+                        rows={2}
+                        value={promptInput}
+                        onChange={(e) => setPromptInput(e.target.value)}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter' && !e.shiftKey) {
+                            e.preventDefault();
+                            if (promptInput.trim() || attachedFile) {
+                              handleSendMessage();
+                            }
+                          }
+                        }}
+                        placeholder="Ask Hermes a question or type a prompt..."
+                        className="w-full bg-transparent resize-none border-none text-white text-sm sm:text-base focus:outline-none focus:ring-0 placeholder:text-zinc-500 placeholder:text-sm min-h-[56px] max-h-[160px] custom-scrollbar"
+                      />
+                    </div>
+
+                    {/* Bottom Action Controls */}
+                    <div className="flex items-center justify-between px-3 sm:px-4 py-2.5 border-t border-white/5 bg-white/[0.01]">
+                      <div className="flex items-center gap-2">
+                        <button
+                          type="button"
+                          onClick={() => fileInputRef.current?.click()}
+                          disabled={uploadingFile || runningAgent}
+                          className="group p-2 hover:bg-white/10 rounded-xl transition-all flex items-center gap-1.5 text-zinc-400 hover:text-white"
+                          title="Attach document or dataset"
+                        >
+                          {uploadingFile ? (
+                            <RefreshCw className="w-4 h-4 animate-spin text-white" />
+                          ) : (
+                            <Paperclip className="w-4 h-4 text-white" />
+                          )}
+                          <span className="text-xs text-zinc-400 hidden group-hover:inline transition-opacity">
+                            Attach
+                          </span>
+                        </button>
+                      </div>
+
+                      <div className="flex items-center gap-2">
+                        <button
+                          type="button"
+                          onClick={() => { setContextTab('project'); setContextPanelOpen(true); }}
+                          className="px-2.5 py-1.5 rounded-xl text-xs text-zinc-400 hover:text-white transition-all border border-dashed border-zinc-700 hover:border-zinc-500 hover:bg-zinc-800/80 flex items-center gap-1.5 font-medium"
+                        >
+                          <Plus className="w-3.5 h-3.5" />
+                          <span>Project</span>
+                        </button>
+
+                        <button
+                          type="button"
+                          onClick={() => handleSendMessage()}
+                          disabled={runningAgent || (!promptInput.trim() && !attachedFile)}
+                          className={`w-8 h-8 rounded-xl text-xs transition-all flex items-center justify-center font-bold ${
+                            promptInput.trim() || attachedFile
+                              ? 'bg-white text-black hover:bg-zinc-200 shadow-[0_0_14px_rgba(255,255,255,0.35)] cursor-pointer'
+                              : 'bg-white/[0.04] text-zinc-600 border border-white/10 cursor-not-allowed'
+                          }`}
+                          title="Send to Hermes AI"
+                        >
+                          <ArrowUp className="w-4 h-4" />
+                        </button>
+                      </div>
+                    </div>
                   </div>
-                  <h1 className="text-3xl sm:text-5xl font-extrabold text-white tracking-tight leading-tight">
-                    Your Intelligent AI. Built for the Future.
-                  </h1>
-                  <p className="text-xs sm:text-sm text-[#A1A1AA] leading-relaxed font-normal max-w-lg mx-auto">
-                    Autonomous companion harness powered by Google Gemma open weights. Ready to explore playbooks, execute dynamic skills, analyze files, and synthesize insights.
-                  </p>
+
+                  {/* Row of 5 Action Pill Buttons */}
+                  <div className="flex flex-wrap items-center justify-center gap-2 pt-1">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setPromptInput("Clone a screenshot into clean, responsive React and Tailwind CSS components");
+                        fileInputRef.current?.click();
+                      }}
+                      className="flex items-center gap-2 px-3.5 py-1.5 bg-[#0d0d12]/80 hover:bg-white/[0.08] rounded-full border border-white/10 hover:border-white/20 text-zinc-400 hover:text-white text-xs transition-all shadow-sm spotlight-card"
+                    >
+                      <ImageIcon className="w-3.5 h-3.5" />
+                      <span>Clone a Screenshot</span>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setPromptInput("Import Figma design tokens and recreate the interface layout in Tailwind CSS");
+                      }}
+                      className="flex items-center gap-2 px-3.5 py-1.5 bg-[#0d0d12]/80 hover:bg-white/[0.08] rounded-full border border-white/10 hover:border-white/20 text-zinc-400 hover:text-white text-xs transition-all shadow-sm spotlight-card"
+                    >
+                      <FigmaIcon className="w-3.5 h-3.5" />
+                      <span>Import from Figma</span>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => fileInputRef.current?.click()}
+                      className="flex items-center gap-2 px-3.5 py-1.5 bg-[#0d0d12]/80 hover:bg-white/[0.08] rounded-full border border-white/10 hover:border-white/20 text-zinc-400 hover:text-white text-xs transition-all shadow-sm spotlight-card"
+                    >
+                      <FileUp className="w-3.5 h-3.5" />
+                      <span>Upload a Project</span>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setPromptInput("Build a sleek, futuristic dark glassmorphism landing page with GSAP animations");
+                      }}
+                      className="flex items-center gap-2 px-3.5 py-1.5 bg-[#0d0d12]/80 hover:bg-white/[0.08] rounded-full border border-white/10 hover:border-white/20 text-zinc-400 hover:text-white text-xs transition-all shadow-sm spotlight-card"
+                    >
+                      <Monitor className="w-3.5 h-3.5" />
+                      <span>Landing Page</span>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setPromptInput("Build an animated multi-step user onboarding and sign-up form in React");
+                      }}
+                      className="flex items-center gap-2 px-3.5 py-1.5 bg-[#0d0d12]/80 hover:bg-white/[0.08] rounded-full border border-white/10 hover:border-white/20 text-zinc-400 hover:text-white text-xs transition-all shadow-sm spotlight-card"
+                    >
+                      <CircleUserRound className="w-3.5 h-3.5" />
+                      <span>Sign Up Form</span>
+                    </button>
+                  </div>
                 </div>
 
                 {/* 3D Interactive Suggested Task Cards (USER → HERMES → RESULT) */}
