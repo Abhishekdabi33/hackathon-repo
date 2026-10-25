@@ -5,6 +5,28 @@ export default {
     "./src/**/*.{js,ts,jsx,tsx}",
   ],
   theme: {
+    fontFamily: {
+      sans: [
+        '"Neue Haas Grotesk Display Pro"',
+        '"Neue Haas Grotesk Text Pro"',
+        '"Neue Haas Grotesk"',
+        '-apple-system',
+        'BlinkMacSystemFont',
+        '"Helvetica Neue"',
+        'Helvetica',
+        'Arial',
+        'sans-serif',
+      ],
+      mono: [
+        '"JetBrains Mono"',
+        'ui-monospace',
+        'SFMono-Regular',
+        'Menlo',
+        'Monaco',
+        'Consolas',
+        'monospace',
+      ],
+    },
     extend: {
       colors: {
         obsidian: {
