@@ -249,7 +249,7 @@ export default function HermesCharacter({
       led: '#00E5FF',
       eyeGrad: 'url(#eyeGradCyan)',
       filterGlow: 'url(#cyanGlow)',
-      statusBadge: 'text-[#00E5FF] border-[#3B0A6B]/40 bg-[#3B0A6B]/20',
+      statusBadge: 'text-[#ffffff] border-[#3B0A6B]/40 bg-[#3B0A6B]/20',
       eyeScale: 'scale(1)'
     },
     listening: {
@@ -257,7 +257,7 @@ export default function HermesCharacter({
       led: '#00E5FF',
       eyeGrad: 'url(#eyeGradCyan)',
       filterGlow: 'url(#cyanGlow)',
-      statusBadge: 'text-[#00E5FF] border-[#00E5FF]/45 bg-[#00E5FF]/15',
+      statusBadge: 'text-[#ffffff] border-[#00E5FF]/45 bg-[#00E5FF]/15',
       eyeScale: 'scale(1.08)'
     },
     thinking: {
@@ -273,7 +273,7 @@ export default function HermesCharacter({
       led: '#00E5FF',
       eyeGrad: 'url(#eyeGradCyan)',
       filterGlow: 'url(#cyanGlow)',
-      statusBadge: 'text-[#00E5FF] border-[#00E5FF]/35 bg-[#3B0A6B]/25',
+      statusBadge: 'text-[#ffffff] border-[#00E5FF]/35 bg-[#3B0A6B]/25',
       eyeScale: 'scaleX(1.04) scaleY(0.93)'
     },
     speaking: {
@@ -281,7 +281,7 @@ export default function HermesCharacter({
       led: '#00E5FF',
       eyeGrad: 'url(#eyeGradCyan)',
       filterGlow: 'url(#cyanGlow)',
-      statusBadge: 'text-[#00E5FF] border-[#00E5FF]/50 bg-[#00E5FF]/20',
+      statusBadge: 'text-[#ffffff] border-[#00E5FF]/50 bg-[#00E5FF]/20',
       eyeScale: 'scale(1.03)'
     }
   };

@@ -438,7 +438,7 @@ export default function App() {
                     href={p.url}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="btn-premium px-2 py-1 rounded-lg bg-[#3B0A6B]/30 hover:bg-[#00E5FF]/20 text-[#00E5FF] border border-white/10 hover:border-white/20 flex items-center space-x-1 text-[11px] shrink-0"
+                    className="btn-premium px-2 py-1 rounded-lg bg-[#3B0A6B]/30 hover:bg-[#00E5FF]/20 text-[#ffffff] border border-white/10 hover:border-white/20 flex items-center space-x-1 text-[11px] shrink-0"
                   >
                     <span>View Full Size</span>
                     <ExternalLink className="w-3 h-3" />
@@ -516,7 +516,7 @@ export default function App() {
   const modelInfo = deviceConfig?.model || null;
 
   return (
-    <div className="flex h-screen w-screen overflow-hidden bg-[#070709] text-[#FFFFFF] font-sans antialiased selection:bg-[#3B0A6B]/50 selection:text-[#00E5FF]">
+    <div className="flex h-screen w-screen overflow-hidden bg-[#070709] text-[#FFFFFF] font-sans antialiased selection:bg-[#3B0A6B]/50 selection:text-[#ffffff]">
       
       {/* ==================================================================== */}
       {/* 1. LEFT SIDEBAR                                                      */}
@@ -532,12 +532,12 @@ export default function App() {
           <div className="flex items-center justify-between px-2 pt-1.5 pb-2 border-b border-white/10">
             <div className="flex items-center space-x-2.5">
               <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-[#3B0A6B] to-[#09090b] border border-white/20 flex items-center justify-center shadow-[0_0_15px_rgba(0,229,255,0.2)]">
-                <Bot className="w-4.5 h-4.5 text-[#00E5FF]" />
+                <Bot className="w-4.5 h-4.5 text-[#ffffff]" />
               </div>
               <div>
                 <span className="font-bold text-sm tracking-tight text-[#ffffff] flex items-center space-x-1.5">
                   <span>Hermes</span>
-                  <span className="text-[10px] px-1.5 py-0.2 rounded-full bg-[#3B0A6B]/40 text-[#00E5FF] border border-white/20 font-mono">
+                  <span className="text-[10px] px-1.5 py-0.2 rounded-full bg-[#3B0A6B]/40 text-[#ffffff] border border-white/20 font-mono">
                     2.0
                   </span>
                 </span>
@@ -547,7 +547,7 @@ export default function App() {
             
             <button 
               onClick={() => setSidebarOpen(false)}
-              className="sm:hidden text-[#71717a] hover:text-[#00E5FF] p-1 rounded-lg hover:bg-[#3B0A6B]/25 transition-colors"
+              className="sm:hidden text-[#71717a] hover:text-[#ffffff] p-1 rounded-lg hover:bg-[#3B0A6B]/25 transition-colors"
             >
               <X className="w-4 h-4" />
             </button>
@@ -559,10 +559,10 @@ export default function App() {
             className="w-full btn-premium sheen-travel flex items-center justify-between px-3.5 py-2.5 rounded-xl bg-gradient-to-r from-[#3B0A6B]/40 via-[#220642]/30 to-[#09090b] border border-white/10 hover:border-white/20 text-xs font-semibold text-[#ffffff] hover:text-white shadow-sm transition-all group"
           >
             <div className="flex items-center space-x-2">
-              <Plus className="w-4 h-4 text-[#00E5FF] transition-transform duration-200 group-hover:rotate-90" />
+              <Plus className="w-4 h-4 text-[#ffffff] transition-transform duration-200 group-hover:rotate-90" />
               <span>New Agent Session</span>
             </div>
-            <span className="text-[10px] text-[#71717a] font-mono group-hover:text-[#00E5FF] transition-colors">⌘K</span>
+            <span className="text-[10px] text-[#71717a] font-mono group-hover:text-[#ffffff] transition-colors">⌘K</span>
           </button>
 
           {/* Sessions & Navigation */}
@@ -585,7 +585,7 @@ export default function App() {
               onClick={() => handleSendMessage("Analyze our database statistics and check GPU status.")}
               className="w-full text-left px-2.5 py-2 rounded-xl text-xs text-[#a1a1aa] hover:text-[#ffffff] hover:bg-white/[0.04] border border-transparent hover:border-white/10 flex items-center space-x-2.5 truncate transition-all group"
             >
-              <Activity className="w-3.5 h-3.5 text-[#71717a] group-hover:text-[#00E5FF] shrink-0 transition-colors" />
+              <Activity className="w-3.5 h-3.5 text-[#71717a] group-hover:text-[#ffffff] shrink-0 transition-colors" />
               <span className="truncate">Database & Telemetry Audit</span>
             </button>
 
@@ -593,7 +593,7 @@ export default function App() {
               onClick={() => handleSendMessage("Use api-integrator skill to format an endpoint")}
               className="w-full text-left px-2.5 py-2 rounded-xl text-xs text-[#a1a1aa] hover:text-[#ffffff] hover:bg-white/[0.04] border border-transparent hover:border-white/10 flex items-center space-x-2.5 truncate transition-all group"
             >
-              <Code2 className="w-3.5 h-3.5 text-[#71717a] group-hover:text-[#00E5FF] shrink-0 transition-colors" />
+              <Code2 className="w-3.5 h-3.5 text-[#71717a] group-hover:text-[#ffffff] shrink-0 transition-colors" />
               <span className="truncate">API Schema Generator</span>
             </button>
 
@@ -608,10 +608,10 @@ export default function App() {
                 className="w-full text-left px-2.5 py-2 rounded-xl text-xs text-[#a1a1aa] hover:text-[#ffffff] hover:bg-white/[0.04] border border-transparent hover:border-white/10 flex items-center justify-between transition-all group"
               >
                 <div className="flex items-center space-x-2.5">
-                  <FileCode className="w-3.5 h-3.5 text-[#00E5FF] group-hover:scale-110 transition-transform" />
+                  <FileCode className="w-3.5 h-3.5 text-[#ffffff] group-hover:scale-110 transition-transform" />
                   <span>Agent Skills Hub</span>
                 </div>
-                <span className="text-[10px] font-mono px-1.5 py-0.5 rounded-full bg-[#3B0A6B]/30 text-[#00E5FF] border border-white/10 group-hover:border-white/20">
+                <span className="text-[10px] font-mono px-1.5 py-0.5 rounded-full bg-[#3B0A6B]/30 text-[#ffffff] border border-white/10 group-hover:border-white/20">
                   {skills.length}
                 </span>
               </button>
@@ -621,7 +621,7 @@ export default function App() {
                 className="w-full text-left px-2.5 py-2 rounded-xl text-xs text-[#a1a1aa] hover:text-[#ffffff] hover:bg-white/[0.04] border border-transparent hover:border-white/10 flex items-center justify-between transition-all group"
               >
                 <div className="flex items-center space-x-2.5">
-                  <Cpu className="w-3.5 h-3.5 text-[#00E5FF] group-hover:scale-110 transition-transform" />
+                  <Cpu className="w-3.5 h-3.5 text-[#ffffff] group-hover:scale-110 transition-transform" />
                   <span>Device Telemetry</span>
                 </div>
                 <span className="w-1.5 h-1.5 rounded-full bg-[#00E5FF] shadow-[0_0_6px_#00E5FF]" />
@@ -631,7 +631,7 @@ export default function App() {
                 onClick={() => { setContextTab('project'); setContextPanelOpen(true); }}
                 className="w-full text-left px-2.5 py-2 rounded-xl text-xs text-[#a1a1aa] hover:text-[#ffffff] hover:bg-white/[0.04] border border-transparent hover:border-white/10 flex items-center space-x-2.5 transition-all group"
               >
-                <Users className="w-3.5 h-3.5 text-[#00E5FF] group-hover:scale-110 transition-transform" />
+                <Users className="w-3.5 h-3.5 text-[#ffffff] group-hover:scale-110 transition-transform" />
                 <span>Team & Pods</span>
               </button>
             </div>
@@ -782,8 +782,8 @@ export default function App() {
 
                 {/* Hero Greeting Typography */}
                 <div className="space-y-3 max-w-2xl mx-auto px-4">
-                  <div className="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-white/[0.03] border border-white/10 text-[#00E5FF] text-[10px] font-mono tracking-widest uppercase mb-1 shadow-sm">
-                    <Sparkles className="w-3 h-3 text-[#00E5FF]" />
+                  <div className="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-white/[0.03] border border-white/10 text-[#ffffff] text-[10px] font-mono tracking-widest uppercase mb-1 shadow-sm">
+                    <Sparkles className="w-3 h-3 text-[#ffffff]" />
                     <span>Next-Generation AI Companion</span>
                   </div>
                   <h1 className="text-3xl sm:text-5xl font-extrabold text-white tracking-tight leading-tight">
@@ -805,17 +805,17 @@ export default function App() {
                         className="p-4 rounded-2xl bg-white/[0.025] hover:bg-white/[0.045] border border-white/10 hover:border-white/20 cursor-pointer space-y-2.5 transition-all shadow-sm"
                       >
                         <div className="flex items-center justify-between">
-                          <span className="text-[9px] font-mono uppercase tracking-wider text-[#00E5FF] bg-white/[0.04] px-2 py-0.5 rounded-md border border-white/10">
+                          <span className="text-[9px] font-mono uppercase tracking-wider text-[#ffffff] bg-white/[0.04] px-2 py-0.5 rounded-md border border-white/10">
                             {card.category}
                           </span>
-                          <div className="w-6 h-6 rounded-lg bg-white/[0.04] border border-white/10 text-[#00E5FF] flex items-center justify-center transition-transform duration-200 group-hover:scale-110">
+                          <div className="w-6 h-6 rounded-lg bg-white/[0.04] border border-white/10 text-[#ffffff] flex items-center justify-center transition-transform duration-200 group-hover:scale-110">
                             <IconComponent className="w-3.5 h-3.5" />
                           </div>
                         </div>
                         <div>
                           <h3 className="text-xs font-semibold text-[#ffffff] tracking-tight group-hover:text-white flex items-center justify-between">
                             <span>{card.title}</span>
-                            <ChevronRight className="w-3 h-3 text-[#71717a] group-hover:text-[#00E5FF] group-hover:translate-x-0.5 transition-transform" />
+                            <ChevronRight className="w-3 h-3 text-[#71717a] group-hover:text-[#ffffff] group-hover:translate-x-0.5 transition-transform" />
                           </h3>
                           <p className="text-[11px] text-[#a1a1aa] leading-relaxed line-clamp-2 pt-1 font-normal">
                             {card.description}
@@ -847,7 +847,7 @@ export default function App() {
                       <div className="flex items-center space-x-2">
                         <span className="text-xs font-bold text-[#ffffff] tracking-tight">Hermes Neural Assistant</span>
                         <span className="w-1.5 h-1.5 rounded-full bg-[#00E5FF] animate-status-breathe" />
-                        <span className="text-[10px] font-mono text-[#00E5FF] uppercase tracking-wider bg-[#3B0A6B]/40 px-2 py-0.5 rounded-full border border-white/20">
+                        <span className="text-[10px] font-mono text-[#ffffff] uppercase tracking-wider bg-[#3B0A6B]/40 px-2 py-0.5 rounded-full border border-white/20">
                           {getHermesState()}
                         </span>
                       </div>
@@ -861,7 +861,7 @@ export default function App() {
 
                   <div className="flex items-center space-x-2">
                     {health?.cuda_available && (
-                      <span className="hidden sm:inline-flex items-center space-x-1.5 bg-[#3B0A6B]/30 text-[#00E5FF] border border-white/20 px-2.5 py-1 rounded-full text-[10px] font-mono">
+                      <span className="hidden sm:inline-flex items-center space-x-1.5 bg-[#3B0A6B]/30 text-[#ffffff] border border-white/20 px-2.5 py-1 rounded-full text-[10px] font-mono">
                         <span className="w-1 h-1 rounded-full bg-[#00E5FF] shadow-[0_0_6px_#00E5FF]" />
                         <span>CUDA 12.6</span>
                       </span>
@@ -871,7 +871,7 @@ export default function App() {
                       className="btn-premium px-2.5 py-1 rounded-lg text-xs text-[#71717a] hover:text-[#ffffff] hover:bg-white/[0.04] border border-transparent hover:border-white/10 flex items-center space-x-1.5"
                       title="Start New Agent Session"
                     >
-                      <Plus className="w-3.5 h-3.5 text-[#00E5FF]" />
+                      <Plus className="w-3.5 h-3.5 text-[#ffffff]" />
                       <span className="hidden sm:inline">New Session</span>
                     </button>
                   </div>
@@ -910,8 +910,8 @@ export default function App() {
                     {msg.role === 'user' && (
                       <div className="max-w-xl rounded-2xl bg-white/[0.04] border border-white/10 hover:border-white/20 transition-all px-4.5 py-3 text-sm text-white leading-relaxed shadow-sm">
                         {msg.attachedFile && (
-                          <div className="flex items-center space-x-2 px-2.5 py-1 mb-2 rounded-lg bg-[#00E5FF]/10 border border-white/20 text-xs text-[#00E5FF] w-fit">
-                            <FileText className="w-3.5 h-3.5 text-[#00E5FF]" />
+                          <div className="flex items-center space-x-2 px-2.5 py-1 mb-2 rounded-lg bg-[#00E5FF]/10 border border-white/20 text-xs text-[#ffffff] w-fit">
+                            <FileText className="w-3.5 h-3.5 text-[#ffffff]" />
                             <span className="font-mono text-[11px] truncate max-w-[200px]">{msg.attachedFile.name}</span>
                             <span className="text-[10px] text-[#a1a1aa] font-mono">({Math.round(msg.attachedFile.size / 1024)} KB)</span>
                           </div>
@@ -934,7 +934,7 @@ export default function App() {
                               className="w-full px-4 py-2.5 flex items-center justify-between text-xs text-[#a1a1aa] hover:text-[#ffffff] bg-[#070709]/40 hover:bg-[#3B0A6B]/20 transition-colors"
                             >
                               <div className="flex items-center space-x-2">
-                                <CheckCircle2 className="w-3.5 h-3.5 text-[#00E5FF]" />
+                                <CheckCircle2 className="w-3.5 h-3.5 text-[#ffffff]" />
                                 <span className="font-medium text-[#ffffff]">
                                   Agent completed {msg.steps.length} {msg.steps.length === 1 ? 'activity' : 'activities'}
                                 </span>
@@ -944,7 +944,7 @@ export default function App() {
                               </div>
                               
                               <div className="flex items-center space-x-2 text-[11px]">
-                                <span className="font-mono text-[#00E5FF] bg-[#3B0A6B]/30 px-2 py-0.5 rounded-full border border-white/10">
+                                <span className="font-mono text-[#ffffff] bg-[#3B0A6B]/30 px-2 py-0.5 rounded-full border border-white/10">
                                   {msg.duration_ms} ms
                                 </span>
                                 {expandedTraceId === msg.id ? (
@@ -970,7 +970,7 @@ export default function App() {
                                           {s.action ? `Calling tool: ${s.action}` : 'Reasoning & Planning'}
                                         </span>
                                       </div>
-                                      <span className="text-[10px] text-[#00E5FF] font-mono">Completed</span>
+                                      <span className="text-[10px] text-[#ffffff] font-mono">Completed</span>
                                     </div>
 
                                     {/* Natural Language Thought */}
@@ -982,13 +982,13 @@ export default function App() {
                                     {s.action && (
                                       <div className="ml-7 p-2 bg-[#070709] rounded-lg border border-white/10 text-[11px] font-mono text-[#a1a1aa]">
                                         <span className="text-[#71717a]">Input: </span>
-                                        <span className="text-[#00E5FF]">{s.action_input}</span>
+                                        <span className="text-[#ffffff]">{s.action_input}</span>
                                       </div>
                                     )}
 
                                     {/* Observation Output (if any) */}
                                     {s.observation && (
-                                      <div className="ml-7 p-2.5 bg-[#070709] rounded-lg border border-white/20 text-[#00E5FF] text-[11px] font-mono whitespace-pre-wrap leading-relaxed max-h-40 overflow-y-auto custom-scrollbar">
+                                      <div className="ml-7 p-2.5 bg-[#070709] rounded-lg border border-white/20 text-[#ffffff] text-[11px] font-mono whitespace-pre-wrap leading-relaxed max-h-40 overflow-y-auto custom-scrollbar">
                                         <span className="text-[#71717a] block text-[9px] uppercase font-bold tracking-wider mb-0.5">Observation:</span>
                                         {s.observation}
                                       </div>
@@ -1016,19 +1016,19 @@ export default function App() {
                                 onClick={() => handleSpeakMessage(msg.id, msg.content)}
                                 className={`btn-premium px-2.5 py-1 rounded-lg border flex items-center space-x-1 text-[11px] transition-all ${
                                   speakingMessageId === msg.id && isSpeaking
-                                    ? 'bg-[#00E5FF]/20 text-[#00E5FF] border-white/20 shadow-[0_0_15px_rgba(0,229,255,0.3)]'
-                                    : 'bg-[#09090b] hover:bg-white/[0.05] text-[#a1a1aa] hover:text-[#00E5FF] border-white/10 hover:border-white/20'
+                                    ? 'bg-[#00E5FF]/20 text-[#ffffff] border-white/20 shadow-[0_0_15px_rgba(0,229,255,0.3)]'
+                                    : 'bg-[#09090b] hover:bg-white/[0.05] text-[#a1a1aa] hover:text-[#ffffff] border-white/10 hover:border-white/20'
                                 }`}
                                 title={speakingMessageId === msg.id && isSpeaking ? "Stop Voice" : "Hear Hermes Speak"}
                               >
                                 {speakingMessageId === msg.id && isSpeaking ? (
                                   <>
-                                    <VolumeX className="w-3 h-3 text-[#00E5FF]" />
+                                    <VolumeX className="w-3 h-3 text-[#ffffff]" />
                                     <span>Mute</span>
                                   </>
                                 ) : (
                                   <>
-                                    <Volume2 className="w-3 h-3 text-[#00E5FF]" />
+                                    <Volume2 className="w-3 h-3 text-[#ffffff]" />
                                     <span>Speak</span>
                                   </>
                                 )}
@@ -1036,13 +1036,13 @@ export default function App() {
 
                               <button
                                 onClick={() => handleCopy(msg.id, msg.content)}
-                                className="btn-premium px-2.5 py-1 rounded-lg bg-[#09090b] hover:bg-white/[0.05] text-[#a1a1aa] hover:text-[#00E5FF] border border-white/10 hover:border-white/20 flex items-center space-x-1.5 text-[11px]"
+                                className="btn-premium px-2.5 py-1 rounded-lg bg-[#09090b] hover:bg-white/[0.05] text-[#a1a1aa] hover:text-[#ffffff] border border-white/10 hover:border-white/20 flex items-center space-x-1.5 text-[11px]"
                                 title="Copy Response"
                               >
                                 {copiedId === msg.id ? (
                                   <>
-                                    <Check className="w-3 h-3 text-[#00E5FF]" />
-                                    <span className="text-[#00E5FF]">Copied</span>
+                                    <Check className="w-3 h-3 text-[#ffffff]" />
+                                    <span className="text-[#ffffff]">Copied</span>
                                   </>
                                 ) : (
                                   <>
@@ -1054,7 +1054,7 @@ export default function App() {
 
                               <button
                                 onClick={() => handleSendMessage(messages[messages.length - 2]?.content || "Retry")}
-                                className="btn-premium p-1.5 rounded-lg bg-[#09090b] hover:bg-white/[0.05] text-[#a1a1aa] hover:text-[#00E5FF] border border-white/10 hover:border-white/20"
+                                className="btn-premium p-1.5 rounded-lg bg-[#09090b] hover:bg-white/[0.05] text-[#a1a1aa] hover:text-[#ffffff] border border-white/10 hover:border-white/20"
                                 title="Regenerate"
                               >
                                 <RotateCcw className="w-3 h-3" />
@@ -1083,8 +1083,8 @@ export default function App() {
                     
                     {/* Progressive Agent Activity Stepper */}
                     <div className="p-4 rounded-2xl bg-white/[0.03] border border-white/10 shadow-[0_0_30px_rgba(59,10,107,0.35)] space-y-3 flex-1 text-xs card-interactive">
-                      <div className="flex items-center space-x-2 text-[#00E5FF] font-medium">
-                        <Sparkles className="w-3.5 h-3.5 animate-spin text-[#00E5FF]" />
+                      <div className="flex items-center space-x-2 text-[#ffffff] font-medium">
+                        <Sparkles className="w-3.5 h-3.5 animate-spin text-[#ffffff]" />
                         <span>Hermes is executing agent workflow...</span>
                       </div>
 
@@ -1092,18 +1092,18 @@ export default function App() {
                       <div className="space-y-2 pt-1 font-sans">
                         <div className={`flex items-center space-x-2.5 transition-opacity ${liveExecutionStage >= 1 ? 'opacity-100 text-[#ffffff]' : 'opacity-40 text-[#71717a]'}`}>
                           {liveExecutionStage > 1 ? (
-                            <CheckCircle2 className="w-3.5 h-3.5 text-[#00E5FF] shrink-0" />
+                            <CheckCircle2 className="w-3.5 h-3.5 text-[#ffffff] shrink-0" />
                           ) : (
-                            <CircleDot className="w-3.5 h-3.5 text-[#00E5FF] animate-pulse shrink-0" />
+                            <CircleDot className="w-3.5 h-3.5 text-[#ffffff] animate-pulse shrink-0" />
                           )}
                           <span>Analyzing your request & planning strategy</span>
                         </div>
 
                         <div className={`flex items-center space-x-2.5 transition-opacity ${liveExecutionStage >= 2 ? 'opacity-100 text-[#ffffff]' : 'opacity-40 text-[#71717a]'}`}>
                           {liveExecutionStage > 2 ? (
-                            <CheckCircle2 className="w-3.5 h-3.5 text-[#00E5FF] shrink-0" />
+                            <CheckCircle2 className="w-3.5 h-3.5 text-[#ffffff] shrink-0" />
                           ) : liveExecutionStage === 2 ? (
-                            <CircleDot className="w-3.5 h-3.5 text-[#00E5FF] animate-pulse shrink-0" />
+                            <CircleDot className="w-3.5 h-3.5 text-[#ffffff] animate-pulse shrink-0" />
                           ) : (
                             <span className="w-3.5 h-3.5 rounded-full border border-[#71717a] shrink-0" />
                           )}
@@ -1112,9 +1112,9 @@ export default function App() {
 
                         <div className={`flex items-center space-x-2.5 transition-opacity ${liveExecutionStage >= 3 ? 'opacity-100 text-[#ffffff]' : 'opacity-40 text-[#71717a]'}`}>
                           {liveExecutionStage > 3 ? (
-                            <CheckCircle2 className="w-3.5 h-3.5 text-[#00E5FF] shrink-0" />
+                            <CheckCircle2 className="w-3.5 h-3.5 text-[#ffffff] shrink-0" />
                           ) : liveExecutionStage === 3 ? (
-                            <CircleDot className="w-3.5 h-3.5 text-[#00E5FF] animate-pulse shrink-0" />
+                            <CircleDot className="w-3.5 h-3.5 text-[#ffffff] animate-pulse shrink-0" />
                           ) : (
                             <span className="w-3.5 h-3.5 rounded-full border border-[#71717a] shrink-0" />
                           )}
@@ -1123,7 +1123,7 @@ export default function App() {
 
                         <div className={`flex items-center space-x-2.5 transition-opacity ${liveExecutionStage >= 4 ? 'opacity-100 text-[#ffffff]' : 'opacity-40 text-[#71717a]'}`}>
                           {liveExecutionStage === 4 ? (
-                            <CircleDot className="w-3.5 h-3.5 text-[#00E5FF] animate-pulse shrink-0" />
+                            <CircleDot className="w-3.5 h-3.5 text-[#ffffff] animate-pulse shrink-0" />
                           ) : (
                             <span className="w-3.5 h-3.5 rounded-full border border-[#71717a] shrink-0" />
                           )}
@@ -1242,7 +1242,7 @@ export default function App() {
                 className={`btn-premium px-3 py-1 rounded-lg text-xs font-medium transition-all ${
                   contextTab === 'device'
                     ? 'bg-[#3B0A6B] text-[#FFFFFF] border border-white/20 shadow-[0_0_12px_rgba(0,229,255,0.2)]'
-                    : 'text-[#a1a1aa] hover:text-[#00E5FF] hover:border-white/10'
+                    : 'text-[#a1a1aa] hover:text-[#ffffff] hover:border-white/10'
                 }`}
               >
                 Device Specs
@@ -1252,7 +1252,7 @@ export default function App() {
                 className={`btn-premium px-3 py-1 rounded-lg text-xs font-medium transition-all ${
                   contextTab === 'skills'
                     ? 'bg-[#3B0A6B] text-[#FFFFFF] border border-white/20 shadow-[0_0_12px_rgba(0,229,255,0.2)]'
-                    : 'text-[#a1a1aa] hover:text-[#00E5FF] hover:border-white/10'
+                    : 'text-[#a1a1aa] hover:text-[#ffffff] hover:border-white/10'
                 }`}
               >
                 Skills ({skills.length})
@@ -1262,7 +1262,7 @@ export default function App() {
                 className={`btn-premium px-3 py-1 rounded-lg text-xs font-medium transition-all ${
                   contextTab === 'project'
                     ? 'bg-[#3B0A6B] text-[#FFFFFF] border border-white/20 shadow-[0_0_12px_rgba(0,229,255,0.2)]'
-                    : 'text-[#a1a1aa] hover:text-[#00E5FF] hover:border-white/10'
+                    : 'text-[#a1a1aa] hover:text-[#ffffff] hover:border-white/10'
                 }`}
               >
                 Team & Pods
@@ -1271,7 +1271,7 @@ export default function App() {
 
             <button
               onClick={() => setContextPanelOpen(false)}
-              className="btn-premium text-[#71717a] hover:text-[#00E5FF] p-1.5 rounded-xl hover:bg-[#3B0A6B]/30 transition-colors border border-transparent hover:border-white/10"
+              className="btn-premium text-[#71717a] hover:text-[#ffffff] p-1.5 rounded-xl hover:bg-[#3B0A6B]/30 transition-colors border border-transparent hover:border-white/10"
               title="Close Panel"
             >
               <X className="w-4 h-4" />
@@ -1286,16 +1286,16 @@ export default function App() {
               <div className="space-y-4 animate-slide-up">
                 <div className="flex items-center justify-between">
                   <span className="font-semibold text-[#ffffff] tracking-tight flex items-center space-x-2">
-                    <Cpu className="w-4 h-4 text-[#00E5FF]" />
+                    <Cpu className="w-4 h-4 text-[#ffffff]" />
                     <span>Host Compute Environment</span>
                   </span>
                   <button
                     onClick={() => fetchHealth()}
                     disabled={loadingHealth}
-                    className="btn-premium p-1.5 rounded-lg text-[#71717a] hover:text-[#00E5FF] hover:bg-[#3B0A6B]/30 transition-colors border border-transparent hover:border-white/10"
+                    className="btn-premium p-1.5 rounded-lg text-[#71717a] hover:text-[#ffffff] hover:bg-[#3B0A6B]/30 transition-colors border border-transparent hover:border-white/10"
                     title="Refresh Telemetry"
                   >
-                    <RefreshCw className={`w-3.5 h-3.5 ${loadingHealth ? 'animate-spin text-[#00E5FF]' : ''}`} />
+                    <RefreshCw className={`w-3.5 h-3.5 ${loadingHealth ? 'animate-spin text-[#ffffff]' : ''}`} />
                   </button>
                 </div>
 
@@ -1303,7 +1303,7 @@ export default function App() {
                 <div className="p-3.5 rounded-2xl bg-white/[0.03] border border-white/10 space-y-2.5 shadow-[0_4px_20px_rgba(0,0,0,0.5)] card-interactive">
                   <div className="flex items-center justify-between">
                     <span className="text-[10px] uppercase font-semibold text-[#71717a] tracking-wider font-mono">GPU Device</span>
-                    <span className="text-[10px] font-mono text-[#00E5FF] bg-[#3B0A6B]/30 px-2 py-0.5 rounded-full border border-white/20 shadow-[0_0_8px_rgba(0,229,255,0.2)]">
+                    <span className="text-[10px] font-mono text-[#ffffff] bg-[#3B0A6B]/30 px-2 py-0.5 rounded-full border border-white/20 shadow-[0_0_8px_rgba(0,229,255,0.2)]">
                       CUDA 12.6
                     </span>
                   </div>
@@ -1315,7 +1315,7 @@ export default function App() {
                   <div className="space-y-1">
                     <div className="flex justify-between text-[11px] text-[#a1a1aa] font-mono">
                       <span>Available VRAM:</span>
-                      <span className="text-[#00E5FF] font-semibold">{gpuInfo?.available_vram_mb || 4095.5} MB</span>
+                      <span className="text-[#ffffff] font-semibold">{gpuInfo?.available_vram_mb || 4095.5} MB</span>
                     </div>
                     <div className="w-full h-1.5 rounded-full bg-[#3B0A6B]/30 overflow-hidden border border-white/10">
                       <div 
@@ -1337,14 +1337,14 @@ export default function App() {
                     </div>
                     <div className="p-2.5 bg-[#070709] rounded-xl border border-white/10">
                       <span className="text-[#71717a] block text-[9px] uppercase font-mono">RAM Total</span>
-                      <span className="font-semibold text-[#00E5FF] font-mono">{ramInfo?.total_gb || 7.73} GB</span>
+                      <span className="font-semibold text-[#ffffff] font-mono">{ramInfo?.total_gb || 7.73} GB</span>
                     </div>
                   </div>
 
                   <div className="p-2.5 bg-[#070709] rounded-xl border border-white/10 space-y-1">
                     <div className="flex justify-between text-[10px] text-[#a1a1aa] font-mono">
                       <span>RAM Utilization:</span>
-                      <span className="text-[#00E5FF] font-semibold">{ramInfo?.percent_used || 90}%</span>
+                      <span className="text-[#ffffff] font-semibold">{ramInfo?.percent_used || 90}%</span>
                     </div>
                     <div className="w-full h-1.5 rounded-full bg-[#3B0A6B]/30 overflow-hidden border border-white/10">
                       <div 
@@ -1372,7 +1372,7 @@ export default function App() {
                   </div>
                   <div className="flex justify-between py-1">
                     <span className="text-[#71717a]">Model Engine:</span>
-                    <span className="font-medium text-[#00E5FF]">Google Gemma 2 (2B/9B)</span>
+                    <span className="font-medium text-[#ffffff]">Google Gemma 2 (2B/9B)</span>
                   </div>
                 </div>
 
@@ -1385,15 +1385,15 @@ export default function App() {
                 <div className="space-y-2">
                   <div className="flex items-center justify-between">
                     <span className="font-semibold text-[#ffffff] tracking-tight flex items-center space-x-2">
-                    <FileCode className="w-4 h-4 text-[#00E5FF]" />
+                    <FileCode className="w-4 h-4 text-[#ffffff]" />
                     <span>Agent Skills ({skills.length})</span>
                   </span>
                     <button
                       type="button"
                       onClick={() => setShowSkillModal(!showSkillModal)}
-                      className="btn-premium px-2 py-0.5 rounded-lg bg-[#3B0A6B]/30 hover:bg-[#00E5FF]/20 text-[#00E5FF] border border-white/10 hover:border-white/20 flex items-center space-x-1 text-[11px]"
+                      className="btn-premium px-2 py-0.5 rounded-lg bg-[#3B0A6B]/30 hover:bg-[#00E5FF]/20 text-[#ffffff] border border-white/10 hover:border-white/20 flex items-center space-x-1 text-[11px]"
                     >
-                      <Plus className="w-3 h-3 text-[#00E5FF]" />
+                      <Plus className="w-3 h-3 text-[#ffffff]" />
                       <span>New Skill</span>
                     </button>
                   </div>
@@ -1416,7 +1416,7 @@ export default function App() {
                     <form onSubmit={handleCreateSkill} className="p-3.5 rounded-2xl bg-[#09090b] border border-white/20 space-y-2.5 shadow-[0_4px_20px_rgba(0,0,0,0.6)] animate-slide-up">
                       <div className="flex items-center justify-between border-b border-white/10 pb-1.5">
                         <span className="text-xs font-semibold text-[#ffffff] flex items-center space-x-1">
-                          <PlusCircle className="w-3.5 h-3.5 text-[#00E5FF]" />
+                          <PlusCircle className="w-3.5 h-3.5 text-[#ffffff]" />
                           <span>Author New SKILL.md</span>
                         </span>
                         <button
@@ -1508,7 +1508,7 @@ export default function App() {
                     >
                       <div className="flex items-center justify-between mb-1">
                         <span className="font-mono font-semibold text-xs text-[#ffffff]">{s.name}</span>
-                        <span className="text-[9px] font-mono bg-[#3B0A6B]/30 border border-white/10 px-1.5 py-0.2 rounded-full text-[#00E5FF]">
+                        <span className="text-[9px] font-mono bg-[#3B0A6B]/30 border border-white/10 px-1.5 py-0.2 rounded-full text-[#ffffff]">
                           v{s.version}
                         </span>
                       </div>
@@ -1544,15 +1544,15 @@ export default function App() {
             {contextTab === 'project' && (
               <div className="space-y-4 animate-slide-up">
                 <span className="font-semibold text-[#ffffff] tracking-tight flex items-center space-x-2">
-                  <Users className="w-4 h-4 text-[#00E5FF]" />
+                  <Users className="w-4 h-4 text-[#ffffff]" />
                   <span>4-Person Hackathon Engineering Pods</span>
                 </span>
 
                 {/* Pod 1 */}
                 <div className="p-3.5 rounded-2xl bg-white/[0.03] border border-white/10 space-y-2 shadow-[0_4px_20px_rgba(0,0,0,0.5)] card-interactive">
                   <div className="flex items-center justify-between">
-                    <span className="text-[10px] uppercase font-bold text-[#00E5FF] font-mono">Pod 1: Frontend Squad</span>
-                    <span className="text-[9px] font-mono bg-[#3B0A6B]/30 text-[#00E5FF] px-2 py-0.5 rounded-full border border-white/20 shadow-[0_0_8px_rgba(0,229,255,0.15)]">
+                    <span className="text-[10px] uppercase font-bold text-[#ffffff] font-mono">Pod 1: Frontend Squad</span>
+                    <span className="text-[9px] font-mono bg-[#3B0A6B]/30 text-[#ffffff] px-2 py-0.5 rounded-full border border-white/20 shadow-[0_0_8px_rgba(0,229,255,0.15)]">
                       feature/frontend
                     </span>
                   </div>
@@ -1565,8 +1565,8 @@ export default function App() {
                 {/* Pod 2 */}
                 <div className="p-3.5 rounded-2xl bg-white/[0.03] border border-white/10 space-y-2 shadow-[0_4px_20px_rgba(0,0,0,0.5)] card-interactive">
                   <div className="flex items-center justify-between">
-                    <span className="text-[10px] uppercase font-bold text-[#00E5FF] font-mono">Pod 2: Backend & AI Engine</span>
-                    <span className="text-[9px] font-mono bg-[#3B0A6B]/30 text-[#00E5FF] px-2 py-0.5 rounded-full border border-white/20 shadow-[0_0_8px_rgba(0,229,255,0.15)]">
+                    <span className="text-[10px] uppercase font-bold text-[#ffffff] font-mono">Pod 2: Backend & AI Engine</span>
+                    <span className="text-[9px] font-mono bg-[#3B0A6B]/30 text-[#ffffff] px-2 py-0.5 rounded-full border border-white/20 shadow-[0_0_8px_rgba(0,229,255,0.15)]">
                       feature/backend-ai
                     </span>
                   </div>
@@ -1593,7 +1593,7 @@ export default function App() {
                   </div>
                   <div className="flex justify-between py-1">
                     <span className="text-[#71717a]">GPU Acceleration:</span>
-                    <span className="text-[#00E5FF] font-semibold">RTX 2050 (4GB) + Kaggle T4</span>
+                    <span className="text-[#ffffff] font-semibold">RTX 2050 (4GB) + Kaggle T4</span>
                   </div>
                 </div>
               </div>
