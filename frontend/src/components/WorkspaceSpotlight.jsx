@@ -39,7 +39,7 @@ export default function WorkspaceSpotlight({
     if (stateRef.current.isTouchDevice) {
       spotlightEl.style.opacity = '0.4';
       spotlightEl.style.background = `
-        radial-gradient(circle 500px at 50% 25%, rgba(255, 255, 255, 0.06) 0%, transparent 75%)
+        radial-gradient(circle 320px at 50% 25%, rgba(255, 255, 255, 0.06) 0%, transparent 75%)
       `;
       return;
     }
@@ -103,9 +103,9 @@ export default function WorkspaceSpotlight({
       if (spotlightEl) {
         spotlightEl.style.opacity = Math.max(0, Math.min(1, s.currentOpacity)).toFixed(3);
         spotlightEl.style.background = `
-          radial-gradient(circle 120px at ${s.currentX.toFixed(1)}px ${s.currentY.toFixed(1)}px, rgba(255, 255, 255, 0.13) 0%, transparent 75%),
-          radial-gradient(circle 360px at ${s.currentX.toFixed(1)}px ${s.currentY.toFixed(1)}px, rgba(255, 255, 255, 0.06) 0%, rgba(59, 10, 107, 0.05) 50%, transparent 75%),
-          radial-gradient(circle 750px at ${s.currentX.toFixed(1)}px ${s.currentY.toFixed(1)}px, rgba(255, 255, 255, 0.025) 0%, transparent 85%)
+          radial-gradient(circle 80px at ${s.currentX.toFixed(1)}px ${s.currentY.toFixed(1)}px, rgba(255, 255, 255, 0.13) 0%, transparent 75%),
+          radial-gradient(circle 240px at ${s.currentX.toFixed(1)}px ${s.currentY.toFixed(1)}px, rgba(255, 255, 255, 0.06) 0%, rgba(59, 10, 107, 0.05) 50%, transparent 75%),
+          radial-gradient(circle 480px at ${s.currentX.toFixed(1)}px ${s.currentY.toFixed(1)}px, rgba(255, 255, 255, 0.025) 0%, transparent 85%)
         `;
       }
 

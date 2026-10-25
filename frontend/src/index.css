@@ -299,7 +299,7 @@
   border-radius: inherit;
   padding: 1.5px;
   background: radial-gradient(
-    340px circle at var(--mouse-x, -500px) var(--mouse-y, -500px),
+    220px circle at var(--mouse-x, -500px) var(--mouse-y, -500px),
     rgba(255, 255, 255, 0.45) 0%,
     rgba(255, 255, 255, 0.12) 35%,
     transparent 65%
@@ -319,7 +319,7 @@
   inset: 0;
   border-radius: inherit;
   background: radial-gradient(
-    420px circle at var(--mouse-x, -500px) var(--mouse-y, -500px),
+    280px circle at var(--mouse-x, -500px) var(--mouse-y, -500px),
     rgba(255, 255, 255, 0.08) 0%,
     rgba(255, 255, 255, 0.02) 40%,
     transparent 70%
