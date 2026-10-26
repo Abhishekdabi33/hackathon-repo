@@ -1,0 +1,139 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/*
+ * Samjho Health design system — premium white + soft blue + electric blue.
+ * White dominates; blue is used strategically for hierarchy and interaction.
+ * Bright, airy, Apple-style healthcare: clean, trustworthy, elegant.
+ */
+
+:root {
+  --radius: 1.25rem;
+
+  /* Core palette */
+  --background: #f8faff; /* soft near-white */
+  --softbg: #eef5ff; /* very light blue */
+  --foreground: #111827; /* dark text */
+  --ink-secondary: #4b5563; /* secondary text */
+  --card: #ffffff;
+  --card-foreground: #111827;
+  --popover: #ffffff;
+  --popover-foreground: #111827;
+  --primary: #2563eb; /* electric blue */
+  --primary-foreground: #ffffff;
+  --bright: #3b82f6; /* bright blue — hover / AI accents */
+  --softblue: #dbeafe; /* soft blue — selected states */
+  --paleblue: #eff6ff; /* pale blue — subtle panels */
+  --secondary: #dbeafe;
+  --secondary-foreground: #1e40af;
+  --muted: #eff6ff;
+  --muted-foreground: #6b7280;
+  --accent: #eff6ff;
+  --accent-foreground: #1d4ed8;
+  --destructive: #dc2626;
+  --destructive-foreground: #ffffff;
+  --border: rgba(37, 99, 235, 0.1);
+  --input: rgba(37, 99, 235, 0.16);
+  --ring: #3b82f6;
+  --ice: #2563eb;
+  --clinical: #3b82f6;
+  --positive: #059669;
+  --caution: #d97706;
+  --alert: #dc2626;
+
+  /* Glass tokens */
+  --glass: rgba(255, 255, 255, 0.72);
+  --glass-strong: rgba(255, 255, 255, 0.88);
+  --glass-vivid: rgba(255, 255, 255, 0.95);
+  --glass-border: rgba(219, 234, 254, 0.75);
+  --glass-border-bright: rgba(219, 234, 254, 0.95);
+  --glass-highlight: rgba(255, 255, 255, 0.95);
+  --glow: rgba(37, 99, 235, 0.15);
+}
+
+@layer base {
+  * {
+    border-color: var(--border);
+  }
+
+  html {
+    scroll-behavior: smooth;
+  }
+
+  body {
+    background-color: var(--background);
+    color: var(--foreground);
+    font-family: "Neue Haas Grotesk Display Pro", "Neue Haas Grotesk Text Pro", "Neue Haas Grotesk", -apple-system, BlinkMacSystemFont, "Helvetica Neue", Helvetica, Arial, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    overflow-x: hidden;
+  }
+
+  ::selection {
+    background: rgba(37, 99, 235, 0.16);
+    color: #2563eb;
+  }
+
+  ::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: rgba(37, 99, 235, 0.2);
+    border-radius: 8px;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: rgba(37, 99, 235, 0.35);
+  }
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+}
+
+/* Glass utilities */
+.glass {
+  background: var(--glass);
+  border: 1px solid var(--glass-border);
+  backdrop-filter: blur(20px) saturate(150%);
+  -webkit-backdrop-filter: blur(20px) saturate(150%);
+  box-shadow:
+    0 8px 32px rgba(37, 99, 235, 0.08),
+    0 0 0 1px rgba(37, 99, 235, 0.04),
+    inset 0 1px 0 rgba(255, 255, 255, 0.95);
+}
+
+.glass-strong {
+  background: var(--glass-strong);
+  border: 1px solid var(--glass-border-bright);
+  backdrop-filter: blur(28px) saturate(160%);
+  -webkit-backdrop-filter: blur(28px) saturate(160%);
+  box-shadow:
+    0 16px 48px rgba(37, 99, 235, 0.1),
+    0 0 0 1px rgba(37, 99, 235, 0.05),
+    inset 0 1px 0 rgba(255, 255, 255, 0.98);
+}
+
+.glass-soft {
+  background: rgba(255, 255, 255, 0.65);
+  border: 1px solid rgba(37, 99, 235, 0.08);
+  backdrop-filter: blur(14px) saturate(130%);
+  -webkit-backdrop-filter: blur(14px) saturate(130%);
+}
+
+/* Ambient background */
+.ambient-grid {
+  background-image:
+    linear-gradient(rgba(37, 99, 235, 0.045) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(37, 99, 235, 0.045) 1px, transparent 1px);
+  background-size: 72px 72px;
+  mask-image: radial-gradient(ellipse 90% 70% at 50% 30%, black 30%, transparent 75%);
+  -webkit-mask-image: radial-gradient(ellipse 90% 70% at 50% 30%, black 30%, transparent 75%);
+}
+
+.ambient-glow {
+  background: radial-gradient(
+    ellipse 60% 45% at 50% 28%,
+    rgba(59, 130, 246, 0.12) 0%,
+    transparent 70%
+  );
+}

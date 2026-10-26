@@ -29,16 +29,54 @@ export default {
     },
     extend: {
       colors: {
-        obsidian: {
-          DEFAULT: '#070709',
-          surface: '#09090b',
-          dark: '#050507',
+        background: '#F8FAFF',
+        softbg: '#EEF5FF',
+        foreground: '#111827',
+        'ink-secondary': '#4B5563',
+        card: {
+          DEFAULT: '#FFFFFF',
+          foreground: '#111827',
         },
+        popover: {
+          DEFAULT: '#FFFFFF',
+          foreground: '#111827',
+        },
+        primary: {
+          DEFAULT: '#2563EB',
+          foreground: '#FFFFFF',
+        },
+        secondary: {
+          DEFAULT: '#DBEAFE',
+          foreground: '#1E40AF',
+        },
+        muted: {
+          DEFAULT: '#EFF6FF',
+          foreground: '#6B7280',
+        },
+        accent: {
+          DEFAULT: '#EFF6FF',
+          foreground: '#1D4ED8',
+        },
+        border: 'rgba(37, 99, 235, 0.12)',
+        input: 'rgba(37, 99, 235, 0.16)',
+        ring: '#3B82F6',
+
+        bright: '#3B82F6',
+        softblue: '#DBEAFE',
+        paleblue: '#EFF6FF',
+        ice: '#2563EB',
+        positive: '#059669',
+        caution: '#D97706',
+        alert: '#DC2626',
+      },
+      borderRadius: {
+        '4xl': '2rem',
       },
       boxShadow: {
-        'glow-white': '0 0 25px rgba(255, 255, 255, 0.08)',
-        'glow-cta': '0 0 20px rgba(255, 255, 255, 0.20)',
-        'glass': '0 8px 32px 0 rgba(0, 0, 0, 0.65)',
+        'glass-card': '0 10px 30px -5px rgba(37, 99, 235, 0.08), 0 4px 6px -2px rgba(0, 0, 0, 0.03)',
+        'glass-float': '0 20px 40px -10px rgba(37, 99, 235, 0.14), 0 1px 3px rgba(0, 0, 0, 0.05)',
+        'glow-blue': '0 0 25px rgba(37, 99, 235, 0.18)',
+        'glow-cta': '0 4px 20px rgba(37, 99, 235, 0.35)',
       },
     },
   },
