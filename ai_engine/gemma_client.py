@@ -78,7 +78,7 @@ class GemmaClient:
                     f"{self.cloud_gpu_url}/api/generate",
                     json=ollama_payload,
                     headers=headers,
-                    timeout=httpx.Timeout(5.0, connect=2.5, read=4.0)
+                    timeout=httpx.Timeout(25.0, connect=5.0, read=15.0)
                 ) as resp:
                     if resp.status_code == 200:
                         for line in resp.iter_lines():
@@ -105,7 +105,7 @@ class GemmaClient:
                 if image_base64:
                     fastapi_payload["image"] = image_base64
 
-                resp2 = httpx.post(f"{self.cloud_gpu_url}/api/predict", json=fastapi_payload, headers=headers, timeout=httpx.Timeout(connect=3.0, read=8.0, write=5.0, pool=5.0))
+                resp2 = httpx.post(f"{self.cloud_gpu_url}/api/predict", json=fastapi_payload, headers=headers, timeout=httpx.Timeout(connect=5.0, read=15.0, write=5.0, pool=5.0))
                 if resp2.status_code == 200:
                     raw_text = resp2.json().get("result", "")
                     clean_text = raw_text
@@ -212,7 +212,7 @@ class GemmaClient:
                     f"{self.cloud_gpu_url}/api/generate",
                     json=ollama_payload,
                     headers=headers,
-                    timeout=httpx.Timeout(connect=3.0, read=8.0, write=5.0, pool=5.0)
+                    timeout=httpx.Timeout(connect=5.0, read=15.0, write=5.0, pool=5.0)
                 ) as resp:
                     if resp.status_code == 200:
                         for line in resp.iter_lines():

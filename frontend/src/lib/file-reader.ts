@@ -1,4 +1,4 @@
-export const API_BASE = (import.meta.env.VITE_API_URL || "").replace(/\/$/, "");
+export const API_BASE = (import.meta.env.VITE_API_URL || "https://lablens-ai-backend.onrender.com").replace(/\/$/, "");
 
 export type ReportInput = {
   reportText?: string;
