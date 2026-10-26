@@ -1,4 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 import { 
   Bot, 
   Sparkles, 
@@ -513,6 +515,78 @@ export default function App() {
     }
   };
 
+  // Custom High-End Medical Markdown Component
+  const MarkdownContent = ({ content }) => {
+    return (
+      <div className="medical-markdown-pro leading-relaxed text-zinc-200">
+        <ReactMarkdown
+          remarkPlugins={[remarkGfm]}
+          components={{
+            h1: ({ node, ...props }) => (
+              <h1 className="text-lg sm:text-xl font-bold text-white mt-4 mb-2 flex items-center space-x-2 border-b border-white/10 pb-1.5" {...props} />
+            ),
+            h2: ({ node, ...props }) => (
+              <h2 className="text-base sm:text-lg font-semibold text-white mt-4 mb-2 flex items-center space-x-2" {...props} />
+            ),
+            h3: ({ node, children, ...props }) => (
+              <div className="mt-5 mb-2.5 pb-1.5 border-b border-white/10 flex items-center space-x-2">
+                <span className="w-2 h-2 rounded-full bg-[#00E5FF] shadow-[0_0_8px_#00E5FF] shrink-0" />
+                <h3 className="text-xs sm:text-sm font-bold text-[#00E5FF] tracking-wider uppercase font-mono" {...props}>
+                  {children}
+                </h3>
+              </div>
+            ),
+            p: ({ node, ...props }) => (
+              <p className="text-sm sm:text-[14.5px] text-zinc-200 leading-relaxed my-2 font-normal" {...props} />
+            ),
+            ul: ({ node, ...props }) => (
+              <ul className="space-y-2 my-2.5 pl-1 list-none" {...props} />
+            ),
+            ol: ({ node, ...props }) => (
+              <ol className="space-y-2 my-2.5 pl-4 list-decimal text-zinc-200 text-sm sm:text-base" {...props} />
+            ),
+            li: ({ node, children, ...props }) => (
+              <li className="flex items-start space-x-2.5 text-sm sm:text-[14.5px] text-zinc-200 my-1" {...props}>
+                <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 mt-2 shrink-0 shadow-[0_0_5px_rgba(6,182,212,0.8)]" />
+                <span className="flex-1 leading-relaxed">{children}</span>
+              </li>
+            ),
+            strong: ({ node, children, ...props }) => (
+              <strong className="font-semibold text-white bg-white/[0.08] px-1.5 py-0.5 rounded border border-white/15" {...props}>
+                {children}
+              </strong>
+            ),
+            em: ({ node, ...props }) => (
+              <em className="text-zinc-300 italic" {...props} />
+            ),
+            blockquote: ({ node, ...props }) => (
+              <blockquote className="my-3 p-3.5 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-200 text-xs sm:text-sm leading-relaxed" {...props} />
+            ),
+            table: ({ node, ...props }) => (
+              <div className="overflow-x-auto my-3 rounded-xl border border-white/10 bg-[#0c0c0e] shadow-lg">
+                <table className="w-full text-left text-xs sm:text-sm border-collapse" {...props} />
+              </div>
+            ),
+            thead: ({ node, ...props }) => (
+              <thead className="bg-white/[0.06] border-b border-white/10 text-zinc-400 font-mono text-[11px] uppercase tracking-wider" {...props} />
+            ),
+            th: ({ node, ...props }) => (
+              <th className="p-3 font-semibold text-zinc-200 border-r border-white/5 last:border-r-0" {...props} />
+            ),
+            td: ({ node, ...props }) => (
+              <td className="p-3 border-t border-white/5 border-r border-white/5 last:border-r-0 text-zinc-300" {...props} />
+            ),
+            code: ({ node, inline, ...props }) => (
+              <code className="bg-white/10 text-[#00E5FF] font-mono text-xs px-1.5 py-0.5 rounded border border-white/10" {...props} />
+            )
+          }}
+        >
+          {content}
+        </ReactMarkdown>
+      </div>
+    );
+  };
+
   // Multimodal assistant output renderer (Images, Diagrams, Formatting)
   const renderAssistantContent = (text) => {
     if (!text) return null;
@@ -549,22 +623,14 @@ export default function App() {
     }
 
     if (parts.length === 0) {
-      return (
-        <p className="text-sm sm:text-base text-[#ffffff] whitespace-pre-wrap leading-relaxed font-normal">
-          {text}
-        </p>
-      );
+      return <MarkdownContent content={text} />;
     }
 
     return (
       <div className="space-y-3.5">
         {parts.map((p, idx) => {
           if (p.type === 'text') {
-            return (
-              <p key={idx} className="text-sm sm:text-base text-[#ffffff] whitespace-pre-wrap leading-relaxed font-normal">
-                {p.content}
-              </p>
-            );
+            return <MarkdownContent key={idx} content={p.content} />;
           }
           if (p.type === 'image') {
             return (
@@ -1252,6 +1318,30 @@ export default function App() {
                           )}
 
                           {renderAssistantContent(msg.content)}
+
+                          {/* Smart Follow-Up Action Chips */}
+                          {!msg.isStreaming && msg.content && (
+                            <div className="pt-2 pb-1 flex flex-wrap items-center gap-1.5">
+                              <span className="text-[10px] text-[#71717a] font-mono flex items-center mr-1">
+                                <Sparkles className="w-2.5 h-2.5 mr-1 text-[#00E5FF]" /> Follow-up:
+                              </span>
+                              {[
+                                "What foods should I avoid with high BP?",
+                                "Explain Hydrochlorothiazide 25mg side effects",
+                                "इसे आसान हिंदी में समझाओ (Hindi)",
+                                "What questions should I ask my doctor?"
+                              ].map((chip, cIdx) => (
+                                <button
+                                  key={cIdx}
+                                  onClick={() => handleSendMessage(chip)}
+                                  disabled={runningAgent}
+                                  className="px-2.5 py-1 rounded-full bg-white/[0.04] hover:bg-white/[0.1] text-zinc-300 hover:text-white border border-white/10 hover:border-[#00E5FF]/40 text-[11px] transition-all flex items-center space-x-1"
+                                >
+                                  <span>{chip}</span>
+                                </button>
+                              ))}
+                            </div>
+                          )}
 
                           {/* Assistant Footer Action Toolbar with White Hover Highlights */}
                           <div className="flex items-center justify-between pt-2 text-xs border-t border-white/10">
