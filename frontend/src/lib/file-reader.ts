@@ -82,14 +82,7 @@ export async function fileToReportInput(file: File): Promise<ReportInput> {
   }
 
   if (type === "application/pdf" || name.endsWith(".pdf")) {
-    // If backend wasn't reachable, attempt client read or inform user
-    try {
-      const text = await readTextFile(file);
-      if (text && text.trim().length > 30) {
-        return { reportText: text.slice(0, MAX_TEXT), fileName: file.name };
-      }
-    } catch {}
-    throw new Error("PDF received. Please make sure the backend is running to perform PyMuPDF and RapidOCR clinical extraction.");
+    throw new Error("Unable to parse PDF on backend. Please ensure the backend is available or upload a PNG/JPEG image of the report.");
   }
 
   if (type.startsWith("video/") || /\.(mp4|mov|webm|avi)$/i.test(name)) {

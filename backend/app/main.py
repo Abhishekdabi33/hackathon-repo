@@ -139,33 +139,42 @@ def extract_pdf_text_and_images(pdf_bytes: bytes) -> tuple[str, Optional[str]]:
 
     try:
         import pymupdf as fitz
-        from rapidocr_onnxruntime import RapidOCR
-        ocr_engine = RapidOCR()
-
         doc = fitz.open(stream=pdf_bytes, filetype="pdf")
+        ocr_engine = None
+        try:
+            from rapidocr_onnxruntime import RapidOCR
+            ocr_engine = RapidOCR()
+        except Exception as ocr_e:
+            logger.warning(f"RapidOCR not loaded for PDF: {ocr_e}")
+
         for i, page in enumerate(doc):
             page_text = page.get_text().strip()
+            pix = None
+            if not first_image_b64 and i == 0:
+                try:
+                    pix = page.get_pixmap(dpi=150)
+                    first_image_b64 = base64.b64encode(pix.tobytes("png")).decode("utf-8")
+                except Exception:
+                    pass
+
             if len(page_text) > 40:
                 text_chunks.append(page_text)
-            else:
-                pix = page.get_pixmap(dpi=150)
-                img_bytes = pix.tobytes("png")
-                if not first_image_b64 and i == 0:
-                    first_image_b64 = base64.b64encode(img_bytes).decode("utf-8")
-                
-                res, _ = ocr_engine(img_bytes)
-                if res:
-                    ocr_lines = [r[1] for r in res]
-                    text_chunks.append("\n".join(ocr_lines))
-
-            if not first_image_b64 and i == 0:
-                pix = page.get_pixmap(dpi=150)
-                first_image_b64 = base64.b64encode(pix.tobytes("png")).decode("utf-8")
+            elif ocr_engine is not None:
+                try:
+                    if pix is None:
+                        pix = page.get_pixmap(dpi=150)
+                    img_bytes = pix.tobytes("png")
+                    res, _ = ocr_engine(img_bytes)
+                    if res:
+                        ocr_lines = [r[1] for r in res]
+                        text_chunks.append("\n".join(ocr_lines))
+                except Exception as page_ocr_err:
+                    logger.warning(f"Page {i} OCR error: {page_ocr_err}")
 
         if text_chunks:
             return "\n\n".join(text_chunks), first_image_b64
-    except Exception:
-        pass
+    except Exception as pdf_fitz_err:
+        logger.warning(f"PyMuPDF parsing fallback: {pdf_fitz_err}")
 
     try:
         import pypdf
@@ -1137,10 +1146,16 @@ async def upload_file(file: UploadFile = File(...)):
         # Handle Image files (PNG, JPG, JPEG, WEBP)
         if any(filename_lower.endswith(ext) for ext in [".png", ".jpg", ".jpeg", ".webp"]):
             b64_str = base64.b64encode(content_bytes).decode("utf-8")
-            from rapidocr_onnxruntime import RapidOCR
-            ocr_engine = RapidOCR()
-            res, _ = ocr_engine(content_bytes)
-            ocr_text = "\n".join([r[1] for r in res]) if res else ""
+            ocr_text = ""
+            try:
+                from rapidocr_onnxruntime import RapidOCR
+                ocr_engine = RapidOCR()
+                res, _ = ocr_engine(content_bytes)
+                if res:
+                    ocr_text = "\n".join([r[1] for r in res])
+            except Exception as ocr_err:
+                logger.warning(f"Image OCR error / missing: {ocr_err}")
+
             final_content = ocr_text if ocr_text else f"[Medical Image / Prescription: {file.filename}]"
             return {
                 "status": "success",
@@ -1154,9 +1169,13 @@ async def upload_file(file: UploadFile = File(...)):
 
         # Handle Video files (MP4, MOV, WEBM, AVI)
         if any(filename_lower.endswith(ext) for ext in [".mp4", ".mov", ".webm", ".avi"]):
-            import tempfile, cv2
-            from rapidocr_onnxruntime import RapidOCR
-            ocr_engine = RapidOCR()
+            import tempfile
+            ocr_engine = None
+            try:
+                from rapidocr_onnxruntime import RapidOCR
+                ocr_engine = RapidOCR()
+            except Exception:
+                pass
             video_ocr_lines = []
             first_frame_b64 = None
 
