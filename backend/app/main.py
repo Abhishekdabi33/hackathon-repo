@@ -1,3 +1,5 @@
+from fastapi.responses import StreamingResponse
+from backend.app.rag_engine import clinical_rag
 import os
 import sys
 import time
@@ -107,6 +109,12 @@ class CreateSkillRequest(BaseModel):
     instructions: str = Field(..., description="Full operational instructions body in markdown")
     tags: Optional[List[str]] = Field(default_factory=list, description="Categorization tags")
 
+
+class RAGAskRequest(BaseModel):
+    question: str = Field(..., description="User question in any language (English, Hindi, Hinglish, etc.)")
+    report_text: Optional[str] = Field(None, description="Patient report text or context")
+    file_name: Optional[str] = Field("Medical Report", description="Document name")
+    image_base64: Optional[str] = Field(None, description="Optional image base64")
 
 class GemmaGenerateRequest(BaseModel):
     prompt: str = Field(..., description="Prompt for Gemma model")
@@ -399,6 +407,89 @@ def analyze_clinical_document(payload: ClinicalAnalyzeRequest):
     }
 
 
+@app.post("/api/clinical/stream")
+async def stream_clinical_analysis(payload: ClinicalAnalyzeRequest):
+    """
+    Real-Time Server-Sent Events (SSE) Streaming Endpoint:
+    Streams Gemma 4 12B tokens token-by-token (first come first write)
+    along with EvidenceTrace validation metadata.
+    """
+    report_text = payload.report_text or ""
+    evidence_items = clinical_validator.extract_from_text(report_text) if report_text else []
+    abnormal_items = [e for e in evidence_items if e["is_abnormal"]]
+
+    # Prioritized doctor questions
+    doctor_questions = []
+    for item in abnormal_items:
+        doctor_questions.extend(item.get("suggested_questions", []))
+    if not doctor_questions and evidence_items:
+        doctor_questions.append("Are there any routine lifestyle or dietary updates you recommend based on these normal results?")
+
+    # Build prompt using RAG engine for language sensitivity & grounding
+    user_prompt = payload.prompt or "Analyze this medical report and explain findings"
+    rag_prompt = clinical_rag.build_grounded_prompt(
+        user_query=user_prompt,
+        report_text=report_text,
+        report_name=payload.file_name or "Medical Report"
+    )
+
+    async def event_generator():
+        import json
+        # 1. Send initial metadata packet
+        meta = {
+            "type": "metadata",
+            "evidence_trace": evidence_items,
+            "abnormal_count": len(abnormal_items),
+            "total_tests": len(evidence_items),
+            "doctor_questions": list(dict.fromkeys(doctor_questions))[:5],
+            "model_used": "Google Gemma 4 12B"
+        }
+        yield f"data: {json.dumps(meta)}\n\n"
+
+        # 2. Stream tokens from GemmaClient
+        for token in gemma_client.generate_stream(
+            prompt=rag_prompt,
+            image_base64=payload.image_base64
+        ):
+            chunk = {"type": "token", "token": token}
+            yield f"data: {json.dumps(chunk)}\n\n"
+
+        # 3. Send done signal
+        yield f"data: {json.dumps({'type': 'done'})}\n\n"
+
+    return StreamingResponse(event_generator(), media_type="text/event-stream")
+
+
+@app.post("/api/clinical/rag-ask")
+async def rag_ask(payload: RAGAskRequest):
+    """
+    Multilingual RAG Report Query Endpoint:
+    Understands questions in any language (English, Hindi, Hinglish, Marathi, Gujarati, Spanish, etc.)
+    and grounds the answer in patient records and AHA/ADA/WHO clinical guidelines.
+    """
+    rag_prompt = clinical_rag.build_grounded_prompt(
+        user_query=payload.question,
+        report_text=payload.report_text,
+        report_name=payload.file_name or "Medical Report"
+    )
+
+    retrieval_info = clinical_rag.retrieve(payload.question, top_k=3)
+
+    resp = gemma_client.generate(
+        prompt=rag_prompt,
+        image_base64=payload.image_base64
+    )
+
+    return {
+        "status": "success",
+        "question": payload.question,
+        "answer": resp.get("text", ""),
+        "retrieved_sections": [c["section"] for c in retrieval_info.get("report_chunks", [])],
+        "guidelines_consulted": [g["title"] for g in retrieval_info.get("guideline_chunks", [])],
+        "model_used": resp.get("model", "Google Gemma 4 12B")
+    }
+
+
 @app.post("/api/clinical/ask")
 def ask_report_question(payload: ClinicalAskRequest):
     """
@@ -602,14 +693,66 @@ async def upload_file(file: UploadFile = File(...)):
         # Handle Image files (PNG, JPG, JPEG, WEBP)
         if any(filename_lower.endswith(ext) for ext in [".png", ".jpg", ".jpeg", ".webp"]):
             b64_str = base64.b64encode(content_bytes).decode("utf-8")
+            from rapidocr_onnxruntime import RapidOCR
+            ocr_engine = RapidOCR()
+            res, _ = ocr_engine(content_bytes)
+            ocr_text = "\n".join([r[1] for r in res]) if res else ""
+            final_content = ocr_text if ocr_text else f"[Medical Image / Prescription: {file.filename}]"
             return {
                 "status": "success",
                 "filename": file.filename,
                 "file_type": "image",
                 "size_bytes": len(content_bytes),
                 "image_base64": b64_str,
-                "preview": f"[Image file: {file.filename}, {len(content_bytes)} bytes]",
-                "content": f"[Medical Image / Prescription: {file.filename}]"
+                "preview": final_content[:500],
+                "content": final_content
+            }
+
+        # Handle Video files (MP4, MOV, WEBM, AVI)
+        if any(filename_lower.endswith(ext) for ext in [".mp4", ".mov", ".webm", ".avi"]):
+            import tempfile, cv2
+            from rapidocr_onnxruntime import RapidOCR
+            ocr_engine = RapidOCR()
+            video_ocr_lines = []
+            first_frame_b64 = None
+
+            with tempfile.NamedTemporaryFile(suffix=".mp4", delete=False) as tmp_vid:
+                tmp_vid.write(content_bytes)
+                tmp_vid_path = tmp_vid.name
+
+            try:
+                cap = cv2.VideoCapture(tmp_vid_path)
+                frame_count = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
+                sample_indices = [0, frame_count // 2, max(0, frame_count - 5)] if frame_count > 10 else [0]
+                for idx in sample_indices:
+                    cap.set(cv2.CAP_PROP_POS_FRAMES, idx)
+                    ret, frame = cap.read()
+                    if ret:
+                        if not first_frame_b64:
+                            _, buf = cv2.imencode(".png", frame)
+                            first_frame_b64 = base64.b64encode(buf.tobytes()).decode("utf-8")
+                        res, _ = ocr_engine(frame)
+                        if res:
+                            for r in res:
+                                if r[1] not in video_ocr_lines:
+                                    video_ocr_lines.append(r[1])
+                cap.release()
+            finally:
+                try:
+                    os.remove(tmp_vid_path)
+                except Exception:
+                    pass
+
+            vid_content = "\n".join(video_ocr_lines) if video_ocr_lines else f"[Video Recording: {file.filename} - Keyframe analyzed]"
+            return {
+                "status": "success",
+                "filename": file.filename,
+                "file_type": "video",
+                "size_bytes": len(content_bytes),
+                "line_count": len(vid_content.splitlines()),
+                "preview": vid_content[:500],
+                "content": vid_content,
+                "image_base64": first_frame_b64
             }
 
         # Handle Text-based formats (CSV, TXT, JSON, TSV)

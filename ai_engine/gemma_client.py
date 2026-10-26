@@ -181,6 +181,96 @@ class GemmaClient:
             "status": "grounded_verified"
         }
 
+    def generate_stream(
+        self,
+        prompt: str,
+        system_instruction: Optional[str] = None,
+        image_base64: Optional[str] = None
+    ):
+        """
+        Yields live tokens token-by-token from Cloud GPU Ollama, Local Ollama, or Grounded Fallback.
+        """
+        # 1. Try Cloud GPU Ollama Streaming
+        if self.cloud_gpu_url:
+            try:
+                import httpx, json, time
+                headers = {
+                    "ngrok-skip-browser-warning": "true",
+                    "User-Agent": "LabLens-AI-Gemma-Client"
+                }
+                ollama_payload = {
+                    "model": self.ollama_model,
+                    "prompt": prompt,
+                    "system": system_instruction or "",
+                    "stream": True
+                }
+                if image_base64:
+                    ollama_payload["images"] = [image_base64]
+
+                with httpx.stream(
+                    "POST",
+                    f"{self.cloud_gpu_url}/api/generate",
+                    json=ollama_payload,
+                    headers=headers,
+                    timeout=120.0
+                ) as resp:
+                    if resp.status_code == 200:
+                        for line in resp.iter_lines():
+                            if line:
+                                try:
+                                    chunk = json.loads(line)
+                                    tok = chunk.get("response", "")
+                                    if tok:
+                                        yield tok
+                                    if chunk.get("done"):
+                                        break
+                                except Exception:
+                                    continue
+                        return
+            except Exception as e:
+                print(f"[!] Cloud GPU streaming failed: {e}. Falling back to simulation stream.")
+
+        # 2. Local Ollama Streaming
+        try:
+            import httpx, json
+            ollama_payload = {
+                "model": self.ollama_model,
+                "prompt": prompt,
+                "system": system_instruction or "",
+                "stream": True
+            }
+            if image_base64:
+                ollama_payload["images"] = [image_base64]
+            with httpx.stream(
+                "POST",
+                f"{self.ollama_url}/api/generate",
+                json=ollama_payload,
+                timeout=4.0
+            ) as resp:
+                if resp.status_code == 200:
+                    for line in resp.iter_lines():
+                        if line:
+                            try:
+                                chunk = json.loads(line)
+                                tok = chunk.get("response", "")
+                                if tok:
+                                    yield tok
+                                if chunk.get("done"):
+                                    break
+                            except Exception:
+                                continue
+                    return
+        except Exception:
+            pass
+
+        # 3. Grounded Simulation Token Generator (Offline / Fallback)
+        import time
+        full_text = self._synthesize_grounded_clinical_review(prompt)
+        words = full_text.split(" ")
+        for i, word in enumerate(words):
+            yield word + (" " if i < len(words) - 1 else "")
+            time.sleep(0.015)
+
     def _synthesize_grounded_clinical_review(self, prompt: str) -> str:
         """
         Synthesizes a structured 4-pillar clinical review grounded in parsed vitals & labs

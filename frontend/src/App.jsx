@@ -146,9 +146,21 @@ export default function App() {
     }
     
     window.speechSynthesis.cancel();
-    const utterance = new SpeechSynthesisUtterance(text);
-    utterance.rate = 1.0;
-    utterance.pitch = 1.05;
+    const cleanText = (text || '').replace(/[*#_`>|]/g, ' ').replace(/\n+/g, '. ');
+    const utterance = new SpeechSynthesisUtterance(cleanText);
+    utterance.rate = 0.98;
+    utterance.pitch = 1.0;
+    try {
+      const voices = window.speechSynthesis.getVoices();
+      const isHindi = /kya|mera|meri|hai|dawa|dard|khoon|daktar|theek|parhez/i.test(cleanText);
+      if (isHindi) {
+        const hiVoice = voices.find(v => v.lang.includes('hi') || v.name.includes('Hindi'));
+        if (hiVoice) {
+          utterance.voice = hiVoice;
+          utterance.lang = 'hi-IN';
+        }
+      }
+    } catch (e) {}
     
     utterance.onstart = () => {
       setIsSpeaking(true);
@@ -373,13 +385,31 @@ export default function App() {
     setAttachedFile(null);
     setRunningAgent(true);
 
+    const assistantMsgId = (Date.now() + 1).toString();
+    const initialAssistantMsg = {
+      id: assistantMsgId,
+      role: 'assistant',
+      content: '',
+      isStreaming: true,
+      evidence_trace: null,
+      doctor_questions: [],
+      abnormal_count: 0,
+      model_used: 'Google Gemma 4 12B',
+      steps: [],
+      duration_ms: 0,
+      status: 'streaming',
+      timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+    };
+
+    setMessages((prev) => [...prev, initialAssistantMsg]);
+
     try {
       const isClinical = currentAttached?.content || 
-        /report|blood|cbc|lipid|cholesterol|sugar|glucose|thyroid|tsh|creatinine|doctor|prescription|patient|lab|anemia/i.test(text);
+        /report|blood|cbc|lipid|cholesterol|sugar|glucose|thyroid|tsh|creatinine|doctor|prescription|patient|lab|anemia|bp|pressure|pulse|kya|mera|meri|hai|dawa|dard|parhez/i.test(text);
 
-      let data;
       if (isClinical) {
-        const res = await fetch('/api/clinical/analyze', {
+        const startTime = Date.now();
+        const res = await fetch('/api/clinical/stream', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
@@ -389,7 +419,52 @@ export default function App() {
             image_base64: currentAttached?.imageBase64 || null
           })
         });
-        data = await res.json();
+
+        if (!res.ok) throw new Error(`Stream error: ${res.status}`);
+
+        const reader = res.body.getReader();
+        const decoder = new TextDecoder();
+        let accumulatedContent = '';
+
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+          const chunkStr = decoder.decode(value, { stream: true });
+          const lines = chunkStr.split('\n');
+
+          for (const line of lines) {
+            if (line.startsWith('data: ')) {
+              try {
+                const parsed = JSON.parse(line.slice(6));
+                if (parsed.type === 'metadata') {
+                  setMessages(prev => prev.map(m => m.id === assistantMsgId ? {
+                    ...m,
+                    evidence_trace: parsed.evidence_trace || null,
+                    doctor_questions: parsed.doctor_questions || [],
+                    abnormal_count: parsed.abnormal_count || 0,
+                    model_used: parsed.model_used || 'Google Gemma 4 12B'
+                  } : m));
+                } else if (parsed.type === 'token') {
+                  accumulatedContent += parsed.token;
+                  setMessages(prev => prev.map(m => m.id === assistantMsgId ? {
+                    ...m,
+                    content: accumulatedContent
+                  } : m));
+                }
+              } catch (e) {
+                // Ignore partial JSON
+              }
+            }
+          }
+        }
+
+        const elapsed = Date.now() - startTime;
+        setMessages(prev => prev.map(m => m.id === assistantMsgId ? {
+          ...m,
+          isStreaming: false,
+          status: 'success',
+          duration_ms: elapsed
+        } : m));
       } else {
         const res = await fetch('/api/agent/chat', {
           method: 'POST',
@@ -401,25 +476,19 @@ export default function App() {
             max_steps: 3
           })
         });
-        data = await res.json();
+        const data = await res.json();
+        setMessages(prev => prev.map(m => m.id === assistantMsgId ? {
+          ...m,
+          content: data.explanation || data.final_answer || 'Analysis complete.',
+          evidence_trace: data.evidence_trace || null,
+          doctor_questions: data.doctor_questions || [],
+          abnormal_count: data.abnormal_count || 0,
+          model_used: data.model_used || 'Google Gemma 4 12B',
+          isStreaming: false,
+          status: data.status || 'success',
+          duration_ms: data.latency_ms || 0
+        } : m));
       }
-
-      const assistantMsgId = (Date.now() + 1).toString();
-      const newAssistantMsg = {
-        id: assistantMsgId,
-        role: 'assistant',
-        content: data.explanation || data.final_answer || 'Analysis complete.',
-        evidence_trace: data.evidence_trace || null,
-        doctor_questions: data.doctor_questions || [],
-        abnormal_count: data.abnormal_count || 0,
-        model_used: data.model_used || 'Google Gemma 4 12B',
-        steps: data.agent_steps || data.steps || [],
-        duration_ms: data.latency_ms || data.duration_ms || 0,
-        status: data.status || 'success',
-        timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-      };
-
-      setMessages((prev) => [...prev, newAssistantMsg]);
 
       // Connect character animation: Switch Hermes to Speaking state
       setSpeakingMessageId(assistantMsgId);
@@ -1384,7 +1453,7 @@ export default function App() {
               ref={fileInputRef}
               onChange={handleFileUpload}
               className="hidden"
-              accept=".pdf,.png,.jpg,.jpeg,.webp,.txt,.csv,.json,.md,.yaml,.yml"
+              accept=".pdf,.png,.jpg,.jpeg,.webp,.mp4,.mov,.webm,.avi,.txt,.csv,.json,.md,.yaml,.yml"
             />
             <button
               type="button"
