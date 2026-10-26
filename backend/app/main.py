@@ -376,6 +376,18 @@ def analyze_clinical_document(payload: ClinicalAnalyzeRequest):
     start_time = time.time()
     report_text = payload.report_text or ""
 
+    # 0. Multimodal Auto-OCR: If image_base64 is provided without text, extract text using RapidOCR
+    if (not report_text or len(report_text.strip()) < 10) and payload.image_base64:
+        try:
+            from rapidocr_onnxruntime import RapidOCR
+            ocr_engine = RapidOCR()
+            raw_img = base64.b64decode(payload.image_base64)
+            res, _ = ocr_engine(raw_img)
+            if res:
+                report_text = "\n".join([r[1] for r in res])
+        except Exception as ocr_err:
+            print(f"[!] Analyze OCR fallback notice: {ocr_err}")
+
     # 1. Deterministic Extraction & Validation
     evidence_items = clinical_validator.extract_from_text(report_text) if report_text else []
     abnormal_items = [e for e in evidence_items if e["is_abnormal"]]

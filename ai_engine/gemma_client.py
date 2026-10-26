@@ -78,7 +78,7 @@ class GemmaClient:
                     f"{self.cloud_gpu_url}/api/generate",
                     json=ollama_payload,
                     headers=headers,
-                    timeout=httpx.Timeout(90.0, connect=5.0)
+                    timeout=httpx.Timeout(5.0, connect=2.5, read=4.0)
                 ) as resp:
                     if resp.status_code == 200:
                         for line in resp.iter_lines():
