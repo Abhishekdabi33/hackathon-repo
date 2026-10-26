@@ -1,49 +1,73 @@
 import { useEffect, useState } from "react";
-import { motion, useMotionValue, useSpring } from "motion/react";
+import { motion, useMotionValue, useSpring, useReducedMotion } from "motion/react";
 
 /**
- * Subtle radial light that follows the cursor, blending into the dark
- * background like light grazing glass. Hidden on touch devices.
+ * Premium Light Blue Spotlight Glow.
+ * Restrained size (~320px) with soft radial falloff and light blue tint.
+ * Glides smoothly across the UI behind cards and content with zero friction.
  */
 export function CursorSpotlight() {
   const [enabled, setEnabled] = useState(false);
   const [visible, setVisible] = useState(false);
-  const x = useMotionValue(-400);
-  const y = useMotionValue(-400);
-  const sx = useSpring(x, { stiffness: 160, damping: 22, mass: 0.4 });
-  const sy = useSpring(y, { stiffness: 160, damping: 22, mass: 0.4 });
+  const reducedMotion = useReducedMotion();
+
+  const x = useMotionValue(-500);
+  const y = useMotionValue(-500);
+
+  // High-precision spring physics for smooth, natural cursor tracking
+  const sx = useSpring(x, { stiffness: 220, damping: 25, mass: 0.35 });
+  const sy = useSpring(y, { stiffness: 220, damping: 25, mass: 0.35 });
 
   useEffect(() => {
-    if (!window.matchMedia("(pointer: fine)").matches) return;
+    // Only track mouse on pointer-fine devices
+    if (!window.matchMedia("(pointer: fine)").matches) {
+      setEnabled(true);
+      return;
+    }
+
     setEnabled(true);
+
     const onMove = (e: MouseEvent) => {
       x.set(e.clientX);
       y.set(e.clientY);
       setVisible(true);
     };
+
+    const onLeave = () => {
+      setVisible(false);
+    };
+
     window.addEventListener("mousemove", onMove, { passive: true });
-    return () => window.removeEventListener("mousemove", onMove);
+    document.addEventListener("mouseleave", onLeave);
+
+    return () => {
+      window.removeEventListener("mousemove", onMove);
+      document.removeEventListener("mouseleave", onLeave);
+    };
   }, [x, y]);
 
-  if (!enabled) return null;
+  if (!enabled || reducedMotion) return null;
 
   return (
-    <motion.div
-      aria-hidden
-      className="pointer-events-none fixed inset-0 z-[5]"
-      animate={{ opacity: visible ? 1 : 0 }}
+    <div
+      aria-hidden="true"
+      className="pointer-events-none fixed inset-0 z-[4] overflow-hidden select-none"
     >
+      {/* Light Blue Spotlight Glow — restrained 320px diameter */}
       <motion.div
-        className="absolute h-[520px] w-[520px] rounded-full"
+        className="absolute h-[320px] w-[320px] rounded-full will-change-transform"
+        animate={{ opacity: visible ? 1 : 0 }}
+        transition={{ duration: 0.25, ease: "easeOut" }}
         style={{
           x: sx,
           y: sy,
           translateX: "-50%",
           translateY: "-50%",
           background:
-            "radial-gradient(circle, rgba(37,99,235,0.06) 0%, rgba(59,130,246,0.025) 38%, transparent 68%)",
+            "radial-gradient(circle, rgba(96, 165, 250, 0.24) 0%, rgba(59, 130, 246, 0.12) 36%, rgba(219, 234, 254, 0.05) 58%, transparent 72%)",
+          filter: "blur(20px)",
         }}
       />
-    </motion.div>
+    </div>
   );
 }

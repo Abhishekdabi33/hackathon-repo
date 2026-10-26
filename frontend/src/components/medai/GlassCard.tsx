@@ -70,7 +70,7 @@ export function GlassCard({ children, className, intensity = "glass", tilt = tru
         className="pointer-events-none absolute inset-0 transition-opacity duration-300"
         style={{
           opacity: sheen.on ? 1 : 0.55,
-          background: `radial-gradient(420px circle at ${sheen.x}% ${sheen.y}%, rgba(255,255,255,0.55), transparent 60%)`,
+          background: `radial-gradient(300px circle at ${sheen.x}% ${sheen.y}%, rgba(191,219,254,0.35), rgba(255,255,255,0.5) 30%, transparent 62%)`,
         }}
       />
       {/* Static sheen diagonal */}
