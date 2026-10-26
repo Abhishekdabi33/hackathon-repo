@@ -45,20 +45,19 @@ export const Route = createFileRoute("/")({
 export function LandingPage() {
   const reduced = useReducedMotion();
   const { scrollY } = useScroll();
-  const heroY = useTransform(scrollY, [0, 700], [0, 140]);
-  const heroOpacity = useTransform(scrollY, [0, 480], [1, 0]);
-  const heroScale = useTransform(scrollY, [0, 700], [1, 0.88]);
+  const heroY = useTransform(scrollY, [0, 800], [0, 25]);
 
   return (
     <main className="relative">
       {/* ---------- Hero ---------- */}
-      <section className="relative flex min-h-dvh flex-col items-center justify-center px-6 pb-32 pt-28 text-center sm:pb-24">
+      <section className="relative flex min-h-dvh flex-col items-center justify-center px-6 pb-16 pt-20 text-center sm:pb-20 sm:pt-24">
         <motion.div
-          {...(reduced ? {} : { style: { y: heroY, opacity: heroOpacity, scale: heroScale } })}
-          className="flex flex-col items-center"
+          {...(reduced ? {} : { style: { y: heroY } })}
+          className="flex flex-col items-center w-full max-w-4xl mx-auto"
         >
+          {/* Interactive 3D Hero Diorama */}
           <motion.div
-            initial={{ opacity: 0, y: 30, scale: 0.94 }}
+            initial={{ opacity: 0, y: 16, scale: 0.96 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             transition={{ type: "spring", stiffness: 70, damping: 16 }}
             className="w-full"
@@ -66,36 +65,42 @@ export function LandingPage() {
             <HeroScene />
           </motion.div>
 
+          {/* Headline & CTAs */}
           <motion.div
-            initial={{ opacity: 0, y: 24 }}
+            initial={{ opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.25, type: "spring", stiffness: 80, damping: 16 }}
-            className="mt-10"
+            transition={{ delay: 0.15, type: "spring", stiffness: 80, damping: 16 }}
+            className="mt-3 sm:mt-5 w-full"
           >
-            <div className="glass mx-auto mb-6 flex w-fit items-center gap-2 rounded-full px-4 py-1.5 text-[11px] font-medium uppercase tracking-[0.14em] text-ice/90">
-              <span className="h-1.5 w-1.5 rounded-full bg-ice" />
+            <div className="glass mx-auto mb-3.5 flex w-fit items-center gap-2 rounded-full px-4 py-1 text-[11px] font-semibold uppercase tracking-[0.14em] text-primary shadow-xs">
+              <span className="h-1.5 w-1.5 rounded-full bg-primary animate-pulse" />
               Medical intelligence, made human
             </div>
-            <h1 className="mx-auto max-w-3xl text-balance text-4xl font-semibold leading-[1.08] tracking-tight sm:text-6xl">
+
+            <h1 className="mx-auto max-w-3xl text-balance text-3xl sm:text-5xl md:text-6xl font-bold leading-[1.08] tracking-tight text-foreground">
               Understand your medical reports{" "}
               <span className="bg-gradient-to-r from-primary to-bright bg-clip-text text-transparent">with AI</span>
             </h1>
-            <p className="mx-auto mt-5 max-w-xl text-pretty text-base leading-relaxed text-muted-foreground sm:text-lg">
+
+            <p className="mx-auto mt-3 sm:mt-3.5 max-w-xl text-pretty text-sm sm:text-base leading-relaxed text-muted-foreground">
               Upload your medical report and let AI turn complex clinical information into a clear,
-              structured summary.
+              structured summary with EvidenceTrace™ validation.
             </p>
-            <div className="mt-9 flex flex-wrap items-center justify-center gap-3">
+
+            {/* Prominent, Unmissable CTA Buttons */}
+            <div className="mt-6 flex flex-wrap items-center justify-center gap-3 relative z-30">
               <PressLink
                 to="/dashboard"
-                className="group flex items-center gap-2 rounded-full bg-primary px-8 py-3.5 text-sm font-semibold text-primary-foreground shadow-[0_10px_40px_rgba(37,99,235,0.25)] transition-colors hover:bg-bright"
+                className="group relative z-30 flex items-center gap-2 rounded-full bg-primary px-8 py-3.5 text-sm font-bold text-white shadow-[0_8px_30px_rgba(37,99,235,0.35)] transition-all hover:bg-bright hover:shadow-[0_12px_40px_rgba(37,99,235,0.45)] hover:scale-105 active:scale-95"
               >
-                Get Started
-                <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
+                <span>Get Started</span>
+                <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
               </PressLink>
+
               <PressLink
                 to="/analyze"
                 search={{ sample: true }}
-                className="glass rounded-full px-7 py-3.5 text-sm font-medium text-foreground/90 transition-colors hover:bg-paleblue"
+                className="glass relative z-30 rounded-full px-7 py-3.5 text-sm font-semibold text-foreground transition-all hover:bg-paleblue hover:text-primary shadow-xs"
               >
                 Explore Demo
               </PressLink>
@@ -103,13 +108,14 @@ export function LandingPage() {
           </motion.div>
         </motion.div>
 
+        {/* Scroll helper */}
         <motion.div
-          className="absolute bottom-8 flex flex-col items-center gap-2 text-muted-foreground/60"
-          animate={reduced ? {} : { y: [0, 6, 0] }}
+          className="mt-6 hidden sm:flex flex-col items-center gap-1 text-muted-foreground/50"
+          animate={reduced ? {} : { y: [0, 4, 0] }}
           transition={{ duration: 2.2, repeat: Infinity }}
         >
-          <span className="text-[10px] uppercase tracking-[0.2em]">Scroll</span>
-          <span className="h-8 w-px bg-gradient-to-b from-primary/30 to-transparent" />
+          <span className="text-[9px] uppercase tracking-[0.2em] font-mono">Scroll</span>
+          <span className="h-5 w-px bg-gradient-to-b from-primary/30 to-transparent" />
         </motion.div>
       </section>
 
@@ -123,26 +129,26 @@ export function LandingPage() {
         <div className="grid gap-5 md:grid-cols-3">
           {[
             {
-              icon: <UploadCloud className="h-5 w-5 text-ice" />,
+              icon: <UploadCloud className="h-5 w-5 text-primary" />,
               title: "Upload",
-              body: "Drop in a PDF, photo or scan of your report. Everything stays between you and the AI.",
+              body: "Drop in a PDF, photo or scan of your report. Everything stays private between you and the AI.",
             },
             {
-              icon: <ScanSearch className="h-5 w-5 text-ice" />,
+              icon: <ScanSearch className="h-5 w-5 text-primary" />,
               title: "Analyze",
-              body: "Hitho reads every value, finding and abbreviation — then organizes what matters.",
+              body: "EvidenceTrace™ extracts each test and validates values against gold-standard laboratory reference intervals.",
             },
             {
-              icon: <Lightbulb className="h-5 w-5 text-ice" />,
+              icon: <Lightbulb className="h-5 w-5 text-primary" />,
               title: "Understand",
-              body: "A plain-language summary, key findings and lab values you can actually act on.",
+              body: "A plain-language summary, key findings, and prioritized doctor questions you can actually act on.",
             },
           ].map((step, i) => (
             <Reveal key={step.title} delay={i * 0.08}>
               <GlassCard className="h-full p-7">
-                <div className="glass-soft flex h-11 w-11 items-center justify-center rounded-2xl">{step.icon}</div>
+                <div className="glass-soft flex h-11 w-11 items-center justify-center rounded-2xl bg-softblue/60">{step.icon}</div>
                 <div className="mt-5 font-mono text-[11px] text-muted-foreground/70">0{i + 1}</div>
-                <h3 className="mt-1 text-lg font-semibold tracking-tight">{step.title}</h3>
+                <h3 className="mt-1 text-lg font-semibold tracking-tight text-foreground">{step.title}</h3>
                 <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{step.body}</p>
               </GlassCard>
             </Reveal>
@@ -159,53 +165,83 @@ export function LandingPage() {
         />
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {[
-            { icon: <FileText className="h-4 w-4 text-ice" />, title: "Report summarization", body: "The whole report, condensed into a few honest sentences." },
-            { icon: <BookOpenText className="h-4 w-4 text-ice" />, title: "Terminology explained", body: "Every complex term unpacked in language anyone can follow." },
-            { icon: <ListChecks className="h-4 w-4 text-ice" />, title: "Key finding extraction", body: "The observations that matter, ranked by importance." },
-            { icon: <Tags className="h-4 w-4 text-ice" />, title: "Lab value organization", body: "Values, units and reference ranges side by side." },
-            { icon: <MessageCircle className="h-4 w-4 text-ice" />, title: "Question answering", body: "Ask follow-up questions about your own results." },
-            { icon: <Sparkles className="h-4 w-4 text-ice" />, title: "Plain-language tone", body: "Calm, clear and reassuring — never alarmist." },
-          ].map((cap, i) => (
-            <Reveal key={cap.title} delay={(i % 3) * 0.06} y={18}>
-              <GlassCard intensity="soft" className="h-full p-5" tilt={false}>
-                <div className="flex items-center gap-3">
-                  <span className="glass-soft flex h-9 w-9 items-center justify-center rounded-xl">{cap.icon}</span>
-                  <h3 className="text-[15px] font-semibold tracking-tight">{cap.title}</h3>
-                </div>
-                <p className="mt-3 text-[13px] leading-relaxed text-muted-foreground">{cap.body}</p>
+            {
+              icon: <FileText className="h-4 w-4 text-primary" />,
+              title: "Multi-format OCR & PDF Parsing",
+              desc: "Upload scanned prescriptions, lab PDFs, or high-res phone photos.",
+            },
+            {
+              icon: <Tags className="h-4 w-4 text-primary" />,
+              title: "Jargon Demystification",
+              desc: "Cryptic terms like MCV, eGFR, and lymphocytosis decoded instantly.",
+            },
+            {
+              icon: <ListChecks className="h-4 w-4 text-primary" />,
+              title: "Deterministic Validation",
+              desc: "Zero-hallucination EvidenceTrace™ verifies numbers against certified reference standards.",
+            },
+            {
+              icon: <Sparkles className="h-4 w-4 text-primary" />,
+              title: "Key Takeaways",
+              desc: "A three-bullet plain-language summary you can read in thirty seconds.",
+            },
+            {
+              icon: <MessageCircle className="h-4 w-4 text-primary" />,
+              title: "Prioritized Doctor Questions",
+              desc: "Empowering consultation checklists prepared for your next clinical visit.",
+            },
+            {
+              icon: <BookOpenText className="h-4 w-4 text-primary" />,
+              title: "Export Clinical Summary",
+              desc: "One-click generation of a structured, printable brief for your physician.",
+            },
+          ].map((f, i) => (
+            <Reveal key={f.title} delay={i * 0.05}>
+              <GlassCard intensity="soft" className="h-full p-6" tilt={false}>
+                <span className="glass-soft flex h-9 w-9 items-center justify-center rounded-xl bg-softblue/60">{f.icon}</span>
+                <h3 className="mt-4 text-base font-semibold tracking-tight text-foreground">{f.title}</h3>
+                <p className="mt-1.5 text-sm leading-relaxed text-muted-foreground">{f.desc}</p>
               </GlassCard>
             </Reveal>
           ))}
         </div>
       </Section>
 
-      {/* ---------- Interactive demo ---------- */}
+      {/* ---------- Preview / Feature Spotlight ---------- */}
       <Section>
         <Reveal>
-          <GlassCard intensity="strong" className="overflow-hidden" tilt={false}>
-            <div className="grid items-center gap-8 p-8 sm:p-12 lg:grid-cols-2">
+          <GlassCard intensity="strong" className="overflow-hidden p-8 sm:p-12 shadow-glass-card" tilt={false}>
+            <div className="grid items-center gap-8 lg:grid-cols-2">
               <div>
-                <p className="text-[11px] font-medium uppercase tracking-[0.16em] text-ice/80">Interactive demo</p>
-                <h2 className="mt-3 text-2xl font-semibold tracking-tight sm:text-3xl">
-                  Explore a real sample report
+                <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-primary">In action</p>
+                <h2 className="mt-3 text-3xl font-semibold tracking-tight text-foreground sm:text-4xl">
+                  Clear answers, zero panic
                 </h2>
-                <p className="mt-3 max-w-md text-sm leading-relaxed text-muted-foreground">
-                  Curious what an analysis looks like? Walk through a complete blood count and metabolic
-                  panel — summarized, explained and organized exactly like your own report would be.
+                <p className="mt-4 text-base leading-relaxed text-muted-foreground">
+                  Instead of drowning in numbers or googling symptoms into a panic, Samjho Health gives you
+                  a calm, structured overview. Flagged values come with certified context and doctor discussion points.
                 </p>
-                <PressLink
-                  to="/analyze"
-                  search={{ sample: true }}
-                  className="group mt-7 inline-flex items-center gap-2 rounded-full bg-primary px-6 py-3 text-sm font-semibold text-primary-foreground transition-colors hover:bg-bright"
-                >
-                  Explore Demo
-                  <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
-                </PressLink>
+                <div className="mt-6 flex flex-wrap gap-3">
+                  <PressLink
+                    to="/dashboard"
+                    className="flex items-center gap-2 rounded-full bg-primary px-6 py-3 text-xs font-bold text-white shadow-sm hover:bg-bright"
+                  >
+                    Get Started <ArrowRight className="h-3.5 w-3.5" />
+                  </PressLink>
+                  <PressLink
+                    to="/analyze"
+                    search={{ sample: true }}
+                    className="glass rounded-full px-5 py-3 text-xs font-semibold text-foreground hover:bg-paleblue"
+                  >
+                    Explore Demo
+                  </PressLink>
+                </div>
               </div>
+
               {/* Mini report preview */}
-              <div className="glass-soft relative mx-auto w-full max-w-sm rounded-3xl p-5">
-                <div className="flex items-center gap-2 text-[10px] uppercase tracking-[0.14em] text-muted-foreground">
-                  <FileText className="h-3.5 w-3.5 text-ice" /> sample-lab-report.pdf
+              <div className="glass-soft relative mx-auto w-full max-w-sm rounded-3xl p-5 border border-border">
+                <div className="flex items-center gap-2 text-[10px] font-semibold uppercase tracking-[0.14em] text-primary">
+                  <FileText className="h-3.5 w-3.5 text-primary" /> sample-lab-report.pdf
                 </div>
                 <div className="mt-4 space-y-2.5">
                   {[
@@ -214,15 +250,14 @@ export function LandingPage() {
                     ["Fasting Glucose", "96 mg/dL", "text-positive"],
                     ["ALT", "54 U/L", "text-caution"],
                   ].map(([name, value, color]) => (
-                    <div key={name} className="flex items-center justify-between rounded-xl bg-paleblue px-3.5 py-2.5">
-                      <span className="text-[13px] text-muted-foreground">{name}</span>
-                      <span className={`font-mono text-[13px] font-semibold ${color}`}>{value}</span>
+                    <div key={name} className="flex items-center justify-between rounded-xl bg-paleblue px-3.5 py-2">
+                      <span className="text-[12px] font-medium text-muted-foreground">{name}</span>
+                      <span className={`font-mono text-[12px] font-bold ${color}`}>{value}</span>
                     </div>
                   ))}
                 </div>
-                <div className="glass mt-4 rounded-2xl p-3.5 text-[12px] leading-relaxed text-foreground/85">
-                  “Your cholesterol is above the recommended range — worth discussing with your doctor,
-                  while your blood count looks healthy.”
+                <div className="glass mt-4 rounded-2xl p-3 text-[12px] leading-relaxed text-foreground/90 font-medium border border-border/80">
+                  “Your cholesterol is slightly above the certified interval — worth discussing with your doctor, while blood count is healthy.”
                 </div>
               </div>
             </div>
@@ -230,49 +265,30 @@ export function LandingPage() {
         </Reveal>
       </Section>
 
-      {/* ---------- Privacy ---------- */}
-      <Section>
-        <Reveal>
-          <div className="glass flex flex-col items-center gap-4 rounded-4xl px-8 py-12 text-center sm:flex-row sm:text-left">
-            <span className="glass-soft flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl">
-              <ShieldCheck className="h-6 w-6 text-ice" />
-            </span>
-            <div>
-              <h3 className="text-lg font-semibold tracking-tight">Your health data deserves care</h3>
-              <p className="mt-1.5 max-w-2xl text-sm leading-relaxed text-muted-foreground">
-                Medical documents are deeply personal. Samjho Health processes your report to produce your summary —
-                reports are handled securely and are never shared. We believe AI in healthcare should be
-                transparent about exactly that.
-              </p>
-            </div>
-          </div>
-        </Reveal>
-      </Section>
-
       {/* ---------- Final CTA ---------- */}
       <Section>
         <Reveal>
-          <div className="relative overflow-hidden rounded-4xl px-6 py-20 text-center">
+          <div className="relative overflow-hidden rounded-4xl px-6 py-16 text-center border border-border bg-white shadow-sm">
             <div
               className="absolute inset-0"
               style={{
                 background:
-                  "radial-gradient(ellipse 70% 90% at 50% 110%, rgba(59,130,246,0.12), transparent 70%)",
+                  "radial-gradient(ellipse 70% 90% at 50% 110%, rgba(37,99,235,0.08), transparent 70%)",
               }}
             />
             <div className="relative">
               <div className="mx-auto w-fit">
-                <AiCharacter size={120} />
+                <AiCharacter size={110} />
               </div>
-              <h2 className="mt-8 text-3xl font-semibold tracking-tight sm:text-4xl">
+              <h2 className="mt-6 text-3xl font-semibold tracking-tight text-foreground sm:text-4xl">
                 Ready to understand your report?
               </h2>
-              <p className="mx-auto mt-3 max-w-md text-sm text-muted-foreground">
-                It takes about thirty seconds. Your future self will thank you.
+              <p className="mx-auto mt-2 max-w-md text-sm text-muted-foreground">
+                It takes about thirty seconds with zero hallucinations.
               </p>
               <PressLink
                 to="/dashboard"
-                className="mt-8 inline-flex items-center gap-2 rounded-full bg-primary px-8 py-4 text-sm font-semibold text-primary-foreground shadow-[0_10px_40px_rgba(37,99,235,0.28)] transition-colors hover:bg-bright"
+                className="mt-6 inline-flex items-center gap-2 rounded-full bg-primary px-8 py-3.5 text-sm font-bold text-white shadow-[0_8px_30px_rgba(37,99,235,0.3)] transition-all hover:bg-bright hover:scale-105"
               >
                 Get Started <ArrowRight className="h-4 w-4" />
               </PressLink>
@@ -288,7 +304,7 @@ export function LandingPage() {
 
 function Section({ children, id }: { children: ReactNode; id?: string }) {
   return (
-    <section id={id} className="relative mx-auto max-w-5xl px-6 py-20">
+    <section id={id} className="relative mx-auto max-w-5xl px-6 py-16">
       {children}
     </section>
   );
@@ -297,9 +313,9 @@ function Section({ children, id }: { children: ReactNode; id?: string }) {
 function SectionHeading({ eyebrow, title, subtitle }: { eyebrow: string; title: string; subtitle: string }) {
   return (
     <Reveal className="mb-10 text-center">
-      <p className="text-[11px] font-medium uppercase tracking-[0.16em] text-ice/80">{eyebrow}</p>
-      <h2 className="mt-3 text-3xl font-semibold tracking-tight sm:text-4xl">{title}</h2>
-      <p className="mx-auto mt-3 max-w-lg text-sm text-muted-foreground">{subtitle}</p>
+      <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-primary">{eyebrow}</p>
+      <h2 className="mt-2 text-3xl font-semibold tracking-tight text-foreground sm:text-4xl">{title}</h2>
+      <p className="mx-auto mt-2 max-w-lg text-sm text-muted-foreground">{subtitle}</p>
     </Reveal>
   );
 }
