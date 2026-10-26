@@ -6,7 +6,7 @@ import { analyzeReport } from "@/lib/ai-functions";
 import { fileToReportInput, type ReportInput } from "@/lib/file-reader";
 import { SAMPLE_REPORT_NAME, SAMPLE_REPORT_TEXT } from "@/lib/sample-report";
 import { setCurrentReport } from "@/lib/current-report";
-import { takePendingFile } from "@/lib/pending-file";
+import { takePendingFile, setPendingFile } from "@/lib/pending-file";
 import { saveReport } from "@/lib/history";
 import { UploadCard, type PickedFile } from "@/components/medai/UploadCard";
 import { AnalysisStages } from "@/components/medai/AnalysisStages";
@@ -77,7 +77,18 @@ function AnalyzePage() {
   useEffect(() => {
     // A file handed over from the dashboard starts the flow immediately.
     const pending = takePendingFile();
-    if (pending) void pick(pending);
+    if (pending) {
+      void (async () => {
+        try {
+          await pick(pending);
+          const input = await fileToReportInput(pending);
+          run(input, pending.name);
+        } catch (err) {
+          setError(err instanceof Error ? err.message : "Could not read that report.");
+          setPhase("error");
+        }
+      })();
+    }
   }, []);
 
   useEffect(() => {
@@ -113,69 +124,94 @@ function AnalyzePage() {
     }
   }
 
+  const handleTextSubmit = (text: string, mode: "analyze" | "ask") => {
+    const fname = mode === "analyze" ? "Pasted_Clinical_Report.txt" : "Clinical_Inquiry.txt";
+    const f = new File([text], fname, { type: "text/plain" });
+    pick(f);
+    void (async () => {
+      const input = await fileToReportInput(f);
+      run(input, fname);
+    })();
+  };
+
   return (
     <main className="relative mx-auto min-h-dvh max-w-4xl px-6 pb-10 pt-32">
       <Link
         to="/"
         className="mb-10 inline-flex items-center gap-2 text-sm text-muted-foreground transition-colors hover:text-foreground"
       >
-        <ArrowLeft className="h-4 w-4" /> Back to home
+        <ArrowLeft className="h-4 w-4" /> Home
       </Link>
 
+      {/* Upload & prompt stage */}
       {phase === "upload" && (
-        <>
-          <Reveal className="mb-10 text-center">
-            <h1 className="text-3xl font-semibold tracking-tight sm:text-4xl">
-              What would you like to understand?
-            </h1>
-            <p className="mx-auto mt-3 max-w-md text-sm text-muted-foreground">
-              Upload a lab report, scan or discharge summary. Hitho reads it and explains it in plain language.
-            </p>
-          </Reveal>
-
-          <Reveal delay={0.1}>
-            <UploadCard
-              file={file}
-              onPick={pick}
-              onRemove={() => {
-                fileRef.current = null;
-                setFile(null);
-              }}
-              onSample={() => run({ reportText: SAMPLE_REPORT_TEXT }, SAMPLE_REPORT_NAME)}
-              onAnalyze={analyzePicked}
-              busy={false}
-            />
-          </Reveal>
-        </>
+        <Reveal>
+          <UploadCard
+            file={file}
+            onPick={pick}
+            onRemove={() => {
+              fileRef.current = null;
+              setFile(null);
+            }}
+            onAnalyze={analyzePicked}
+            onSample={() => run({ reportText: SAMPLE_REPORT_TEXT }, SAMPLE_REPORT_NAME)}
+            onTextSubmit={handleTextSubmit}
+          />
+        </Reveal>
       )}
 
-      {(phase === "analyzing" || phase === "revealing") && <AnalysisStages done={phase === "revealing"} />}
+      {/* In-progress analysis animation */}
+      {(phase === "analyzing" || phase === "revealing") && (
+        <AnalysisStages
+          onComplete={() => {
+            if (analysis) setPhase("done");
+          }}
+        />
+      )}
 
-      {phase === "done" && analysis && <ResultsDashboard analysis={analysis} fileName={fileName} />}
-
-      {phase === "error" && (
-        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
-          <GlassCard intensity="strong" className="mx-auto max-w-lg p-8 text-center" tilt={false}>
-            <span className="glass-soft mx-auto flex h-12 w-12 items-center justify-center rounded-2xl">
-              <AlertTriangle className="h-5 w-5 text-caution" />
-            </span>
-            <h2 className="mt-5 text-xl font-semibold tracking-tight">That didn't work</h2>
-            <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{error}</p>
-            <PressButton
+      {/* Done: Results Dashboard */}
+      {phase === "done" && analysis && (
+        <>
+          <div className="mb-6 flex justify-start">
+            <button
               onClick={() => {
                 setPhase("upload");
                 setFile(null);
-                setError("");
+                setAnalysis(null);
+                fileRef.current = null;
               }}
-              className="mt-6 px-6 py-2.5 text-sm"
+              className="inline-flex items-center gap-2 text-sm font-semibold text-primary transition-colors hover:text-bright"
             >
-              Try again
-            </PressButton>
-          </GlassCard>
-        </motion.div>
+              <ArrowLeft className="h-4 w-4" /> Analyze another report
+            </button>
+          </div>
+          <ResultsDashboard analysis={analysis} fileName={fileName} />
+          <DisclaimerFooter />
+        </>
       )}
 
-      <DisclaimerFooter />
+      {/* Error state */}
+      {phase === "error" && (
+        <Reveal>
+          <GlassCard className="flex flex-col items-center gap-4 p-8 text-center sm:p-10" tilt={false}>
+            <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-alert/15 text-alert">
+              <AlertTriangle className="h-6 w-6" />
+            </span>
+            <h2 className="text-xl font-semibold tracking-tight text-foreground">Could not complete analysis</h2>
+            <p className="max-w-md text-sm text-muted-foreground">{error}</p>
+            <div className="flex gap-3 pt-2">
+              <PressButton
+                onClick={() => {
+                  setPhase("upload");
+                  setError("");
+                }}
+              >
+                Try again
+              </PressButton>
+            </div>
+          </GlassCard>
+        </Reveal>
+      )}
     </main>
   );
 }

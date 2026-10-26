@@ -64,6 +64,13 @@ function DashboardPage() {
     void navigate({ to: "/analyze", search: { sample: false } });
   };
 
+  const handleTextSubmit = (text: string, mode: "analyze" | "ask") => {
+    const filename = mode === "analyze" ? "Pasted_Clinical_Report.txt" : "Clinical_Inquiry.txt";
+    const file = new File([text], filename, { type: "text/plain" });
+    setPendingFile(file);
+    void navigate({ to: "/analyze", search: { sample: false } });
+  };
+
   return (
     <main className="relative mx-auto min-h-dvh max-w-5xl px-6 pb-10 pt-28 sm:pt-32">
       {/* Greeting */}
@@ -73,7 +80,7 @@ function DashboardPage() {
           Your Health Dashboard
         </h1>
         <p className="mx-auto mt-3 max-w-md text-sm text-muted-foreground">
-          Analyze a new clinical document, test one of our pre-loaded certified samples, or revisit recent summaries.
+          Upload your medical document, paste report text directly, ask health questions, or test one of our pre-loaded certified samples.
         </p>
       </Reveal>
 
@@ -120,6 +127,7 @@ function DashboardPage() {
               onRemove={() => {}}
               onAnalyze={() => {}}
               onSample={() => void navigate({ to: "/analyze", search: { sample: true } })}
+              onTextSubmit={handleTextSubmit}
             />
           </Reveal>
 
@@ -147,7 +155,7 @@ function DashboardPage() {
                 </span>
                 <p className="text-sm font-semibold text-foreground">No reports yet</p>
                 <p className="max-w-xs text-[13px] text-muted-foreground">
-                  Upload your first report above, or try one of the certified demo samples to see how an analysis looks.
+                  Upload your first report above, paste text directly into the prompt box, or try one of the certified demo samples.
                 </p>
               </GlassCard>
             ) : (
@@ -214,7 +222,7 @@ function DashboardPage() {
               <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-primary">
                 <Sparkles className="h-3.5 w-3.5" /> What to Ask
               </div>
-              <p className="mt-1 text-xs text-muted-foreground">Tap any prompt to ask Hitho in the chat bubble.</p>
+              <p className="mt-1 text-xs text-muted-foreground">Tap any prompt to paste into the text box above.</p>
               <div className="mt-3 space-y-2">
                 {TIPS.map((tip) => (
                   <div
