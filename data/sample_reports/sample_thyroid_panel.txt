@@ -1,0 +1,24 @@
+================================================================================
+LIFELINE DIAGNOSTICS & THYROID ENDOCRINE LABORATORY
+Patient Name: Smt. Sunita Devi         Age / Sex: 52 Yrs / Female
+Referred By: Dr. R. K. Saxena, MD      Date: 25-Oct-2026
+Report ID: THY-2026-44019              Status: Verified
+================================================================================
+
+INVESTIGATION                        RESULT    UNIT         REFERENCE RANGE
+--------------------------------------------------------------------------------
+THYROID FUNCTION PROFILE (CLIA)
+Total Triiodothyronine (T3)          78.0      ng/dL        80.0 - 200.0
+Total Thyroxine (T4)                 4.1       ug/dL        5.0 - 12.0
+Thyroid Stimulating Hormone (TSH)    8.92      uIU/mL       0.4 - 4.5
+
+METABOLIC & LIPID SCREEN
+Total Cholesterol                    235.0     mg/dL        125.0 - 200.0
+Fasting Blood Sugar                  104.0     mg/dL        70.0 - 99.0
+Serum Calcium                        9.2       mg/dL        8.5 - 10.5
+--------------------------------------------------------------------------------
+Comments / Clinical Correlation:
+Elevated TSH with low-normal/borderline low free thyroid hormones is consistent with
+Primary Hypothyroidism. Associated secondary hypercholesterolemia noted.
+Recommend clinical evaluation for Levothyroxine replacement therapy and repeat TSH in 6-8 weeks.
+================================================================================

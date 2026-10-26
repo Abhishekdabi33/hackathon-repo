@@ -42,7 +42,11 @@ import {
   ImageIcon,
   FileUp,
   Monitor,
-  CircleUserRound
+  CircleUserRound,
+  Printer,
+  Stethoscope,
+  AlertTriangle,
+  ShieldAlert
 } from 'lucide-react';
 import HermesCharacter from './components/HermesCharacter';
 import TiltCard from './components/TiltCard';
@@ -105,6 +109,20 @@ export default function App() {
   const [selectedSkill, setSelectedSkill] = useState(null);
   const [loadingSkills, setLoadingSkills] = useState(false);
   const [skillSearch, setSkillSearch] = useState('');
+  const [clinicalSamples, setClinicalSamples] = useState([]);
+
+  // Fetch Pre-Loaded Clinical Report Samples
+  const fetchClinicalSamples = async () => {
+    try {
+      const res = await fetch('/api/clinical/samples');
+      if (res.ok) {
+        const data = await res.json();
+        setClinicalSamples(data.samples || []);
+      }
+    } catch (err) {
+      console.error('Error fetching clinical samples:', err);
+    }
+  };
 
   const messagesEndRef = useRef(null);
   const textareaRef = useRef(null);
@@ -237,6 +255,7 @@ export default function App() {
   useEffect(() => {
     fetchHealth();
     fetchSkills();
+    fetchClinicalSamples();
   }, []);
 
   // Send message to Hermes Agent ReAct loop
@@ -257,7 +276,8 @@ export default function App() {
         setAttachedFile({
           name: data.filename,
           size: data.size_bytes,
-          content: data.content
+          content: data.content,
+          imageBase64: data.image_base64 || null
         });
       } else {
         alert(data.detail || 'Failed to upload file');
@@ -272,6 +292,34 @@ export default function App() {
   };
 
   // Handle Custom Skill Creation
+    // Print / Export Clinical Summary Brief
+  const handlePrintSummary = async (msg) => {
+    try {
+      const res = await fetch('/api/clinical/export-summary', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          patient_name: "Patient",
+          evidence_trace: msg.evidence_trace || [],
+          explanation: msg.content || "",
+          doctor_questions: msg.doctor_questions || []
+        })
+      });
+      const data = await res.json();
+      if (data.html_document) {
+        const printWin = window.open('', '_blank');
+        if (printWin) {
+          printWin.document.write(data.html_document);
+          printWin.document.close();
+          printWin.focus();
+          setTimeout(() => printWin.print(), 350);
+        }
+      }
+    } catch (err) {
+      console.error("Print summary error:", err);
+    }
+  };
+
   const handleCreateSkill = async (e) => {
     e.preventDefault();
     if (!newSkillData.name.trim() || !newSkillData.instructions.trim()) return;
@@ -305,12 +353,12 @@ export default function App() {
     }
   };
 
-  // Send message to Hermes Agent ReAct loop
-  const handleSendMessage = async (textToSend) => {
+  // Send message to Hermes Agent / Clinical Engine
+  const handleSendMessage = async (textToSend, customAttached) => {
     const text = textToSend || promptInput;
-    if ((!text.trim() && !attachedFile) || runningAgent) return;
+    const currentAttached = customAttached || attachedFile;
+    if ((!text.trim() && !currentAttached) || runningAgent) return;
 
-    const currentAttached = attachedFile;
     const userMsgId = Date.now().toString();
     const newUserMsg = {
       id: userMsgId,
@@ -326,26 +374,47 @@ export default function App() {
     setRunningAgent(true);
 
     try {
-      const res = await fetch('/api/agent/chat', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          message: text.trim() || `Analyze the attached file: ${currentAttached?.name}`,
-          file_name: currentAttached?.name || null,
-          file_content: currentAttached?.content || null,
-          max_steps: 3
-        })
-      });
+      const isClinical = currentAttached?.content || 
+        /report|blood|cbc|lipid|cholesterol|sugar|glucose|thyroid|tsh|creatinine|doctor|prescription|patient|lab|anemia/i.test(text);
 
-      const data = await res.json();
+      let data;
+      if (isClinical) {
+        const res = await fetch('/api/clinical/analyze', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            prompt: text.trim() || "Analyze this medical report and explain findings",
+            report_text: currentAttached?.content || text.trim(),
+            file_name: currentAttached?.name || "medical_report.txt",
+            image_base64: currentAttached?.imageBase64 || null
+          })
+        });
+        data = await res.json();
+      } else {
+        const res = await fetch('/api/agent/chat', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            message: text.trim() || `Analyze the attached file: ${currentAttached?.name}`,
+            file_name: currentAttached?.name || null,
+            file_content: currentAttached?.content || null,
+            max_steps: 3
+          })
+        });
+        data = await res.json();
+      }
+
       const assistantMsgId = (Date.now() + 1).toString();
-      
       const newAssistantMsg = {
         id: assistantMsgId,
         role: 'assistant',
-        content: data.final_answer || 'Task completed successfully.',
-        steps: data.steps || [],
-        duration_ms: data.duration_ms || 0,
+        content: data.explanation || data.final_answer || 'Analysis complete.',
+        evidence_trace: data.evidence_trace || null,
+        doctor_questions: data.doctor_questions || [],
+        abnormal_count: data.abnormal_count || 0,
+        model_used: data.model_used || 'Google Gemma 4 12B',
+        steps: data.agent_steps || data.steps || [],
+        duration_ms: data.latency_ms || data.duration_ms || 0,
         status: data.status || 'success',
         timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
       };
@@ -484,32 +553,32 @@ export default function App() {
   // Cohesive Suggested Prompts for Empty State
   const suggestedPrompts = [
     {
-      category: "SYSTEM TELEMETRY",
-      title: "Hardware & CUDA Benchmark",
-      description: "Verify RTX 2050 CUDA 12.6 tensor acceleration, memory allocations, and core load.",
-      prompt: "Analyze our database statistics and check GPU status.",
-      icon: Cpu
-    },
-    {
-      category: "API ORCHESTRATION",
-      title: "FastAPI Schema Integrator",
-      description: "Generate compliant OpenAPI endpoint contracts with input validations using the skill.",
-      prompt: "Use api-integrator skill to format an endpoint",
-      icon: Code2
-    },
-    {
-      category: "AGENT PLAYBOOK",
-      title: "Data Analyst Workflow",
-      description: "Inspect discovered SKILL.md files, summarize dataset metrics, and log observations.",
-      prompt: "Use data-analyst skill to summarize sample metrics",
+      category: "HEMATOLOGY & METABOLIC",
+      title: "Rajesh Sharma CBC & Fasting Sugar",
+      description: "Analyze hemoglobin (10.8 g/dL), fasting sugar (142 mg/dL), and HbA1c with EvidenceTrace verification.",
+      prompt: "Analyze sample_blood_report.txt and extract EvidenceTrace matrix with doctor questions",
       icon: Activity
     },
     {
-      category: "NEURAL HARNESS",
-      title: "Multi-Step ReAct Planning",
-      description: "Demonstrate thought-action-observation cycles across multiple tool calls.",
-      prompt: "Calculate 250 * 18.5 and check PyTorch compute speed",
-      icon: Zap
+      category: "CARDIOVASCULAR RISK",
+      title: "Dyslipidemia Lipid Profile",
+      description: "Evaluate cholesterol (248 mg/dL), HDL (38 mg/dL), and LDL (164 mg/dL) against clinical cutoffs.",
+      prompt: "Analyze sample_lipid_panel.csv for cardiovascular risk factors and clinical flags",
+      icon: ShieldAlert
+    },
+    {
+      category: "ENDOCRINOLOGY SCREEN",
+      title: "Thyroid Profile (TSH & T4)",
+      description: "Check elevated TSH (8.92 uIU/mL) and metabolic markers for primary hypothyroidism.",
+      prompt: "Analyze sample_thyroid_panel.txt and generate physician consultation checklist",
+      icon: Stethoscope
+    },
+    {
+      category: "SYSTEM & GPU TELEMETRY",
+      title: "Gemma 4 12B Hardware Status",
+      description: "Verify local CUDA tensor acceleration and Kaggle Dual Tesla T4 GPU ngrok link.",
+      prompt: "Analyze our database statistics and check GPU status.",
+      icon: Cpu
     }
   ];
 
@@ -1016,12 +1085,109 @@ export default function App() {
 
                         {/* Spacious, Highly Readable Final Answer */}
                         <div className="space-y-3 pt-1">
+                          {/* EvidenceTrace Verification Table */}
+                          {msg.evidence_trace && msg.evidence_trace.length > 0 && (
+                            <div className="rounded-2xl bg-white/[0.03] border border-white/10 p-4 space-y-3.5 my-3 shadow-sm">
+                              <div className="flex items-center justify-between border-b border-white/10 pb-2.5">
+                                <div className="flex items-center space-x-2">
+                                  <div className="w-6 h-6 rounded-lg bg-emerald-500/20 border border-emerald-500/30 flex items-center justify-center">
+                                    <Activity className="w-3.5 h-3.5 text-emerald-400" />
+                                  </div>
+                                  <div>
+                                    <span className="font-semibold text-xs text-white">EvidenceTrace™ Test Validation Matrix</span>
+                                    <p className="text-[10px] text-zinc-400 font-mono">0ms Deterministic Range Check against Clinical Standards</p>
+                                  </div>
+                                </div>
+                                <div className="flex items-center space-x-2">
+                                  <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-red-500/10 text-red-400 border border-red-500/20">
+                                    {msg.abnormal_count} Abnormal
+                                  </span>
+                                  <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-white/[0.05] text-zinc-400 border border-white/10">
+                                    {msg.evidence_trace.length} Total
+                                  </span>
+                                </div>
+                              </div>
+
+                              {/* Table */}
+                              <div className="overflow-x-auto no-scrollbar">
+                                <table className="w-full text-left text-xs">
+                                  <thead>
+                                    <tr className="text-[10px] uppercase font-mono text-zinc-400 border-b border-white/10">
+                                      <th className="pb-2 font-medium">Test Name</th>
+                                      <th className="pb-2 font-medium">Result</th>
+                                      <th className="pb-2 font-medium">Reference Interval</th>
+                                      <th className="pb-2 font-medium">Status</th>
+                                      <th className="pb-2 font-medium">Clinical Context</th>
+                                    </tr>
+                                  </thead>
+                                  <tbody className="divide-y divide-white/[0.06]">
+                                    {msg.evidence_trace.map((item, idx) => {
+                                      const isHigh = item.flag === 'HIGH' || item.flag === 'CRITICAL';
+                                      const isLow = item.flag === 'LOW';
+                                      const flagColor = isHigh 
+                                        ? 'bg-red-500/10 text-red-400 border-red-500/30' 
+                                        : isLow 
+                                        ? 'bg-amber-500/10 text-amber-400 border-amber-500/30' 
+                                        : 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30';
+
+                                      return (
+                                        <tr key={idx} className="hover:bg-white/[0.02] transition-colors">
+                                          <td className="py-2.5 font-medium text-white">{item.test_name}</td>
+                                          <td className="py-2.5 font-bold font-mono text-white">
+                                            {item.value} <span className="text-[10px] font-normal text-zinc-400">{item.unit}</span>
+                                          </td>
+                                          <td className="py-2.5 font-mono text-zinc-400 text-[11px]">{item.ref_range}</td>
+                                          <td className="py-2.5">
+                                            <span className={`text-[10px] font-mono uppercase px-2 py-0.5 rounded-full border ${flagColor}`}>
+                                              {item.flag}
+                                            </span>
+                                          </td>
+                                          <td className="py-2.5 text-zinc-300 text-[11px] max-w-xs">{item.meaning || 'Within reference range'}</td>
+                                        </tr>
+                                      );
+                                    })}
+                                  </tbody>
+                                </table>
+                              </div>
+
+                              {/* Doctor Consultation Questions */}
+                              {msg.doctor_questions && msg.doctor_questions.length > 0 && (
+                                <div className="pt-3 border-t border-white/10 space-y-2">
+                                  <div className="flex items-center space-x-2 text-xs font-semibold text-white">
+                                    <Stethoscope className="w-3.5 h-3.5 text-[#00E5FF]" />
+                                    <span>Prioritized Questions for Your Doctor</span>
+                                  </div>
+                                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-1">
+                                    {msg.doctor_questions.map((q, qIdx) => (
+                                      <div key={qIdx} className="p-2.5 rounded-xl bg-white/[0.02] border border-white/10 hover:border-white/20 text-[11px] text-zinc-300 leading-relaxed flex items-start space-x-2">
+                                        <span className="font-mono text-[10px] text-[#00E5FF] shrink-0 font-bold">Q{qIdx + 1}</span>
+                                        <span>{q}</span>
+                                      </div>
+                                    ))}
+                                  </div>
+                                </div>
+                              )}
+
+                              {/* Export Summary Button */}
+                              <div className="pt-2 flex justify-end">
+                                <button
+                                  onClick={() => handlePrintSummary(msg)}
+                                  className="px-3 py-1.5 rounded-xl bg-white/[0.06] hover:bg-white/[0.12] text-white border border-white/20 hover:border-white/30 text-xs font-medium flex items-center space-x-1.5 shadow-sm transition-all"
+                                  title="Print or save PDF report"
+                                >
+                                  <Printer className="w-3.5 h-3.5 text-white" />
+                                  <span>Export Clinical Summary (PDF)</span>
+                                </button>
+                              </div>
+                            </div>
+                          )}
+
                           {renderAssistantContent(msg.content)}
 
                           {/* Assistant Footer Action Toolbar with White Hover Highlights */}
                           <div className="flex items-center justify-between pt-2 text-xs border-t border-white/10">
                             <span className="text-[10px] text-[#71717a] font-mono">
-                              Google Gemma 2 • Hermes ReAct Harness
+                              {msg.model_used || 'Google Gemma 4 12B'} • LabLens EvidenceTrace™
                             </span>
                             
                             <div className="flex items-center space-x-1.5">
@@ -1179,6 +1345,36 @@ export default function App() {
             </div>
           )}
 
+          {/* Pre-Loaded Clinical Report Samples */}
+          {clinicalSamples && clinicalSamples.length > 0 && (
+            <div className="flex items-center space-x-2 overflow-x-auto no-scrollbar pb-2 px-1 text-xs">
+              <span className="text-[10px] font-mono text-[#71717a] uppercase tracking-wider shrink-0 flex items-center space-x-1">
+                <Activity className="w-3 h-3 text-[#00E5FF]" />
+                <span>Demo Reports:</span>
+              </span>
+              {clinicalSamples.map((sample) => (
+                <button
+                  key={sample.id}
+                  type="button"
+                  disabled={runningAgent}
+                  onClick={() => {
+                    const sampleObj = {
+                      name: sample.filename,
+                      size: sample.content.length,
+                      content: sample.content
+                    };
+                    setAttachedFile(sampleObj);
+                    handleSendMessage(`Analyze ${sample.title} and extract EvidenceTrace validation matrix.`, sampleObj);
+                  }}
+                  className="px-3 py-1 rounded-full bg-white/[0.04] hover:bg-white/[0.09] text-white/80 hover:text-white border border-white/10 hover:border-white/25 shrink-0 transition-all text-[11px] flex items-center space-x-1.5"
+                >
+                  <span className="w-1.5 h-1.5 rounded-full bg-[#00E5FF]/70" />
+                  <span>{sample.title}</span>
+                </button>
+              ))}
+            </div>
+          )}
+
           {/* Rounded Pill Shape Chat Input Box */}
           <div className="rounded-full bg-[#09090b]/85 backdrop-blur-2xl border border-white/10 hover:border-white/20 focus-within:border-white/30 p-1.5 sm:p-2 flex items-center justify-between shadow-[0_16px_40px_-10px_rgba(0,0,0,0.85)] transition-all">
             
@@ -1188,7 +1384,7 @@ export default function App() {
               ref={fileInputRef}
               onChange={handleFileUpload}
               className="hidden"
-              accept=".txt,.csv,.json,.py,.js,.jsx,.ts,.tsx,.html,.md,.log,.yaml,.yml"
+              accept=".pdf,.png,.jpg,.jpeg,.webp,.txt,.csv,.json,.md,.yaml,.yml"
             />
             <button
               type="button"

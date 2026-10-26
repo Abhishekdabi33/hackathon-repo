@@ -1,0 +1,31 @@
+================================================================================
+APOLLO HEALTH CLINIC - OUTPATIENT PRESCRIPTION
+Consultant: Dr. Neha Kapoor, MBBS, MD (Internal Medicine)
+Date: 25-Oct-2026
+Patient: Priya Nair (38F)  |  Weight: 64 kg  |  BP: 130/85 mmHg
+================================================================================
+
+Chief Complaint:
+Fatigue, persistent lethargy, occasional dizziness on standing.
+
+Diagnosis / Assessment:
+Mild Nutritional Anemia & Subclinical Hypothyroidism.
+
+Rx (Prescription):
+1. Tab. Autrin (Ferrous Fumarate + Folic Acid + Vit B12)
+   - Dosage: 1 tablet daily after lunch
+   - Duration: 30 days
+   - Advice: Take with fresh lemon water / Vitamin C for better absorption; avoid tea/coffee 1 hr before/after.
+
+2. Tab. Thyronorm (Levothyroxine Sodium 25 mcg)
+   - Dosage: 1 tablet daily early morning on empty stomach with plain water
+   - Duration: 60 days
+   - Advice: Do not eat anything for at least 45 minutes after taking.
+
+3. Syp. D-Rise 60k (Cholecalciferol oral solution)
+   - Dosage: 1 bottle (5 ml) once weekly after heavy meal
+   - Duration: 8 weeks
+
+Follow-Up:
+Review after 6 weeks with repeat CBC, TSH, and Serum Ferritin.
+================================================================================
