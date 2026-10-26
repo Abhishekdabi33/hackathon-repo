@@ -79,6 +79,22 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
 
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
+  const router = useRouter();
+
+  useEffect(() => {
+    // By default, ensure the Home page ('/') opens first on initial session load
+    try {
+      const isSessionInitialized = sessionStorage.getItem("samjho_home_opened");
+      if (!isSessionInitialized) {
+        sessionStorage.setItem("samjho_home_opened", "true");
+        if (window.location.pathname !== "/" && window.location.pathname !== "") {
+          void router.navigate({ to: "/" });
+        }
+      }
+    } catch {
+      // ignore
+    }
+  }, [router]);
 
   return (
     <QueryClientProvider client={queryClient}>
