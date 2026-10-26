@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { motion } from "motion/react";
-import { ArrowRight, Clock, FileText, MessageCircle, ShieldCheck, Sparkles, Activity, Mic } from "lucide-react";
+import { ArrowRight, Clock, FileText, MessageCircle, ShieldCheck, Sparkles, Mic } from "lucide-react";
 import { loadReports } from "@/lib/history";
 import { setPendingFile } from "@/lib/pending-file";
 import { UploadCard } from "@/components/medai/UploadCard";
@@ -11,9 +11,7 @@ import { Reveal } from "@/components/medai/Reveal";
 import { PressLink } from "@/components/medai/PressLink";
 import { DisclaimerFooter } from "@/components/medai/DisclaimerFooter";
 import { TalkAgentDialog } from "@/components/medai/TalkAgentDialog";
-import { DemoReportsBar } from "@/components/medai/DemoReportsBar";
-import { fetchClinicalSamples } from "@/lib/ai-functions";
-import type { SavedReport, ClinicalSample } from "@/types/report";
+import type { SavedReport } from "@/types/report";
 
 export const Route = createFileRoute("/dashboard")({
   head: () => ({
@@ -44,28 +42,16 @@ const TIPS = [
 function DashboardPage() {
   const navigate = useNavigate();
   const [reports, setReports] = useState<SavedReport[]>([]);
-  const [samples, setSamples] = useState<ClinicalSample[]>([]);
   const [loaded, setLoaded] = useState(false);
   const [talkOpen, setTalkOpen] = useState(false);
 
   useEffect(() => {
     setReports(loadReports());
     setLoaded(true);
-    fetchClinicalSamples().then((data) => {
-      if (data && data.length > 0) {
-        setSamples(data);
-      }
-    });
   }, []);
 
   const recent = reports.slice(0, 3);
   const lastAnalyzed = reports[0] ? new Date(reports[0].createdAt) : null;
-
-  const handleSelectSample = (sample: ClinicalSample) => {
-    const file = new File([sample.content], sample.filename, { type: "text/plain" });
-    setPendingFile(file);
-    void navigate({ to: "/analyze", search: { sample: false } });
-  };
 
   const handleTextSubmit = (text: string, mode: "analyze" | "ask") => {
     const filename = mode === "analyze" ? "Pasted_Clinical_Report.txt" : "Clinical_Inquiry.txt";
@@ -91,16 +77,6 @@ function DashboardPage() {
           Upload a medical document, paste report text directly, ask health questions, or tap Hitho above to speak.
         </p>
       </Reveal>
-
-      {/* Pre-Loaded Clinical Report Samples Bar */}
-      {samples.length > 0 && (
-        <Reveal delay={0.03} className="mb-7">
-          <DemoReportsBar
-            samples={samples}
-            onSelect={handleSelectSample}
-          />
-        </Reveal>
-      )}
 
       <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_320px]">
         {/* Main column */}
