@@ -62,45 +62,43 @@ class GemmaClient:
                     "User-Agent": "LabLens-AI-Gemma-Client"
                 }
                 # Try direct Ollama endpoint on Cloud GPU first
+                import json
                 ollama_payload = {
                     "model": self.ollama_model,
                     "prompt": prompt,
                     "system": system_instruction or "",
-                    "stream": False
+                    "stream": True
                 }
                 if image_base64:
                     ollama_payload["images"] = [image_base64]
 
-                resp = httpx.post(f"{self.cloud_gpu_url}/api/generate", json=ollama_payload, headers=headers, timeout=httpx.Timeout(90.0, connect=5.0))
-                if resp.status_code == 200:
-                    data = resp.json()
-                    if "response" in data:
-                        return {
-                            "text": data.get("response", "").strip(),
-                            "model": self.ollama_model,
-                            "provider": "ollama-cloud-gpu",
-                            "status": "success"
-                        }
-                elif resp.status_code in [404, 400]:
-                    # Auto-detect available models from Ollama /api/tags
-                    try:
-                        tags_resp = httpx.get(f"{self.cloud_gpu_url}/api/tags", headers=headers, timeout=10.0)
-                        if tags_resp.status_code == 200:
-                            models = [m.get("name") for m in tags_resp.json().get("models", [])]
-                            for available_m in ["lablens-clinical", "gemma4:12b", "gemma2:9b", "gemma2:2b"] + models:
-                                if any(available_m in m for m in models):
-                                    ollama_payload["model"] = available_m
-                                    retry_resp = httpx.post(f"{self.cloud_gpu_url}/api/generate", json=ollama_payload, headers=headers, timeout=httpx.Timeout(90.0, connect=5.0))
-                                    if retry_resp.status_code == 200:
-                                        self.ollama_model = available_m
-                                        return {
-                                            "text": retry_resp.json().get("response", "").strip(),
-                                            "model": available_m,
-                                            "provider": "ollama-cloud-gpu",
-                                            "status": "success"
-                                        }
-                    except Exception:
-                        pass
+                collected_tokens = []
+                with httpx.stream(
+                    "POST",
+                    f"{self.cloud_gpu_url}/api/generate",
+                    json=ollama_payload,
+                    headers=headers,
+                    timeout=httpx.Timeout(90.0, connect=5.0)
+                ) as resp:
+                    if resp.status_code == 200:
+                        for line in resp.iter_lines():
+                            if line:
+                                try:
+                                    chunk = json.loads(line)
+                                    tok = chunk.get("response", "")
+                                    if tok:
+                                        collected_tokens.append(tok)
+                                    if chunk.get("done"):
+                                        break
+                                except Exception:
+                                    continue
+                        if collected_tokens:
+                            return {
+                                "text": "".join(collected_tokens).strip(),
+                                "model": self.ollama_model,
+                                "provider": "ollama-cloud-gpu",
+                                "status": "success"
+                            }
 
                 # Try custom FastAPI predict endpoint on Cloud GPU
                 fastapi_payload = {"prompt": prompt, "max_tokens": 768}
