@@ -18,6 +18,8 @@ import {
 import { GlassCard } from "./GlassCard";
 import { Reveal } from "./Reveal";
 import { ExplainDialog, type ExplainTarget } from "./ExplainDialog";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 import { statusLabel, type Analysis, type EvidenceTraceItem } from "@/types/report";
 import { exportClinicalSummary } from "@/lib/ai-functions";
 import { cn } from "@/lib/utils";
@@ -172,9 +174,63 @@ export function ResultsDashboard({ analysis, fileName }: { analysis: Analysis; f
             <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-primary" />
             Clinical AI Summary
           </div>
-          <p className="mt-4 max-w-3xl text-lg leading-relaxed text-foreground/95 sm:text-xl">
-            {analysis.summary}
-          </p>
+          <div className="mt-4 max-w-3xl leading-relaxed text-foreground/95">
+            <ReactMarkdown
+              remarkPlugins={[remarkGfm]}
+              components={{
+                h1: ({ children }) => (
+                  <h2 className="mb-3 mt-5 flex items-center gap-2 border-b border-border/80 pb-2 text-base font-bold uppercase tracking-wider text-primary">
+                    <span className="h-2 w-2 rounded-full bg-primary" />
+                    {children}
+                  </h2>
+                ),
+                h2: ({ children }) => (
+                  <h3 className="mb-2 mt-4 flex items-center gap-2 border-b border-border/60 pb-1.5 text-sm font-bold uppercase tracking-wide text-foreground">
+                    <span className="h-1.5 w-1.5 rounded-full bg-softblue" />
+                    {children}
+                  </h3>
+                ),
+                h3: ({ children }) => (
+                  <h4 className="mb-2 mt-3 text-sm font-semibold text-foreground">
+                    {children}
+                  </h4>
+                ),
+                strong: ({ children }) => (
+                  <strong className="rounded-md bg-paleblue px-1.5 py-0.5 font-semibold text-primary border border-primary/20">
+                    {children}
+                  </strong>
+                ),
+                p: ({ children }) => (
+                  <p className="mb-3 text-[15px] sm:text-base leading-relaxed text-foreground/90">
+                    {children}
+                  </p>
+                ),
+                ul: ({ children }) => (
+                  <ul className="mb-4 space-y-2 pl-1">
+                    {children}
+                  </ul>
+                ),
+                ol: ({ children }) => (
+                  <ol className="mb-4 list-decimal space-y-2 pl-5 text-sm text-foreground/90">
+                    {children}
+                  </ol>
+                ),
+                li: ({ children }) => (
+                  <li className="flex items-start gap-2 text-sm text-foreground/90 leading-relaxed">
+                    <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-primary" />
+                    <span>{children}</span>
+                  </li>
+                ),
+                blockquote: ({ children }) => (
+                  <blockquote className="my-3 rounded-2xl border-l-4 border-primary bg-paleblue/50 px-4 py-3 text-sm italic text-foreground/80">
+                    {children}
+                  </blockquote>
+                ),
+              }}
+            >
+              {analysis.summary}
+            </ReactMarkdown>
+          </div>
           <p className="mt-5 flex items-center gap-2 text-xs text-muted-foreground">
             <ShieldCheck className="h-4 w-4 text-primary" /> Educational summary grounded by certified clinical reference intervals. Please review all findings with a healthcare professional.
           </p>

@@ -201,7 +201,7 @@ export function UploadCard({
                   Drop your medical report here
                 </h3>
                 <p className="mt-1.5 text-sm text-muted-foreground">
-                  PDF, Images, Text or CSV — analyzed with 0ms deterministic validation
+                  PDF, Images, Video, Text or CSV — analyzed with 0ms deterministic validation
                 </p>
               </div>
 
@@ -370,7 +370,7 @@ export function UploadCard({
       <input
         ref={inputRef}
         type="file"
-        accept=".pdf,.jpg,.jpeg,.png,.webp,.txt,.csv,.json,image/*"
+        accept=".pdf,.jpg,.jpeg,.png,.webp,.txt,.csv,.json,.mp4,.mov,.webm,.avi,image/*,video/*"
         className="hidden"
         onChange={(e) => {
           const f = e.target.files?.[0];

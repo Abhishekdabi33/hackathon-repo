@@ -162,12 +162,19 @@ function generateClientSideAnalysis(text: string, fileName?: string): Analysis {
   const evidence: EvidenceTraceItem[] = [];
 
   const checks = [
+    { name: "Blood Pressure (Systolic)", key: "bp_systolic", min: 90, max: 120, unit: "mmHg", pattern: /(?:blood pressure|bp)[\s:=]+([0-9]{2,3})(?:\s*\/|\s*over\s*|\s*mmhg)/i },
+    { name: "Blood Pressure (Diastolic)", key: "bp_diastolic", min: 60, max: 80, unit: "mmHg", pattern: /(?:blood pressure|bp)[\s:=]+[0-9]{2,3}\s*\/\s*([0-9]{2,3})/i },
+    { name: "Pulse Rate", key: "pulse", min: 60, max: 100, unit: "bpm", pattern: /(?:pulse|heart rate|pulse rate)[\s:=]+([0-9.]+)/i },
+    { name: "Body Temperature", key: "temp", min: 97.0, max: 99.1, unit: "°F", pattern: /(?:body temperature|temperature|temp)[\s:=]+([0-9.]+)/i },
+    { name: "Respiratory Rate", key: "rr", min: 12, max: 20, unit: "breaths/min", pattern: /(?:respiratory rate|rr)[\s:=]+([0-9.]+)/i },
     { name: "Hemoglobin", key: "hemoglobin", min: 12.0, max: 17.5, unit: "g/dL", pattern: /(?:hemoglobin|hb|hgb)[\s:=]+([0-9.]+)/i },
     { name: "WBC Count", key: "wbc", min: 4000, max: 11000, unit: "/mcL", pattern: /(?:wbc|white blood cell)[\s:=]+([0-9,]+)/i },
     { name: "Platelets", key: "platelets", min: 150000, max: 450000, unit: "/mcL", pattern: /(?:platelets?|plt)[\s:=]+([0-9,]+)/i },
     { name: "Fasting Glucose", key: "glucose", min: 70, max: 99, unit: "mg/dL", pattern: /(?:fasting glucose|blood sugar|glucose)[\s:=]+([0-9.]+)/i },
     { name: "Total Cholesterol", key: "cholesterol", min: 100, max: 199, unit: "mg/dL", pattern: /(?:total cholesterol|cholesterol)[\s:=]+([0-9.]+)/i },
+    { name: "HDL Cholesterol", key: "hdl", min: 40, max: 60, unit: "mg/dL", pattern: /(?:hdl|hdl cholesterol|good cholesterol)[\s:=]+([0-9.]+)/i },
     { name: "LDL Cholesterol", key: "ldl", min: 50, max: 99, unit: "mg/dL", pattern: /(?:ldl|bad cholesterol)[\s:=]+([0-9.]+)/i },
+    { name: "Triglycerides", key: "triglycerides", min: 50, max: 149, unit: "mg/dL", pattern: /(?:triglycerides?|tg)[\s:=]+([0-9.]+)/i },
     { name: "TSH", key: "tsh", min: 0.4, max: 4.0, unit: "mIU/L", pattern: /(?:tsh|thyroid stimulating hormone)[\s:=]+([0-9.]+)/i },
     { name: "Serum Creatinine", key: "creatinine", min: 0.6, max: 1.2, unit: "mg/dL", pattern: /(?:creatinine)[\s:=]+([0-9.]+)/i },
   ];
@@ -282,7 +289,7 @@ export async function chatWithHitho({
   const query = lastUserMsg?.content || "Explain my results";
 
   try {
-    const res = await fetch("/api/clinical/ask", {
+    const res = await fetch("/api/clinical/rag-ask", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
@@ -296,11 +303,88 @@ export async function chatWithHitho({
       return json.answer || json.explanation || "I've reviewed your question against your clinical report.";
     }
   } catch (e) {
-    console.warn("Backend chat call failed, falling back to local reasoning:", e);
+    console.warn("Backend RAG chat failed, attempting standard /api/clinical/ask:", e);
+    try {
+      const resFallback = await fetch("/api/clinical/ask", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          question: query,
+          report_text: data.reportContext || "",
+        }),
+      });
+      if (resFallback.ok) {
+        const json = await resFallback.json();
+        return json.answer || json.explanation || "";
+      }
+    } catch {}
   }
 
   // Fallback polite answer
   return `Based on your medical report: Remember that all diagnostic findings should be evaluated as part of a whole clinical picture. Focus on the flagged values in your report, and bring the generated Prioritized Doctor Questions to your next visit!`;
+}
+
+/**
+ * Real-time SSE token-by-token streaming from Gemma 4 12B.
+ * First come, first write in response.
+ */
+export async function streamChatWithHitho({
+  query,
+  reportContext,
+  onToken,
+}: {
+  query: string;
+  reportContext?: string;
+  onToken: (token: string) => void;
+}): Promise<string> {
+  const res = await fetch("/api/clinical/stream", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      prompt: query,
+      report_text: reportContext || "",
+      file_name: "Patient Report",
+    }),
+  });
+
+  if (!res.ok || !res.body) {
+    throw new Error(`Streaming API status ${res.status}`);
+  }
+
+  const reader = res.body.getReader();
+  const decoder = new TextDecoder("utf-8");
+  let fullText = "";
+  let buffer = "";
+
+  while (true) {
+    const { done, value } = await reader.read();
+    if (done) break;
+
+    buffer += decoder.decode(value, { stream: true });
+    const lines = buffer.split("\n\n");
+    buffer = lines.pop() || "";
+
+    for (const block of lines) {
+      const trimmed = block.trim();
+      if (!trimmed.startsWith("data:")) continue;
+      const jsonStr = trimmed.slice(5).trim();
+      if (!jsonStr) continue;
+
+      try {
+        const payload = JSON.parse(jsonStr);
+        if (payload.type === "token" && payload.token) {
+          fullText += payload.token;
+          onToken(payload.token);
+        } else if (payload.type === "done") {
+          return fullText;
+        }
+      } catch (err) {
+        // Skip malformed chunk
+      }
+    }
+  }
+
+  return fullText;
 }
 
 /**

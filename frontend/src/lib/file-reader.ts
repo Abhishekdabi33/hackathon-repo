@@ -90,6 +90,10 @@ export async function fileToReportInput(file: File): Promise<ReportInput> {
     throw new Error("PDF received. Please make sure the backend is running to perform PyMuPDF and RapidOCR clinical extraction.");
   }
 
+  if (type.startsWith("video/") || /\.(mp4|mov|webm|avi)$/i.test(name)) {
+    throw new Error("Video received. Please ensure the backend is running so OpenCV can sample keyframes and extract clinical readings.");
+  }
+
   // Default to text read
   const text = await readTextFile(file);
   return { reportText: text.slice(0, MAX_TEXT), fileName: file.name };
