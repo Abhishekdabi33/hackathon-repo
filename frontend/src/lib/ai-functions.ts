@@ -1,5 +1,7 @@
 import type { Analysis, ClinicalSample, EvidenceTraceItem, Finding, LabValue } from "@/types/report";
 
+export const API_BASE = (import.meta.env.VITE_API_URL || "").replace(/\/$/, "");
+
 export type ReportInput = {
   reportText?: string;
   imageDataUrl?: string;
@@ -129,7 +131,7 @@ export async function analyzeReport({ data }: { data: ReportInput }): Promise<An
   }
 
   try {
-    const res = await fetch("/api/clinical/analyze", {
+    const res = await fetch(`${API_BASE}/api/clinical/analyze`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
@@ -289,7 +291,7 @@ export async function chatWithHitho({
   const query = lastUserMsg?.content || "Explain my results";
 
   try {
-    const res = await fetch("/api/clinical/rag-ask", {
+    const res = await fetch(`${API_BASE}/api/clinical/rag-ask`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
@@ -305,7 +307,7 @@ export async function chatWithHitho({
   } catch (e) {
     console.warn("Backend RAG chat failed, attempting standard /api/clinical/ask:", e);
     try {
-      const resFallback = await fetch("/api/clinical/ask", {
+      const resFallback = await fetch(`${API_BASE}/api/clinical/ask`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -337,7 +339,7 @@ export async function streamChatWithHitho({
   reportContext?: string;
   onToken: (token: string) => void;
 }): Promise<string> {
-  const res = await fetch("/api/clinical/stream", {
+  const res = await fetch(`${API_BASE}/api/clinical/stream`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
@@ -448,7 +450,7 @@ Doctor Instructions: Maintain low glycemic index diet, perform 30 min daily aero
  */
 export async function fetchClinicalSamples(): Promise<ClinicalSample[]> {
   try {
-    const res = await fetch("/api/clinical/samples");
+    const res = await fetch(`${API_BASE}/api/clinical/samples`);
     if (res.ok) {
       const data = await res.json();
       if (data.samples && data.samples.length > 0) {
@@ -466,7 +468,7 @@ export async function fetchClinicalSamples(): Promise<ClinicalSample[]> {
  */
 export async function exportClinicalSummary(analysis: Analysis, patientName = "Patient"): Promise<void> {
   try {
-    const res = await fetch("/api/clinical/export-summary", {
+    const res = await fetch(`${API_BASE}/api/clinical/export-summary`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({

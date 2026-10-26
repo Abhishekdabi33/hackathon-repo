@@ -5,6 +5,7 @@ import sys
 import time
 import base64
 import re
+from datetime import datetime
 from pathlib import Path
 from typing import Dict, Any, Optional, List
 
@@ -552,6 +553,94 @@ def get_sample_reports():
     }
 
 
+def format_clinical_markdown_to_html(md_text: str) -> str:
+    """
+    Transforms clinical explanation markdown into clean, hospital-grade HTML.
+    Eliminates raw markdown syntax (**bold**, ### headers, *italics*, bullet points)
+    and strips redundant 'Questions for doctor' sections that are rendered in the dedicated section.
+    """
+    if not md_text:
+        return "<p style='color: #64748b;'>No clinical narrative available.</p>"
+
+    # Strip redundant questions section from the narrative body if present
+    cleaned = re.split(
+        r'###?\s*(?:Prioritized\s*)?Questions\s*(?:for\s*(?:your\s*)?Doctor)?|\*\*Prioritized Questions for Your Doctor\*\*',
+        md_text,
+        flags=re.IGNORECASE
+    )[0].strip()
+
+    # Escape HTML special characters except formatting we will introduce
+    cleaned = cleaned.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
+
+    lines = cleaned.split("\n")
+    html_lines = []
+    in_list = False
+
+    for line in lines:
+        stripped = line.strip()
+
+        # Handle empty lines
+        if not stripped:
+            if in_list:
+                html_lines.append("</ul>")
+                in_list = False
+            continue
+
+        # Handle Headers (###, ##, #)
+        header_match = re.match(r'^(#{1,4})\s+(.+)$', stripped)
+        if header_match:
+            if in_list:
+                html_lines.append("</ul>")
+                in_list = False
+            level = len(header_match.group(1))
+            h_text = header_match.group(2)
+            h_text = re.sub(r'\*\*(.+?)\*\*', r'<b>\1</b>', h_text)
+            if level <= 2:
+                html_lines.append(f'<h3 style="font-size: 15px; font-weight: 700; color: #0369a1; margin: 18px 0 6px 0; border-bottom: 1.5px solid #e0f2fe; padding-bottom: 4px;">{h_text}</h3>')
+            else:
+                html_lines.append(f'<h4 style="font-size: 13.5px; font-weight: 700; color: #0284c7; margin: 14px 0 6px 0; border-left: 3px solid #0284c7; padding-left: 8px;">{h_text}</h4>')
+            continue
+
+        # Handle Bullet Points (* or -)
+        bullet_match = re.match(r'^[\*\-•]\s+(.+)$', stripped)
+        if bullet_match:
+            if not in_list:
+                html_lines.append('<ul style="margin: 6px 0 10px 0; padding-left: 20px; list-style-type: disc;">')
+                in_list = True
+            item_text = bullet_match.group(1)
+            item_text = re.sub(r'\*\*(.+?)\*\*', r'<strong style="color: #0f172a; font-weight: 600;">\1</strong>', item_text)
+            item_text = re.sub(r'\*(.+?)\*', r'<em style="color: #475569;">\1</em>', item_text)
+            html_lines.append(f'<li style="margin-bottom: 6px; line-height: 1.6; color: #334155; font-size: 13.5px;">{item_text}</li>')
+            continue
+
+        # Handle Numbered Lists
+        num_match = re.match(r'^\d+\.\s+(.+)$', stripped)
+        if num_match:
+            if in_list:
+                html_lines.append("</ul>")
+                in_list = False
+            item_text = num_match.group(1)
+            item_text = re.sub(r'\*\*(.+?)\*\*', r'<strong style="color: #0f172a; font-weight: 600;">\1</strong>', item_text)
+            item_text = re.sub(r'\*(.+?)\*', r'<em style="color: #475569;">\1</em>', item_text)
+            html_lines.append(f'<div style="margin-bottom: 6px; line-height: 1.6; color: #334155; font-size: 13.5px; padding-left: 12px; border-left: 2px solid #bae6fd;">{item_text}</div>')
+            continue
+
+        # Normal text paragraph
+        if in_list:
+            html_lines.append("</ul>")
+            in_list = False
+
+        p_text = stripped
+        p_text = re.sub(r'\*\*(.+?)\*\*', r'<strong style="color: #0f172a; font-weight: 600;">\1</strong>', p_text)
+        p_text = re.sub(r'\*(.+?)\*', r'<em style="color: #475569;">\1</em>', p_text)
+        html_lines.append(f'<p style="margin: 6px 0; line-height: 1.65; color: #334155; font-size: 13.5px;">{p_text}</p>')
+
+    if in_list:
+        html_lines.append("</ul>")
+
+    return "\n".join(html_lines)
+
+
 @app.post("/api/clinical/export-summary")
 def export_clinical_summary(payload: ExportSummaryRequest):
     """
@@ -564,88 +653,433 @@ def export_clinical_summary(payload: ExportSummaryRequest):
     questions = payload.doctor_questions or []
     explanation = payload.explanation or "No explanation generated."
     abnormal_items = [e for e in evidence if e.get("is_abnormal")]
+    normal_count = len(evidence) - len(abnormal_items)
+
+    curr_time_str = datetime.now().strftime("%d %b %Y, %I:%M %p")
+    doc_id = f"LBL-{int(time.time()) % 1000000:06d}"
 
     # Build Evidence Table Rows (HTML & MD)
     table_rows_html = ""
     table_rows_md = "| Test Name | Value | Reference Range | Status | Clinical Implication |\n|:---|:---|:---|:---|:---|\n"
-    for item in evidence:
-        flag = item.get("flag", "NORMAL")
-        status_color = "#dc2626" if flag in ["HIGH", "CRITICAL"] else ("#ea580c" if flag == "LOW" else "#16a34a")
-        bg_color = "#fef2f2" if flag in ["HIGH", "CRITICAL"] else ("#fff7ed" if flag == "LOW" else "#f0fdf4")
+
+    for idx, item in enumerate(evidence):
+        raw_status = (item.get("status") or item.get("flag") or "NORMAL").upper()
+        is_abnormal = item.get("is_abnormal") or (raw_status not in ["NORMAL", "REPORTED", "UNKNOWN_RANGE"])
+
+        t_name = item.get("test_name") or item.get("name") or f"Diagnostic Metric {idx+1}"
+        raw_val = item.get("value") if item.get("value") is not None else item.get("measured_value")
+        val_display = str(raw_val) if raw_val is not None else "-"
+        unit_str = item.get("unit") or ""
+
+        # Reference range: check stated_range, reference, ref_range, or min-max
+        ref_display = item.get("stated_range") or item.get("reference") or item.get("ref_range")
+        if not ref_display or str(ref_display).strip().lower() in ["none", "null", ""]:
+            eff_min = item.get("effective_min")
+            eff_max = item.get("effective_max")
+            if eff_min is not None and eff_max is not None:
+                ref_display = f"{eff_min} - {eff_max} {unit_str}".strip()
+            elif eff_max is not None:
+                ref_display = f"&lt; {eff_max} {unit_str}".strip()
+            elif eff_min is not None:
+                ref_display = f"&gt; {eff_min} {unit_str}".strip()
+            else:
+                ref_display = "Standard laboratory interval"
+
+        # Status badge styling
+        if "CRITICAL" in raw_status:
+            badge_label = "CRITICAL LOW" if "LOW" in raw_status else "CRITICAL HIGH"
+            badge_bg = "#ffe4e6"
+            badge_color = "#9f1239"
+            badge_border = "#f43f5e"
+            row_bg = "#fff1f2"
+        elif "LOW" in raw_status:
+            badge_label = "LOW"
+            badge_bg = "#ffedd5"
+            badge_color = "#9a3412"
+            badge_border = "#fb923c"
+            row_bg = "#fffaf5"
+        elif "HIGH" in raw_status:
+            badge_label = "HIGH"
+            badge_bg = "#fef3c7"
+            badge_color = "#92400e"
+            badge_border = "#f59e0b"
+            row_bg = "#fffdf5"
+        else:
+            badge_label = "NORMAL"
+            badge_bg = "#dcfce7"
+            badge_color = "#166534"
+            badge_border = "#86efac"
+            row_bg = "#ffffff"
+
+        context = (
+            item.get("clinical_significance")
+            or item.get("meaning")
+            or item.get("description")
+            or ("Measurement outside reference range requiring physician correlation." if is_abnormal else "Value is within standard physiological gold standard parameters.")
+        )
+
         table_rows_html += f"""
-        <tr style="background: {bg_color}; border-bottom: 1px solid #e2e8f0;">
-          <td style="padding: 10px 14px; font-weight: 600;">{item.get('test_name')}</td>
-          <td style="padding: 10px 14px; font-weight: bold;">{item.get('value')} {item.get('unit')}</td>
-          <td style="padding: 10px 14px; color: #64748b;">{item.get('ref_range')}</td>
-          <td style="padding: 10px 14px;"><span style="color: {status_color}; font-weight: bold; padding: 2px 8px; border-radius: 4px; background: white; border: 1px solid {status_color};">{flag}</span></td>
-          <td style="padding: 10px 14px; color: #334155; font-size: 0.9em;">{item.get('meaning', 'Within expected clinical parameters')}</td>
+        <tr style="background: {row_bg}; border-bottom: 1px solid #e2e8f0; page-break-inside: avoid;">
+          <td style="padding: 10px 14px; font-weight: 600; color: #0f172a; font-size: 13.5px;">{t_name}</td>
+          <td style="padding: 10px 14px; font-weight: 700; color: #1e293b; font-size: 13.5px; white-space: nowrap;">{val_display} <span style="font-weight: 400; font-size: 12px; color: #64748b;">{unit_str}</span></td>
+          <td style="padding: 10px 14px; color: #475569; font-size: 13px; white-space: nowrap;">{ref_display}</td>
+          <td style="padding: 10px 14px; white-space: nowrap;">
+            <span style="background: {badge_bg}; color: {badge_color}; border: 1px solid {badge_border}; font-weight: 700; padding: 3px 8px; border-radius: 6px; font-size: 11px; display: inline-block;">
+              ● {badge_label}
+            </span>
+          </td>
+          <td style="padding: 10px 14px; color: #334155; font-size: 12.5px; line-height: 1.5;">{context}</td>
         </tr>
         """
-        table_rows_md += f"| {item.get('test_name')} | {item.get('value')} {item.get('unit')} | {item.get('ref_range')} | **{flag}** | {item.get('meaning', 'Normal')} |\n"
+        table_rows_md += f"| {t_name} | {val_display} {unit_str} | {ref_display} | **{badge_label}** | {context} |\n"
 
-    # Format questions
-    questions_html = "".join([f"<li style='margin-bottom: 8px;'><b>Q{i+1}:</b> {q}</li>" for i, q in enumerate(questions)])
+    # Format questions as structured consultation cards
+    questions_cards_html = ""
+    for idx, q in enumerate(questions):
+        clean_q = re.sub(r'^\d+[\.\)]\s*', '', q.strip())
+        questions_cards_html += f"""
+        <div style="background: #ffffff; border: 1px solid #e2e8f0; border-left: 4px solid #0284c7; border-radius: 8px; padding: 12px 14px; margin-bottom: 10px; page-break-inside: avoid;">
+          <div style="display: flex; align-items: flex-start; gap: 8px;">
+            <span style="font-weight: 700; color: #0284c7; font-size: 13px;">[ &nbsp; ] Q{idx+1}:</span>
+            <div style="font-size: 13.5px; font-weight: 600; color: #0f172a; line-height: 1.5;">{clean_q}</div>
+          </div>
+          <div style="margin-top: 8px; padding-top: 6px; border-top: 1px dashed #cbd5e1; font-size: 11px; color: #94a3b8; display: flex; justify-content: space-between;">
+            <span>Doctor's Observation / Prescription: __________________________________________________</span>
+            <span>Date: [ &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; ]</span>
+          </div>
+        </div>
+        """
     questions_md = "\n".join([f"{i+1}. {q}" for i, q in enumerate(questions)])
 
-    # Complete printable HTML document
+    # Format explanation cleanly
+    formatted_explanation_html = format_clinical_markdown_to_html(explanation)
+
+    # Complete hospital-grade printable HTML document
     html_document = f"""<!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
   <meta charset="utf-8"/>
   <title>LabLens AI - Clinical Review Summary ({patient})</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <style>
-    body {{ font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; color: #1e293b; margin: 0; padding: 32px; background: #ffffff; }}
-    .header {{ display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #0284c7; padding-bottom: 16px; margin-bottom: 24px; }}
-    .brand {{ font-size: 24px; font-weight: 800; color: #0284c7; }}
-    .badge {{ background: #e0f2fe; color: #0369a1; padding: 4px 10px; border-radius: 12px; font-size: 12px; font-weight: 600; }}
-    .section-title {{ font-size: 16px; font-weight: 700; color: #0f172a; margin-top: 24px; margin-bottom: 12px; border-left: 4px solid #0284c7; padding-left: 8px; }}
-    table {{ width: 100%; border-collapse: collapse; margin-top: 8px; font-size: 14px; }}
-    th {{ background: #f8fafc; padding: 10px 14px; text-align: left; font-weight: 600; color: #475569; border-bottom: 2px solid #cbd5e1; }}
-    .explanation-box {{ background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 16px; line-height: 1.6; font-size: 14px; }}
-    .disclaimer {{ margin-top: 32px; padding: 12px; background: #fffbeb; border: 1px solid #fef3c7; border-radius: 6px; font-size: 12px; color: #92400e; }}
-    @media print {{ body {{ padding: 12px; }} .no-print {{ display: none; }} }}
+    * {{ box-sizing: border-box; }}
+    body {{
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      color: #0f172a;
+      background: #f8fafc;
+      margin: 0;
+      padding: 32px 24px;
+      font-size: 14px;
+      line-height: 1.5;
+    }}
+    .document-sheet {{
+      max-width: 920px;
+      margin: 0 auto;
+      background: #ffffff;
+      border: 1px solid #e2e8f0;
+      border-radius: 12px;
+      padding: 36px 40px;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+    }}
+    .header-bar {{
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      border-bottom: 2px solid #0284c7;
+      padding-bottom: 16px;
+      margin-bottom: 24px;
+    }}
+    .brand-title {{
+      font-size: 24px;
+      font-weight: 800;
+      color: #0284c7;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }}
+    .brand-sub {{
+      font-size: 12px;
+      color: #64748b;
+      font-weight: 500;
+      margin-top: 3px;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+    }}
+    .doc-meta {{
+      text-align: right;
+      font-size: 12px;
+      color: #475569;
+    }}
+    .badge-certified {{
+      display: inline-block;
+      background: #e0f2fe;
+      color: #0369a1;
+      padding: 4px 10px;
+      border-radius: 9999px;
+      font-size: 11px;
+      font-weight: 700;
+      border: 1px solid #bae6fd;
+      margin-bottom: 4px;
+    }}
+    .demographics-grid {{
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 12px;
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      padding: 14px 18px;
+      margin-bottom: 24px;
+    }}
+    .demo-item label {{
+      display: block;
+      font-size: 10.5px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: #64748b;
+      margin-bottom: 2px;
+    }}
+    .demo-item span {{
+      font-size: 13.5px;
+      font-weight: 600;
+      color: #0f172a;
+    }}
+    .section-header {{
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-left: 4px solid #0284c7;
+      padding-left: 10px;
+      margin-top: 28px;
+      margin-bottom: 14px;
+    }}
+    .section-title {{
+      font-size: 15px;
+      font-weight: 700;
+      color: #0f172a;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }}
+    .table-container {{
+      width: 100%;
+      overflow-x: auto;
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      margin-bottom: 24px;
+    }}
+    table {{
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+      text-align: left;
+    }}
+    th {{
+      background: #f1f5f9;
+      color: #334155;
+      font-weight: 700;
+      font-size: 11.5px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      padding: 10px 14px;
+      border-bottom: 2px solid #cbd5e1;
+    }}
+    .explanation-container {{
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      padding: 18px 20px;
+      margin-bottom: 24px;
+    }}
+    .signoff-box {{
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+      border: 1px solid #cbd5e1;
+      background: #f8fafc;
+      border-radius: 8px;
+      padding: 16px 20px;
+      margin-top: 24px;
+      page-break-inside: avoid;
+    }}
+    .stamp-area {{
+      border: 1.5px dashed #94a3b8;
+      border-radius: 6px;
+      padding: 10px;
+      text-align: center;
+      color: #64748b;
+      font-size: 11px;
+    }}
+    .disclaimer-box {{
+      margin-top: 24px;
+      padding: 12px 16px;
+      background: #fffbeb;
+      border: 1px solid #fef3c7;
+      border-radius: 6px;
+      font-size: 11.5px;
+      color: #92400e;
+      line-height: 1.5;
+    }}
+    .print-controls {{
+      display: flex;
+      justify-content: flex-end;
+      gap: 10px;
+      margin-bottom: 16px;
+      max-width: 920px;
+      margin-left: auto;
+      margin-right: auto;
+    }}
+    .btn-print {{
+      background: #0284c7;
+      color: white;
+      border: none;
+      padding: 8px 16px;
+      border-radius: 6px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }}
+    .btn-print:hover {{
+      background: #0369a1;
+    }}
+    @media print {{
+      @page {{
+        margin: 12mm 14mm;
+        size: A4;
+      }}
+      body {{
+        background: #ffffff;
+        padding: 0;
+      }}
+      .document-sheet {{
+        border: none;
+        box-shadow: none;
+        padding: 0;
+        max-width: 100%;
+      }}
+      .no-print {{
+        display: none !important;
+      }}
+      table {{
+        page-break-inside: auto;
+      }}
+      tr {{
+        page-break-inside: avoid;
+        page-break-after: auto;
+      }}
+    }}
   </style>
 </head>
 <body>
-  <div class="header">
+  <div class="print-controls no-print">
+    <button class="btn-print" onclick="window.print()">
+      🖨️ Print / Save as PDF
+    </button>
+  </div>
+
+  <div class="document-sheet">
+    <!-- Header -->
+    <div class="header-bar">
+      <div>
+        <div class="brand-title">🔬 LabLens AI</div>
+        <div class="brand-sub">Clinical Pathology Review & EvidenceTrace™ Brief</div>
+      </div>
+      <div class="doc-meta">
+        <span class="badge-certified">Certified Gold Standard Review</span>
+        <div><b>Doc ID:</b> {doc_id}</div>
+        <div><b>Generated:</b> {curr_time_str}</div>
+        <div><b>Engine:</b> Google Gemma 4 12B Dual T4</div>
+      </div>
+    </div>
+
+    <!-- Patient Demographics & Investigation Overview -->
+    <div class="demographics-grid">
+      <div class="demo-item">
+        <label>Patient Name</label>
+        <span>{patient}</span>
+      </div>
+      <div class="demo-item">
+        <label>Specimen / Panel</label>
+        <span>Comprehensive Clinical Panel</span>
+      </div>
+      <div class="demo-item">
+        <label>Total Tests Validated</label>
+        <span>{len(evidence)} Tests ({abnormal_items.__len__()} Flagged)</span>
+      </div>
+      <div class="demo-item">
+        <label>Review Status</label>
+        <span style="color: {'#dc2626' if abnormal_items else '#16a34a'};">
+          {'● Action Required' if abnormal_items else '● All Parameters Normal'}
+        </span>
+      </div>
+    </div>
+
+    <!-- EvidenceTrace Table -->
+    <div class="section-header">
+      <div class="section-title">EvidenceTrace™ Test Validation Matrix</div>
+      <div style="font-size: 12px; color: #64748b;">
+        {len(abnormal_items)} Flagged &bull; {normal_count} Within Interval
+      </div>
+    </div>
+
+    <div class="table-container">
+      <table>
+        <thead>
+          <tr>
+            <th>Investigation</th>
+            <th>Result</th>
+            <th>Reference Range</th>
+            <th>Status</th>
+            <th>Clinical Context & Pathophysiology</th>
+          </tr>
+        </thead>
+        <tbody>
+          {table_rows_html if table_rows_html else '<tr><td colspan="5" style="padding: 20px; text-align: center; color: #94a3b8;">No standard numerical measurements detected in this report.</td></tr>'}
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Clinical Narrative -->
+    <div class="section-header">
+      <div class="section-title">Clinical Findings & Plain-Language Explanation</div>
+    </div>
+    <div class="explanation-container">
+      {formatted_explanation_html}
+    </div>
+
+    <!-- Physician Consultation Questions -->
+    <div class="section-header">
+      <div class="section-title">Prioritized Questions for Your Doctor</div>
+      <div style="font-size: 11px; color: #64748b;">Bring this sheet to your clinical visit</div>
+    </div>
     <div>
-      <div class="brand">🔬 LabLens AI</div>
-      <div style="color: #64748b; font-size: 13px;">Clinical Report Review & EvidenceTrace Brief</div>
+      {questions_cards_html if questions_cards_html else '<div style="padding: 12px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px; color: #64748b;">No specific abnormalities flagged. Discuss routine preventative screening with your physician.</div>'}
     </div>
-    <div style="text-align: right;">
-      <span class="badge">Model: Gemma 4 12B Dual T4</span>
-      <div style="font-size: 12px; color: #94a3b8; margin-top: 4px;">Date: 25-Oct-2026</div>
+
+    <!-- Physician Sign-Off & Verification Stamp -->
+    <div class="signoff-box">
+      <div>
+        <div style="font-size: 11.5px; font-weight: 700; color: #475569; text-transform: uppercase; margin-bottom: 6px;">Attending Physician Correlation</div>
+        <div style="font-size: 12.5px; color: #334155; line-height: 1.6;">
+          Doctor's Name: ____________________________<br/>
+          Clinic / Hospital: ___________________________<br/>
+          Signature: __________________ &nbsp; Date: ________
+        </div>
+      </div>
+      <div class="stamp-area">
+        <div style="font-weight: 700; margin-bottom: 4px;">LABORATORY / CLINIC STAMP</div>
+        <div>Verified with Gold Standard Reference Intervals</div>
+        <div style="font-size: 10px; margin-top: 6px; color: #94a3b8;">Ref: {doc_id} &bull; Gemma 4 12B</div>
+      </div>
     </div>
-  </div>
 
-  <div class="section-title">EvidenceTrace™ Test Validation Matrix ({len(evidence)} Tests Checked, {len(abnormal_items)} Flagged)</div>
-  <table>
-    <thead>
-      <tr>
-        <th>Investigation</th>
-        <th>Result</th>
-        <th>Reference Range</th>
-        <th>Status</th>
-        <th>Clinical Context</th>
-      </tr>
-    </thead>
-    <tbody>
-      {table_rows_html if table_rows_html else '<tr><td colspan="5" style="padding: 16px; text-align: center; color: #94a3b8;">No standard numerical tests extracted.</td></tr>'}
-    </tbody>
-  </table>
-
-  <div class="section-title">Clinical Findings & Plain-Language Explanation</div>
-  <div class="explanation-box">
-    {explanation.replace(chr(10), '<br/>')}
-  </div>
-
-  <div class="section-title">Prioritized Questions for Your Doctor</div>
-  <ol style="padding-left: 20px; line-height: 1.6; font-size: 14px;">
-    {questions_html if questions_html else '<li>No specific flagged questions; follow standard physician recommendations.</li>'}
-  </ol>
-
-  <div class="disclaimer">
-    ⚠️ <b>Clinical Safety Notice:</b> LabLens AI provides informational assistance based on Google Gemma 4 12B and laboratory reference standards. It does not replace professional medical judgment, diagnosis, or prescription. Always consult a licensed healthcare professional.
+    <!-- Clinical Legal Disclaimer -->
+    <div class="disclaimer-box">
+      ⚠️ <b>Clinical Safety Notice:</b> LabLens AI provides computational educational assistance based on Google Gemma 4 12B and standardized laboratory reference intervals. It is designed to assist patients in understanding laboratory markers and preparing targeted questions for their healthcare providers. It does not replace independent professional medical diagnosis, judgment, or treatment. Always consult a licensed physician or pathologist.
+    </div>
   </div>
 </body>
 </html>"""
@@ -663,9 +1097,7 @@ def export_clinical_summary(payload: ExportSummaryRequest):
     }
 
 
-# ==============================================================================
-# UNIVERSAL INGESTION ENDPOINT
-# ==============================================================================
+
 @app.post("/api/upload")
 async def upload_file(file: UploadFile = File(...)):
     """

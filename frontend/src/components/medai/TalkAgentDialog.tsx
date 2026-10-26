@@ -7,8 +7,6 @@ import {
   VolumeX,
   X,
   Sparkles,
-  MessageCircle,
-  RotateCcw,
   Stethoscope,
   SendHorizontal,
 } from "lucide-react";
@@ -43,8 +41,37 @@ export function TalkAgentDialog({ open, onClose }: TalkAgentProps) {
 
   const recognitionRef = useRef<any>(null);
   const speechRef = useRef<SpeechSynthesisUtterance | null>(null);
+  const isOpenRef = useRef(open);
+  const silenceTimerRef = useRef<any>(null);
+  const accumulatedSpeechRef = useRef("");
+  const isListeningRef = useRef(false);
+  const requestIdRef = useRef(0);
 
-  // Initialize Speech Recognition
+  // Sync open state ref immediately and kill all audio/timers if closed
+  useEffect(() => {
+    isOpenRef.current = open;
+    if (!open) {
+      isListeningRef.current = false;
+      requestIdRef.current++; // Invalidate any pending AI replies
+      if (silenceTimerRef.current) {
+        clearTimeout(silenceTimerRef.current);
+        silenceTimerRef.current = null;
+      }
+      if (typeof window !== "undefined" && window.speechSynthesis) {
+        window.speechSynthesis.cancel();
+      }
+      if (recognitionRef.current) {
+        try {
+          recognitionRef.current.abort();
+        } catch {}
+      }
+      setVoiceState("idle");
+      setLiveSpeech("");
+      accumulatedSpeechRef.current = "";
+    }
+  }, [open]);
+
+  // Initialize Speech Recognition once
   useEffect(() => {
     if (typeof window === "undefined") return;
 
@@ -53,43 +80,81 @@ export function TalkAgentDialog({ open, onClose }: TalkAgentProps) {
 
     if (SpeechRecognition) {
       const recognition = new SpeechRecognition();
-      recognition.continuous = false;
+      recognition.continuous = true; // Natural continuous speaking
       recognition.interimResults = true;
-      recognition.lang = "en-US";
+      recognition.lang = "en-IN"; // English/Hinglish friendly
 
       recognition.onstart = () => {
+        if (!isOpenRef.current) {
+          try { recognition.abort(); } catch {}
+          return;
+        }
         setVoiceState("listening");
-        setLiveSpeech("");
+        isListeningRef.current = true;
       };
 
       recognition.onresult = (event: any) => {
+        if (!isOpenRef.current || !isListeningRef.current) return;
+
         let interim = "";
         let final = "";
-        for (let i = event.resultIndex; i < event.results.length; ++i) {
+
+        for (let i = 0; i < event.results.length; ++i) {
           if (event.results[i].isFinal) {
-            final += event.results[i][0].transcript;
+            final += event.results[i][0].transcript + " ";
           } else {
             interim += event.results[i][0].transcript;
           }
         }
-        const text = final || interim;
-        setLiveSpeech(text);
-        if (final) {
-          setTranscript(final);
-          handleAskQuestion(final);
+
+        const currentCombined = (final + interim).trim();
+        if (!currentCombined) return;
+
+        setLiveSpeech(currentCombined);
+        accumulatedSpeechRef.current = currentCombined;
+
+        // Reset silence timer on every new sound/word detected
+        if (silenceTimerRef.current) {
+          clearTimeout(silenceTimerRef.current);
         }
+
+        // Give user 2.0s natural pause buffer before submitting automatically
+        silenceTimerRef.current = setTimeout(() => {
+          if (!isOpenRef.current || !isListeningRef.current) return;
+          const queryToSubmit = accumulatedSpeechRef.current.trim();
+          if (queryToSubmit.length > 2) {
+            handleAskQuestion(queryToSubmit);
+          }
+        }, 2000);
       };
 
       recognition.onerror = (e: any) => {
-        console.warn("Speech recognition error:", e);
-        if (voiceState === "listening") {
+        if (!isOpenRef.current) return;
+        if (e.error === "aborted") return;
+        console.warn("Speech recognition notice:", e.error);
+        if (e.error !== "no-speech" && voiceState === "listening") {
           setVoiceState("idle");
+          isListeningRef.current = false;
         }
       };
 
       recognition.onend = () => {
-        if (voiceState === "listening" && !transcript) {
-          setVoiceState("idle");
+        if (!isOpenRef.current) return;
+
+        // If recognition ended naturally while listening:
+        if (isListeningRef.current) {
+          const queryToSubmit = accumulatedSpeechRef.current.trim();
+          if (queryToSubmit.length > 2) {
+            // User finished speaking and paused
+            if (silenceTimerRef.current) {
+              clearTimeout(silenceTimerRef.current);
+              silenceTimerRef.current = null;
+            }
+            handleAskQuestion(queryToSubmit);
+          } else {
+            setVoiceState("idle");
+            isListeningRef.current = false;
+          }
         }
       };
 
@@ -97,66 +162,92 @@ export function TalkAgentDialog({ open, onClose }: TalkAgentProps) {
     }
 
     return () => {
+      if (silenceTimerRef.current) clearTimeout(silenceTimerRef.current);
       if (recognitionRef.current) {
-        try {
-          recognitionRef.current.stop();
-        } catch {}
+        try { recognitionRef.current.abort(); } catch {}
       }
-      if (window.speechSynthesis) {
+      if (typeof window !== "undefined" && window.speechSynthesis) {
         window.speechSynthesis.cancel();
       }
     };
   }, []);
 
-  // Cancel speaking when closed
-  useEffect(() => {
-    if (!open) {
-      if (window.speechSynthesis) window.speechSynthesis.cancel();
-      if (recognitionRef.current) {
-        try {
-          recognitionRef.current.stop();
-        } catch {}
-      }
-      setVoiceState("idle");
-      setLiveSpeech("");
+  // Safe Close Handler: completely halts everything and tells parent to close
+  const handleSafeClose = () => {
+    isOpenRef.current = false;
+    isListeningRef.current = false;
+    requestIdRef.current++; // Drops in-flight API replies so AI never speaks aloud after close
+    if (silenceTimerRef.current) {
+      clearTimeout(silenceTimerRef.current);
+      silenceTimerRef.current = null;
     }
-  }, [open]);
+    if (typeof window !== "undefined" && window.speechSynthesis) {
+      window.speechSynthesis.cancel();
+    }
+    if (recognitionRef.current) {
+      try {
+        recognitionRef.current.abort();
+      } catch {}
+    }
+    setVoiceState("idle");
+    setLiveSpeech("");
+    accumulatedSpeechRef.current = "";
+    onClose();
+  };
 
   // Start Voice Listening
   const startListening = () => {
+    if (!isOpenRef.current) return;
     if (window.speechSynthesis) window.speechSynthesis.cancel();
+    if (silenceTimerRef.current) clearTimeout(silenceTimerRef.current);
+
     setResponse("");
     setLiveSpeech("");
     setTranscript("");
+    accumulatedSpeechRef.current = "";
+    isListeningRef.current = true;
 
     if (recognitionRef.current) {
       try {
         recognitionRef.current.start();
       } catch (e) {
         try {
-          recognitionRef.current.stop();
-          setTimeout(() => recognitionRef.current.start(), 200);
+          recognitionRef.current.abort();
+          setTimeout(() => {
+            if (isOpenRef.current && isListeningRef.current) {
+              recognitionRef.current.start();
+            }
+          }, 150);
         } catch {}
       }
     } else {
-      // Fallback for browsers without speech recognition
-      setLiveSpeech("Listening not supported on this browser. You can type or tap a quick prompt below!");
+      setLiveSpeech("Speech recognition not supported on this browser. Tap any quick prompt below!");
       setVoiceState("idle");
+      isListeningRef.current = false;
     }
   };
 
-  const stopListening = () => {
+  const stopListening = (shouldCancel = true) => {
+    isListeningRef.current = false;
+    if (silenceTimerRef.current) {
+      clearTimeout(silenceTimerRef.current);
+      silenceTimerRef.current = null;
+    }
     if (recognitionRef.current) {
       try {
-        recognitionRef.current.stop();
+        recognitionRef.current.abort();
       } catch {}
     }
-    setVoiceState("idle");
+    if (shouldCancel) {
+      setVoiceState("idle");
+      setLiveSpeech("");
+      accumulatedSpeechRef.current = "";
+    }
   };
 
   // Speak Answer aloud with speech synthesis
-  const speakText = (text: string) => {
-    if (!window.speechSynthesis || isMuted) return;
+  const speakText = (text: string, currentReqId: number) => {
+    if (!isOpenRef.current || !window.speechSynthesis || isMuted || requestIdRef.current !== currentReqId) return;
 
     window.speechSynthesis.cancel();
     const cleanText = (text || "").replace(/[*#_`>|]/g, " ").replace(/\n+/g, ". ");
@@ -166,7 +257,7 @@ export function TalkAgentDialog({ open, onClose }: TalkAgentProps) {
 
     try {
       const voices = window.speechSynthesis.getVoices();
-      const isHindi = /kya|mera|meri|hai|dawa|dard|khoon|daktar|theek|parhez/i.test(cleanText);
+      const isHindi = /kya|mera|meri|hai|dawa|dard|khoon|daktar|theek|parhez|kaisa|batao/i.test(cleanText);
       if (isHindi) {
         const hiVoice = voices.find((v) => v.lang.includes("hi") || v.name.includes("Hindi"));
         if (hiVoice) {
@@ -177,13 +268,17 @@ export function TalkAgentDialog({ open, onClose }: TalkAgentProps) {
     } catch {}
 
     utterance.onstart = () => {
+      if (!isOpenRef.current || requestIdRef.current !== currentReqId) {
+        window.speechSynthesis.cancel();
+        return;
+      }
       setVoiceState("speaking");
     };
     utterance.onend = () => {
-      setVoiceState("idle");
+      if (isOpenRef.current) setVoiceState("idle");
     };
     utterance.onerror = () => {
-      setVoiceState("idle");
+      if (isOpenRef.current) setVoiceState("idle");
     };
 
     speechRef.current = utterance;
@@ -193,12 +288,13 @@ export function TalkAgentDialog({ open, onClose }: TalkAgentProps) {
   // Handle Question Query
   const handleAskQuestion = async (queryText: string) => {
     const q = queryText.trim();
-    if (!q) return;
+    if (!q || !isOpenRef.current) return;
 
-    stopListening();
+    stopListening(false);
     setVoiceState("thinking");
     setTranscript(q);
 
+    const currentReqId = ++requestIdRef.current;
     const report = getCurrentReport();
     const reportContext = report ? JSON.stringify(report.analysis) : undefined;
     const newHistory = [...history, { role: "user" as const, content: q }];
@@ -212,20 +308,23 @@ export function TalkAgentDialog({ open, onClose }: TalkAgentProps) {
         },
       });
 
+      // Strict Guard: if user closed dialog while awaiting AI, discard response!
+      if (!isOpenRef.current || requestIdRef.current !== currentReqId) return;
+
       setResponse(reply);
       setHistory((prev) => [...prev, { role: "assistant", content: reply }]);
-      speakText(reply);
+      speakText(reply, currentReqId);
     } catch (err) {
+      if (!isOpenRef.current || requestIdRef.current !== currentReqId) return;
       const fallbackMsg = "I couldn't process that query right now. Please check if the local server is running or try again.";
       setResponse(fallbackMsg);
       setVoiceState("idle");
     }
   };
 
-  // Determine character animated state
   const getAiState = () => {
+    if (voiceState === "speaking") return "happy";
     if (voiceState === "thinking") return "thinking";
-    if (voiceState === "listening" || voiceState === "speaking") return "happy";
     return "idle";
   };
 
@@ -239,7 +338,7 @@ export function TalkAgentDialog({ open, onClose }: TalkAgentProps) {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          onClick={onClose}
+          onClick={handleSafeClose}
           className="absolute inset-0 bg-black/40 backdrop-blur-md"
         />
 
@@ -285,7 +384,7 @@ export function TalkAgentDialog({ open, onClose }: TalkAgentProps) {
 
               <button
                 type="button"
-                onClick={onClose}
+                onClick={handleSafeClose}
                 className="flex h-8 w-8 items-center justify-center rounded-full border border-border bg-white text-muted-foreground hover:bg-paleblue hover:text-foreground transition-colors"
                 aria-label="Close"
               >
@@ -334,9 +433,9 @@ export function TalkAgentDialog({ open, onClose }: TalkAgentProps) {
                 />
                 <span className="text-xs font-bold uppercase tracking-wider text-foreground">
                   {voiceState === "listening"
-                    ? "Listening to you..."
+                    ? "Listening... (Continuous + 2s Buffer)"
                     : voiceState === "thinking"
-                    ? "Reasoning with Gemma..."
+                    ? "Reasoning with Gemma 4 12B..."
                     : voiceState === "speaking"
                     ? "Hitho is Speaking"
                     : "Tap Microphone to Speak"}
@@ -381,18 +480,36 @@ export function TalkAgentDialog({ open, onClose }: TalkAgentProps) {
             </motion.div>
           )}
 
-          {/* Controls: Microphone Button + Quick Prompts */}
+          {/* Controls: Microphone Button + Done Speaking / Quick Prompts */}
           <div className="mt-4 flex flex-col items-center gap-3">
             <div className="flex items-center gap-3">
               {voiceState === "listening" ? (
-                <button
-                  type="button"
-                  onClick={stopListening}
-                  className="flex items-center gap-2 rounded-full bg-rose-600 px-6 py-3 text-xs font-bold text-white shadow-[0_4px_20px_rgba(225,29,72,0.35)] hover:bg-rose-700 transition-all active:scale-95 animate-pulse"
-                >
-                  <MicOff className="h-4 w-4" />
-                  <span>Stop Listening</span>
-                </button>
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => stopListening(true)}
+                    className="flex items-center gap-2 rounded-full border border-rose-300 bg-rose-50 px-5 py-2.5 text-xs font-bold text-rose-700 hover:bg-rose-100 transition-all active:scale-95"
+                  >
+                    <MicOff className="h-4 w-4" />
+                    <span>Cancel</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const text = (accumulatedSpeechRef.current || liveSpeech).trim();
+                      if (text) {
+                        if (silenceTimerRef.current) clearTimeout(silenceTimerRef.current);
+                        handleAskQuestion(text);
+                      }
+                    }}
+                    disabled={!liveSpeech.trim() && !accumulatedSpeechRef.current.trim()}
+                    className="flex items-center gap-2 rounded-full bg-primary px-6 py-2.5 text-xs font-bold text-white shadow-[0_4px_20px_rgba(37,99,235,0.35)] hover:bg-bright transition-all active:scale-95 disabled:opacity-40"
+                  >
+                    <SendHorizontal className="h-4 w-4" />
+                    <span>Done Speaking (Send)</span>
+                  </button>
+                </div>
               ) : (
                 <button
                   type="button"

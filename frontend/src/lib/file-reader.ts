@@ -52,7 +52,7 @@ export async function fileToReportInput(file: File): Promise<ReportInput> {
   try {
     const formData = new FormData();
     formData.append("file", file);
-    const res = await fetch("/api/upload", {
+    const res = await fetch(`${API_BASE}/api/upload`, {
       method: "POST",
       body: formData,
     });
