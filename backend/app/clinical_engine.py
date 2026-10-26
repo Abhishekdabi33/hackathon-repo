@@ -484,6 +484,7 @@ class ClinicalValidator:
             "test_name": test_name,
             "standard_name": metric_key or test_name,
             "value": num_val if num_val is not None else str(value),
+            "measured_value": num_val if num_val is not None else str(value),
             "unit": eff_unit,
             "stated_range": stated_range or (f"{eff_min} - {eff_max}" if eff_min and eff_max else "Not Specified"),
             "effective_min": eff_min,

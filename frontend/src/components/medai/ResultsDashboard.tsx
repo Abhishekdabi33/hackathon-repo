@@ -273,7 +273,7 @@ export function ResultsDashboard({ analysis, fileName }: { analysis: Analysis; f
                             {item.test_name}
                           </td>
                           <td className="px-4 py-3.5 font-mono font-semibold text-foreground">
-                            {item.measured_value} {item.unit}
+                            {(item as any).measured_value ?? (item as any).value} {item.unit}
                           </td>
                           <td className="px-4 py-3.5 font-mono text-muted-foreground">
                             {item.stated_range || "Standard range"}

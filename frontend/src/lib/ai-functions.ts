@@ -18,41 +18,53 @@ function normalizeBackendResponse(data: any, reportText: string, fileName?: stri
   const doctorQuestions: string[] = data.doctor_questions || [];
 
   // Extract findings from evidence trace or explanation
-  const findings: Finding[] = evidence.map((item) => {
+  const findings: Finding[] = evidence.map((item: any) => {
     let importance: "normal" | "attention" | "outside_range" = "normal";
     const st = (item.status || "").toUpperCase();
-    if (st === "CRITICAL") importance = "outside_range";
+    if (st.includes("CRITICAL")) importance = "outside_range";
     else if (st === "HIGH" || st === "LOW") importance = "attention";
+
+    const measuredVal = item.value ?? item.measured_value ?? "";
+    const statedRef = item.stated_range || item.reference || "Standard range";
+    const sig = item.clinical_significance || item.description || item.meaning || `${item.test_name} measured at ${measuredVal} ${item.unit || ""}.`.trim();
 
     return {
       term: item.test_name,
-      explanation: item.clinical_significance || `${item.test_name} measured at ${item.measured_value} ${item.unit}.`,
+      explanation: sig,
       importance,
-      value: `${item.measured_value} ${item.unit}`.trim(),
+      value: `${measuredVal} ${item.unit || ""}`.trim(),
       deepDive: {
-        meaning: item.clinical_significance || `Evaluation of ${item.test_name}`,
-        whyItMatters: `Standard reference range is ${item.stated_range || "standard laboratory interval"}.`,
-        yourResult: `${item.measured_value} ${item.unit}`,
-        typicalRange: item.stated_range || "Standard range",
+        meaning: sig,
+        whyItMatters: `Standard reference range is ${statedRef}.`,
+        yourResult: `${measuredVal} ${item.unit || ""}`.trim(),
+        typicalRange: statedRef,
       },
     };
   });
 
   // Extract values from evidence items
-  const values: LabValue[] = evidence.map((item) => {
+  const values: LabValue[] = evidence.map((item: any) => {
     let status: "normal" | "attention" | "outside_range" = "normal";
     const st = (item.status || "").toUpperCase();
-    if (st === "CRITICAL") status = "outside_range";
+    if (st.includes("CRITICAL")) status = "outside_range";
     else if (st === "HIGH" || st === "LOW") status = "attention";
+
+    const measuredVal = item.value ?? item.measured_value ?? "";
 
     return {
       name: item.test_name,
-      value: String(item.measured_value),
+      value: String(measuredVal),
       unit: item.unit || null,
-      reference: item.stated_range || null,
+      reference: item.stated_range || item.reference || null,
       status,
     };
   });
+
+  const evidenceNormalized: EvidenceTraceItem[] = evidence.map((item: any) => ({
+    ...item,
+    measured_value: item.value ?? item.measured_value ?? "",
+    value: item.value ?? item.measured_value ?? "",
+  }));
 
   // Parse common medical abbreviations from text
   const abbreviations: { abbr: string; meaning: string }[] = [];
@@ -79,12 +91,10 @@ function normalizeBackendResponse(data: any, reportText: string, fileName?: stri
     }
   }
 
-  // Generate clean conversational AI summary
+  // Generate clean conversational AI summary (Preserve Markdown headings for rich ReactMarkdown rendering)
   let cleanSummary = explanation;
-  // If raw explanation contains markdown headings or trace, clean it for display
   cleanSummary = cleanSummary
     .replace(/```[\s\S]*?```/g, "")
-    .replace(/^#+\s+/gm, "")
     .trim();
 
   if (!cleanSummary || cleanSummary.length < 20) {
@@ -111,7 +121,7 @@ function normalizeBackendResponse(data: any, reportText: string, fileName?: stri
     ],
     values,
     abbreviations,
-    evidence_trace: evidence,
+    evidence_trace: evidenceNormalized,
     doctor_questions: doctorQuestions,
     abnormal_count: abnormalCount,
     total_tests: data.total_tests || evidence.length,

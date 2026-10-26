@@ -71,7 +71,7 @@ class GemmaClient:
                 if image_base64:
                     ollama_payload["images"] = [image_base64]
 
-                resp = httpx.post(f"{self.cloud_gpu_url}/api/generate", json=ollama_payload, headers=headers, timeout=httpx.Timeout(10.0, connect=3.0))
+                resp = httpx.post(f"{self.cloud_gpu_url}/api/generate", json=ollama_payload, headers=headers, timeout=httpx.Timeout(90.0, connect=5.0))
                 if resp.status_code == 200:
                     data = resp.json()
                     if "response" in data:
@@ -90,7 +90,7 @@ class GemmaClient:
                             for available_m in ["lablens-clinical", "gemma4:12b", "gemma2:9b", "gemma2:2b"] + models:
                                 if any(available_m in m for m in models):
                                     ollama_payload["model"] = available_m
-                                    retry_resp = httpx.post(f"{self.cloud_gpu_url}/api/generate", json=ollama_payload, headers=headers, timeout=httpx.Timeout(10.0, connect=3.0))
+                                    retry_resp = httpx.post(f"{self.cloud_gpu_url}/api/generate", json=ollama_payload, headers=headers, timeout=httpx.Timeout(90.0, connect=5.0))
                                     if retry_resp.status_code == 200:
                                         self.ollama_model = available_m
                                         return {
@@ -107,7 +107,7 @@ class GemmaClient:
                 if image_base64:
                     fastapi_payload["image"] = image_base64
 
-                resp2 = httpx.post(f"{self.cloud_gpu_url}/api/predict", json=fastapi_payload, headers=headers, timeout=httpx.Timeout(10.0, connect=3.0))
+                resp2 = httpx.post(f"{self.cloud_gpu_url}/api/predict", json=fastapi_payload, headers=headers, timeout=httpx.Timeout(90.0, connect=5.0))
                 if resp2.status_code == 200:
                     raw_text = resp2.json().get("result", "")
                     clean_text = raw_text
@@ -214,7 +214,7 @@ class GemmaClient:
                     f"{self.cloud_gpu_url}/api/generate",
                     json=ollama_payload,
                     headers=headers,
-                    timeout=httpx.Timeout(10.0, connect=3.0)
+                    timeout=httpx.Timeout(90.0, connect=5.0)
                 ) as resp:
                     if resp.status_code == 200:
                         for line in resp.iter_lines():
@@ -401,7 +401,13 @@ class GemmaClient:
                     )
 
         # 2. Full Comprehensive 4-Pillar Clinical Brief (For Review & Analyze Dashboard)
-                # Section 1: Executive Summary
+        # Extract patient name from prompt if available
+        patient_name_match = re.search(r'(?:patient(?:\s*name)?|name)[\s:]+([A-Za-z\s]+?)(?:\s*\(|\n|,|$)', prompt, re.IGNORECASE)
+        patient_name = patient_name_match.group(1).strip() if patient_name_match else "the patient"
+        if len(patient_name) > 30 or any(bad in patient_name.lower() for bad in ["report", "complete", "clinical", "sample", "record", "user"]):
+            patient_name = "the patient"
+
+        # Section 1: Executive Summary
         if abnormal:
             flags_summary = ", ".join([f"{e['test_name']} ({e['value']} {e['unit']})" for e in abnormal])
             exec_summary = (
