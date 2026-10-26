@@ -1,4 +1,6 @@
 import os
+import re
+import time
 import json
 from typing import Dict, Any, List, Optional
 from dotenv import load_dotenv
@@ -345,7 +347,7 @@ class GemmaClient:
         if not all_q:
             all_q.append("Are there any preventive lifestyle adjustments recommended based on these baseline findings?")
             all_q.append("When should my next routine check-up and follow-up screening be scheduled?")
-        for i, q in enumerate(dict.fromkeys(all_q)[:4], 1):
+        for i, q in enumerate(list(dict.fromkeys(all_q))[:4], 1):
             doctor_q_lines.append(f"{i}. {q}")
 
         return (
