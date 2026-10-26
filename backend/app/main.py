@@ -152,17 +152,17 @@ def extract_pdf_text_and_images(pdf_bytes: bytes) -> tuple[str, Optional[str]]:
             pix = None
             if not first_image_b64 and i == 0:
                 try:
-                    pix = page.get_pixmap(dpi=150)
+                    pix = page.get_pixmap(dpi=96)
                     first_image_b64 = base64.b64encode(pix.tobytes("png")).decode("utf-8")
                 except Exception:
                     pass
 
             if len(page_text) > 40:
                 text_chunks.append(page_text)
-            elif ocr_engine is not None:
+            elif ocr_engine is not None and i < 3:
                 try:
                     if pix is None:
-                        pix = page.get_pixmap(dpi=150)
+                        pix = page.get_pixmap(dpi=96)
                     img_bytes = pix.tobytes("png")
                     res, _ = ocr_engine(img_bytes)
                     if res:
@@ -1150,7 +1150,22 @@ async def upload_file(file: UploadFile = File(...)):
             try:
                 from rapidocr_onnxruntime import RapidOCR
                 ocr_engine = RapidOCR()
-                res, _ = ocr_engine(content_bytes)
+                ocr_target_bytes = content_bytes
+                try:
+                    from PIL import Image
+                    import io
+                    img = Image.open(io.BytesIO(content_bytes))
+                    if max(img.width, img.height) > 1200:
+                        if img.mode in ("RGBA", "P"):
+                            img = img.convert("RGB")
+                        img.thumbnail((1200, 1200))
+                        buf = io.BytesIO()
+                        img.save(buf, format="JPEG", quality=85)
+                        ocr_target_bytes = buf.getvalue()
+                except Exception as resize_err:
+                    logger.warning(f"Image resize skipped: {resize_err}")
+
+                res, _ = ocr_engine(ocr_target_bytes)
                 if res:
                     ocr_text = "\n".join([r[1] for r in res])
             except Exception as ocr_err:
