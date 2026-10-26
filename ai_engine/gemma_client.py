@@ -71,7 +71,7 @@ class GemmaClient:
                 if image_base64:
                     ollama_payload["images"] = [image_base64]
 
-                resp = httpx.post(f"{self.cloud_gpu_url}/api/generate", json=ollama_payload, headers=headers, timeout=120.0)
+                resp = httpx.post(f"{self.cloud_gpu_url}/api/generate", json=ollama_payload, headers=headers, timeout=httpx.Timeout(4.0, connect=1.5))
                 if resp.status_code == 200:
                     data = resp.json()
                     if "response" in data:
@@ -90,7 +90,7 @@ class GemmaClient:
                             for available_m in ["lablens-clinical", "gemma4:12b", "gemma2:9b", "gemma2:2b"] + models:
                                 if any(available_m in m for m in models):
                                     ollama_payload["model"] = available_m
-                                    retry_resp = httpx.post(f"{self.cloud_gpu_url}/api/generate", json=ollama_payload, headers=headers, timeout=120.0)
+                                    retry_resp = httpx.post(f"{self.cloud_gpu_url}/api/generate", json=ollama_payload, headers=headers, timeout=httpx.Timeout(4.0, connect=1.5))
                                     if retry_resp.status_code == 200:
                                         self.ollama_model = available_m
                                         return {
@@ -107,7 +107,7 @@ class GemmaClient:
                 if image_base64:
                     fastapi_payload["image"] = image_base64
 
-                resp2 = httpx.post(f"{self.cloud_gpu_url}/api/predict", json=fastapi_payload, headers=headers, timeout=120.0)
+                resp2 = httpx.post(f"{self.cloud_gpu_url}/api/predict", json=fastapi_payload, headers=headers, timeout=httpx.Timeout(4.0, connect=1.5))
                 if resp2.status_code == 200:
                     raw_text = resp2.json().get("result", "")
                     clean_text = raw_text
@@ -214,7 +214,7 @@ class GemmaClient:
                     f"{self.cloud_gpu_url}/api/generate",
                     json=ollama_payload,
                     headers=headers,
-                    timeout=120.0
+                    timeout=httpx.Timeout(4.0, connect=1.5)
                 ) as resp:
                     if resp.status_code == 200:
                         for line in resp.iter_lines():
@@ -275,23 +275,133 @@ class GemmaClient:
 
     def _synthesize_grounded_clinical_review(self, prompt: str) -> str:
         """
-        Synthesizes a structured 4-pillar clinical review grounded in parsed vitals & labs
-        when offline or as a zero-hallucination deterministic fallback.
+        Synthesizes grounded clinical insights.
+        - If prompt is a conversational query (from Voice Agent or Chat), generates a warm, concise, conversational response (English or Hindi/Hinglish).
+        - If prompt is a full report analysis, generates the comprehensive 4-pillar clinical brief.
         """
         try:
-            from backend.app.clinical_engine import clinical_validator
+            from backend.app.clinical_engine import clinical_validator, CLINICAL_STANDARDS
             evidence = clinical_validator.extract_from_text(prompt)
         except Exception:
             evidence = []
+            CLINICAL_STANDARDS = {}
 
         abnormal = [e for e in evidence if e.get("is_abnormal")]
         normal = [e for e in evidence if not e.get("is_abnormal")]
 
-        # Detect patient info
-        name_m = re.search(r"(?i)\bname[:\s]+([a-zA-Z\s]{2,25})", prompt)
-        patient_name = name_m.group(1).strip().title() if name_m else "the patient"
+        # 1. Detect if this is a conversational query (from Voice Agent, RAG chat, or Ask)
+        user_q = None
+        q_match = re.search(r'USER QUESTION:\s*["\']?(.*?)["\']?\s*(?:INSTRUCTIONS|$)', prompt, re.DOTALL | re.IGNORECASE)
+        if q_match:
+            user_q = q_match.group(1).strip()
+        else:
+            q_match2 = re.search(r'Question about medical report:\s*(.+)', prompt, re.IGNORECASE)
+            if q_match2:
+                user_q = q_match2.group(1).strip()
+            elif len(prompt.strip()) < 280 and not any(k in prompt.lower() for k in ["file content preview:", "attached file:"]):
+                user_q = prompt.strip()
 
-        # Section 1: Executive Summary
+        # If a conversational question was detected, craft a direct, empathetic, spoken-friendly answer
+        if user_q:
+            lower_q = user_q.lower()
+            is_hindi = any(re.search(rf"\b{w}\b", lower_q) for w in [
+                "kya", "mera", "meri", "hai", "kaise", "batao", "dawa", "dard", "khoon",
+                "theek", "daktar", "kab", "kaisa", "madhumeh", "namak", "khana", "parhez", "kam"
+            ])
+
+            # Find if a specific test or metric was asked about
+            matched_test = None
+            for item in evidence:
+                t_lower = item["test_name"].lower()
+                aliases = [t_lower]
+                if "hemoglobin" in t_lower or "hb" in t_lower:
+                    aliases += ["hemoglobin", "hb", "iron", "blood", "khoon", "anemia"]
+                elif "glucose" in t_lower or "sugar" in t_lower:
+                    aliases += ["glucose", "sugar", "diabetes", "cheeni"]
+                elif "pressure" in t_lower or "bp" in t_lower:
+                    aliases += ["pressure", "bp", "hypertension", "systolic", "diastolic"]
+                elif "cholesterol" in t_lower or "ldl" in t_lower or "lipid" in t_lower:
+                    aliases += ["cholesterol", "ldl", "lipid", "fat"]
+                elif "creatinine" in t_lower or "kidney" in t_lower:
+                    aliases += ["creatinine", "kidney", "renal"]
+
+                if any(re.search(rf"\b{re.escape(a)}\b", lower_q) for a in aliases):
+                    matched_test = item
+                    break
+
+            # Handle questions about doctor checklist
+            if any(w in lower_q for w in ["daktar", "question", "checklist", "puchu", "ask"]):
+                if is_hindi:
+                    questions_list = [
+                        "1. Kya mere test results me koi aisi baat hai jisme turant dhyan dene ki zaroorat hai?",
+                        "2. Kya mujhe aage koi follow-up test (jaise iron profile ya lipid panel) karwana chahiye?",
+                        "3. Mere daily diet ya routine me aap kya badlaav recommend karte hain?"
+                    ]
+                    return "Aap apne doctor se agle visit me ye zaroori sawaal pooch sakte hain:\n\n" + "\n".join(questions_list) + "\n\n*LabLens AI: Ye jaankari educational awareness ke liye hai, doctor ki salaah zaroor lein.*"
+                else:
+                    q_lines = []
+                    for e in abnormal[:3]:
+                        q_lines.extend(e.get("suggested_questions", []))
+                    if not q_lines:
+                        q_lines = [
+                            "Are there any preventive lifestyle adjustments recommended based on these baseline findings?",
+                            "When should my next routine check-up and follow-up screening be scheduled?"
+                        ]
+                    formatted_q = "\n".join([f"{i+1}. {q}" for i, q in enumerate(list(dict.fromkeys(q_lines))[:3])])
+                    return f"Here are the prioritized questions you should discuss with your doctor:\n\n{formatted_q}\n\n*LabLens AI provides educational assistance; discuss all findings with your physician.*"
+
+            # If a specific test was asked about
+            if matched_test:
+                t_name = matched_test["test_name"]
+                val = matched_test["value"]
+                unit = matched_test["unit"]
+                ref = matched_test["stated_range"]
+                flag = matched_test["flag"]
+                sig = matched_test.get("clinical_significance", "")
+
+                if is_hindi:
+                    status_text = "kam hai (Low)" if "LOW" in matched_test["status"] else ("zyada hai (High)" if "HIGH" in matched_test["status"] else "bilkul normal hai")
+                    return (
+                        f"Aapka **{t_name}** level **{val} {unit}** hai, jo normal range ({ref} {unit}) ke mutabiq **{status_text}**.\n\n"
+                        f"{sig}\n\n"
+                        f"**Doctor Discussion**: Apne doctor se salaah lein ki kya iske liye diet ya supplements me koi badlaav karne ki zaroorat hai."
+                    )
+                else:
+                    status_str = f"flagged as **{flag}**" if matched_test["is_abnormal"] else "within the normal healthy reference interval"
+                    return (
+                        f"Your **{t_name}** is **{val} {unit}**, which is {status_str} (standard reference: {ref} {unit}).\n\n"
+                        f"{sig}\n\n"
+                        f"**Next Steps**: I recommend reviewing this reading with your attending physician to evaluate whether any lifestyle adjustments or confirmatory testing is appropriate."
+                    )
+
+            # General / conversational query without specific test match
+            if is_hindi:
+                if abnormal:
+                    flag_names = ", ".join([f"{e['test_name']} ({e['value']} {e['unit']})" for e in abnormal])
+                    return (
+                        f"Aapki report me baseline parameters theek hain, par **{flag_names}** par thoda dhyan dene ki zaroorat hai.\n\n"
+                        "Ghabrane ki baat nahi hai; doctor se milkar routine follow-up aur lifestyle recommendations par baat karein."
+                    )
+                else:
+                    return (
+                        "Aapke report ke sabhi primary parameters standard gold reference range me hain aur koi abnormal flag nahi mila hai!\n\n"
+                        "Healthy lifestyle aur regular hydration maintain rakhein."
+                    )
+            else:
+                if abnormal:
+                    flag_names = ", ".join([f"{e['test_name']} ({e['value']} {e['unit']})" for e in abnormal])
+                    return (
+                        f"Your overall vital markers are generally stable, with clinical attention recommended for **{flag_names}**.\n\n"
+                        "These findings are grounded against clinical gold standards. Discuss these specific values with your healthcare provider for clinical correlation."
+                    )
+                else:
+                    return (
+                        "All recorded laboratory parameters in your review are within standard physiological reference intervals. "
+                        "No acute deviations or abnormal flags were detected in this analysis."
+                    )
+
+        # 2. Full Comprehensive 4-Pillar Clinical Brief (For Review & Analyze Dashboard)
+                # Section 1: Executive Summary
         if abnormal:
             flags_summary = ", ".join([f"{e['test_name']} ({e['value']} {e['unit']})" for e in abnormal])
             exec_summary = (
