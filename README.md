@@ -46,7 +46,7 @@
 - Powered by the Web Speech API (`webkitSpeechRecognition`) with live acoustic wavebars and bilingual speech synthesis (`SpeechSynthesisUtterance` with Hindi & English voice detection).
 - Grounded conversational Q&A against the patient's active report via `/api/clinical/rag-ask` and `/api/clinical/ask`.
 
-### 5. 🎨 Apple-Grade Healthcare Design System
+### 5. 🎨  Healthcare Design System
 - Clean, bright **White + Soft Blue + Electric Blue** color system (`#F8FAFF`, `#EEF5FF`, `#FFFFFF`, `#2563EB`, `#3B82F6`).
 - Premium Linotype *Neue Haas Grotesk* typography.
 - Compact, fluid **160px light blue cursor spotlight** with button-hover constriction and an optical shockwave burst animation that disappears upon clicking interactive controls.
