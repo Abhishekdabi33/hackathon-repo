@@ -421,7 +421,7 @@ def analyze_clinical_document(payload: ClinicalAnalyzeRequest):
 
 
 @app.post("/api/clinical/stream")
-async def stream_clinical_analysis(payload: ClinicalAnalyzeRequest):
+def stream_clinical_analysis(payload: ClinicalAnalyzeRequest):
     """
     Real-Time Server-Sent Events (SSE) Streaming Endpoint:
     Streams Gemma 4 12B tokens token-by-token (first come first write)
@@ -446,7 +446,7 @@ async def stream_clinical_analysis(payload: ClinicalAnalyzeRequest):
         report_name=payload.file_name or "Medical Report"
     )
 
-    async def event_generator():
+    def event_generator():
         import json
         # 1. Send initial metadata packet
         meta = {
