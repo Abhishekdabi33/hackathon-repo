@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { motion } from "motion/react";
-import { ArrowRight, Clock, FileText, MessageCircle, ShieldCheck, Sparkles, Activity } from "lucide-react";
+import { ArrowRight, Clock, FileText, MessageCircle, ShieldCheck, Sparkles, Activity, Mic } from "lucide-react";
 import { loadReports } from "@/lib/history";
 import { setPendingFile } from "@/lib/pending-file";
 import { UploadCard } from "@/components/medai/UploadCard";
@@ -10,6 +10,7 @@ import { GlassCard } from "@/components/medai/GlassCard";
 import { Reveal } from "@/components/medai/Reveal";
 import { PressLink } from "@/components/medai/PressLink";
 import { DisclaimerFooter } from "@/components/medai/DisclaimerFooter";
+import { TalkAgentDialog } from "@/components/medai/TalkAgentDialog";
 import { fetchClinicalSamples } from "@/lib/ai-functions";
 import type { SavedReport, ClinicalSample } from "@/types/report";
 
@@ -44,6 +45,7 @@ function DashboardPage() {
   const [reports, setReports] = useState<SavedReport[]>([]);
   const [samples, setSamples] = useState<ClinicalSample[]>([]);
   const [loaded, setLoaded] = useState(false);
+  const [talkOpen, setTalkOpen] = useState(false);
 
   useEffect(() => {
     setReports(loadReports());
@@ -73,14 +75,19 @@ function DashboardPage() {
 
   return (
     <main className="relative mx-auto min-h-dvh max-w-5xl px-6 pb-10 pt-28 sm:pt-32">
-      {/* Greeting */}
+      {/* Voice Talk Agent Modal Window */}
+      <TalkAgentDialog open={talkOpen} onClose={() => setTalkOpen(false)} />
+
+      {/* Greeting with Interactive Tap-to-Talk Companion */}
       <Reveal className="mb-10 flex flex-col items-center text-center">
-        <AiCharacter size={96} interactive={false} />
+        <div className="cursor-pointer" onClick={() => setTalkOpen(true)}>
+          <AiCharacter size={96} interactive={true} onClick={() => setTalkOpen(true)} showTalkBadge={true} />
+        </div>
         <h1 className="mt-6 text-3xl font-semibold tracking-tight text-foreground sm:text-4xl">
           Your Health Dashboard
         </h1>
         <p className="mx-auto mt-3 max-w-md text-sm text-muted-foreground">
-          Upload your medical document, paste report text directly, ask health questions, or test one of our pre-loaded certified samples.
+          Upload a medical document, paste report text directly, ask health questions, or tap Hitho above to speak.
         </p>
       </Reveal>
 
@@ -194,10 +201,19 @@ function DashboardPage() {
 
         {/* Right sidebar */}
         <aside className="space-y-5">
-          {/* Quick stats */}
+          {/* Quick stats with Voice Talk shortcut */}
           <Reveal delay={0.08}>
             <GlassCard className="p-5" tilt={false}>
-              <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Activity</p>
+              <div className="flex items-center justify-between">
+                <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Activity</p>
+                <button
+                  type="button"
+                  onClick={() => setTalkOpen(true)}
+                  className="flex items-center gap-1 text-[11px] font-bold text-primary hover:text-bright"
+                >
+                  <Mic className="h-3 w-3" /> Voice Agent
+                </button>
+              </div>
               <div className="mt-4 grid grid-cols-2 gap-3 text-center">
                 <div className="rounded-xl border border-border bg-paleblue/60 p-3">
                   <p className="font-mono text-2xl font-bold text-foreground">{reports.length}</p>
@@ -222,12 +238,13 @@ function DashboardPage() {
               <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-primary">
                 <Sparkles className="h-3.5 w-3.5" /> What to Ask
               </div>
-              <p className="mt-1 text-xs text-muted-foreground">Tap any prompt to paste into the text box above.</p>
+              <p className="mt-1 text-xs text-muted-foreground">Tap any prompt to ask Hitho in the chat bubble or voice mode.</p>
               <div className="mt-3 space-y-2">
                 {TIPS.map((tip) => (
                   <div
                     key={tip}
-                    className="flex items-center gap-2 rounded-xl border border-border/80 bg-paleblue/50 p-2.5 text-xs text-foreground/90 font-medium"
+                    onClick={() => setTalkOpen(true)}
+                    className="flex items-center gap-2 rounded-xl border border-border/80 bg-paleblue/50 p-2.5 text-xs text-foreground/90 font-medium cursor-pointer hover:bg-paleblue hover:border-primary/40 transition-all"
                   >
                     <MessageCircle className="h-3 w-3 text-primary shrink-0" />
                     <span>{tip}</span>

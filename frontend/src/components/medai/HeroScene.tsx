@@ -1,5 +1,5 @@
 import { motion, useMotionValue, useSpring, useTransform, useReducedMotion } from "motion/react";
-import { FileText } from "lucide-react";
+import { FileText, Mic } from "lucide-react";
 import { AiCharacter } from "./AiCharacter";
 
 /**
@@ -7,7 +7,7 @@ import { AiCharacter } from "./AiCharacter";
  * with the cursor. Glass report card behind, the Hitho companion at
  * center, and lab-value chips floating at different depths.
  */
-export function HeroScene() {
+export function HeroScene({ onAiClick }: { onAiClick?: () => void }) {
   const reduced = useReducedMotion();
   const mx = useMotionValue(0);
   const my = useMotionValue(0);
@@ -67,16 +67,22 @@ export function HeroScene() {
           </motion.div>
         </div>
 
-        {/* The companion — front-center, closest to the viewer */}
+        {/* The companion — front-center, closest to the viewer. Interactive tap-to-talk */}
         <div
           className="absolute left-1/2 top-1/2"
-          style={{ transform: "translate(-50%, -50%) translateZ(50px)" }}
+          style={{ transform: "translate(-50%, -50%) translateZ(60px)" }}
         >
           <motion.div
             animate={reduced ? {} : { y: [0, -9, 0], rotate: [0, 1.2, -1.2, 0] }}
             transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }}
+            className="relative group cursor-pointer"
           >
-            <AiCharacter size={135} interactive={false} />
+            <AiCharacter
+              size={135}
+              interactive={true}
+              onClick={onAiClick}
+              showTalkBadge={true}
+            />
           </motion.div>
         </div>
 

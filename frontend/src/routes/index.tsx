@@ -1,4 +1,4 @@
-import type { ReactNode } from "react";
+import { useState, type ReactNode } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { PressLink } from "@/components/medai/PressLink";
 import { motion, useScroll, useTransform, useReducedMotion } from "motion/react";
@@ -14,12 +14,16 @@ import {
   BookOpenText,
   ShieldCheck,
   ArrowRight,
+  Mic,
+  Activity,
+  HeartPulse,
 } from "lucide-react";
 import { AiCharacter } from "@/components/medai/AiCharacter";
 import { HeroScene } from "@/components/medai/HeroScene";
 import { GlassCard } from "@/components/medai/GlassCard";
 import { Reveal } from "@/components/medai/Reveal";
 import { DisclaimerFooter } from "@/components/medai/DisclaimerFooter";
+import { TalkAgentDialog } from "@/components/medai/TalkAgentDialog";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -44,25 +48,36 @@ export const Route = createFileRoute("/")({
 
 export function LandingPage() {
   const reduced = useReducedMotion();
-  const { scrollY } = useScroll();
+  const { scrollY, scrollYProgress } = useScroll();
   const heroY = useTransform(scrollY, [0, 800], [0, 25]);
+  const [talkOpen, setTalkOpen] = useState(false);
 
   return (
     <main className="relative">
-      {/* ---------- Hero ---------- */}
+      {/* Top Scroll Reading Progress Bar */}
+      <motion.div
+        aria-hidden
+        className="fixed top-0 left-0 right-0 h-[3px] bg-gradient-to-r from-primary via-bright to-softblue z-[60] origin-left pointer-events-none"
+        style={{ scaleX: scrollYProgress }}
+      />
+
+      {/* Voice Talk Agent Modal Window */}
+      <TalkAgentDialog open={talkOpen} onClose={() => setTalkOpen(false)} />
+
+      {/* ---------- Hero Section ---------- */}
       <section className="relative flex min-h-dvh flex-col items-center justify-center px-6 pb-16 pt-20 text-center sm:pb-20 sm:pt-24">
         <motion.div
           {...(reduced ? {} : { style: { y: heroY } })}
           className="flex flex-col items-center w-full max-w-4xl mx-auto"
         >
-          {/* Interactive 3D Hero Diorama */}
+          {/* Interactive 3D Hero Diorama with Click-to-Talk Companion */}
           <motion.div
             initial={{ opacity: 0, y: 16, scale: 0.96 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             transition={{ type: "spring", stiffness: 70, damping: 16 }}
             className="w-full"
           >
-            <HeroScene />
+            <HeroScene onAiClick={() => setTalkOpen(true)} />
           </motion.div>
 
           {/* Headline & CTAs */}
@@ -87,7 +102,7 @@ export function LandingPage() {
               structured summary with EvidenceTrace™ validation.
             </p>
 
-            {/* Prominent, Unmissable CTA Buttons */}
+            {/* Prominent CTA Buttons + Voice Talk Quick Trigger */}
             <div className="mt-6 flex flex-wrap items-center justify-center gap-3 relative z-30">
               <PressLink
                 to="/dashboard"
@@ -97,10 +112,20 @@ export function LandingPage() {
                 <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
               </PressLink>
 
+              <button
+                type="button"
+                onClick={() => setTalkOpen(true)}
+                className="flex items-center gap-2 rounded-full border border-primary/25 bg-white px-6 py-3.5 text-sm font-semibold text-primary shadow-sm hover:bg-paleblue hover:border-primary/45 hover:scale-105 active:scale-95 transition-all"
+                title="Speak directly with Hitho AI"
+              >
+                <Mic className="h-4 w-4 text-primary animate-pulse" />
+                <span>Talk with Hitho</span>
+              </button>
+
               <PressLink
                 to="/analyze"
                 search={{ sample: true }}
-                className="glass relative z-30 rounded-full px-7 py-3.5 text-sm font-semibold text-foreground transition-all hover:bg-paleblue hover:text-primary shadow-xs"
+                className="glass relative z-30 rounded-full px-6 py-3.5 text-sm font-semibold text-foreground transition-all hover:bg-paleblue hover:text-primary shadow-xs"
               >
                 Explore Demo
               </PressLink>
@@ -108,18 +133,18 @@ export function LandingPage() {
           </motion.div>
         </motion.div>
 
-        {/* Scroll helper */}
+        {/* Scroll Helper */}
         <motion.div
           className="mt-6 hidden sm:flex flex-col items-center gap-1 text-muted-foreground/50"
           animate={reduced ? {} : { y: [0, 4, 0] }}
           transition={{ duration: 2.2, repeat: Infinity }}
         >
-          <span className="text-[9px] uppercase tracking-[0.2em] font-mono">Scroll</span>
+          <span className="text-[9px] uppercase tracking-[0.2em] font-mono">Scroll to explore</span>
           <span className="h-5 w-px bg-gradient-to-b from-primary/30 to-transparent" />
         </motion.div>
       </section>
 
-      {/* ---------- How it works ---------- */}
+      {/* ---------- How it works (With Staggered Scroll Animations) ---------- */}
       <Section id="how-it-works">
         <SectionHeading
           eyebrow="How it works"
@@ -144,19 +169,26 @@ export function LandingPage() {
               body: "A plain-language summary, key findings, and prioritized doctor questions you can actually act on.",
             },
           ].map((step, i) => (
-            <Reveal key={step.title} delay={i * 0.08}>
-              <GlassCard className="h-full p-7">
+            <motion.div
+              key={step.title}
+              initial={{ opacity: 0, y: 35, scale: 0.96 }}
+              whileInView={{ opacity: 1, y: 0, scale: 1 }}
+              viewport={{ once: true, margin: "-60px" }}
+              transition={{ duration: 0.6, delay: i * 0.12, ease: [0.16, 1, 0.3, 1] }}
+              whileHover={{ y: -6, transition: { duration: 0.25 } }}
+            >
+              <GlassCard className="h-full p-7 transition-shadow hover:shadow-glass-card">
                 <div className="glass-soft flex h-11 w-11 items-center justify-center rounded-2xl bg-softblue/60">{step.icon}</div>
                 <div className="mt-5 font-mono text-[11px] text-muted-foreground/70">0{i + 1}</div>
                 <h3 className="mt-1 text-lg font-semibold tracking-tight text-foreground">{step.title}</h3>
                 <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{step.body}</p>
               </GlassCard>
-            </Reveal>
+            </motion.div>
           ))}
         </div>
       </Section>
 
-      {/* ---------- AI Capabilities ---------- */}
+      {/* ---------- AI Capabilities (Scroll Triggered 3D Cards) ---------- */}
       <Section>
         <SectionHeading
           eyebrow="AI capabilities"
@@ -196,20 +228,32 @@ export function LandingPage() {
               desc: "One-click generation of a structured, printable brief for your physician.",
             },
           ].map((f, i) => (
-            <Reveal key={f.title} delay={i * 0.05}>
-              <GlassCard intensity="soft" className="h-full p-6" tilt={false}>
+            <motion.div
+              key={f.title}
+              initial={{ opacity: 0, y: 30, scale: 0.95 }}
+              whileInView={{ opacity: 1, y: 0, scale: 1 }}
+              viewport={{ once: true, margin: "-40px" }}
+              transition={{ duration: 0.5, delay: i * 0.08, ease: [0.16, 1, 0.3, 1] }}
+              whileHover={{ y: -4, transition: { duration: 0.2 } }}
+            >
+              <GlassCard intensity="soft" className="h-full p-6 transition-all hover:border-primary/30 hover:bg-white" tilt={false}>
                 <span className="glass-soft flex h-9 w-9 items-center justify-center rounded-xl bg-softblue/60">{f.icon}</span>
                 <h3 className="mt-4 text-base font-semibold tracking-tight text-foreground">{f.title}</h3>
                 <p className="mt-1.5 text-sm leading-relaxed text-muted-foreground">{f.desc}</p>
               </GlassCard>
-            </Reveal>
+            </motion.div>
           ))}
         </div>
       </Section>
 
-      {/* ---------- Preview / Feature Spotlight ---------- */}
+      {/* ---------- In Action Feature Spotlight ---------- */}
       <Section>
-        <Reveal>
+        <motion.div
+          initial={{ opacity: 0, y: 40 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, margin: "-60px" }}
+          transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
+        >
           <GlassCard intensity="strong" className="overflow-hidden p-8 sm:p-12 shadow-glass-card" tilt={false}>
             <div className="grid items-center gap-8 lg:grid-cols-2">
               <div>
@@ -238,8 +282,14 @@ export function LandingPage() {
                 </div>
               </div>
 
-              {/* Mini report preview */}
-              <div className="glass-soft relative mx-auto w-full max-w-sm rounded-3xl p-5 border border-border">
+              {/* Mini report preview with scroll slide-in */}
+              <motion.div
+                initial={{ opacity: 0, x: 30 }}
+                whileInView={{ opacity: 1, x: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.7, delay: 0.2, ease: "easeOut" }}
+                className="glass-soft relative mx-auto w-full max-w-sm rounded-3xl p-5 border border-border shadow-sm"
+              >
                 <div className="flex items-center gap-2 text-[10px] font-semibold uppercase tracking-[0.14em] text-primary">
                   <FileText className="h-3.5 w-3.5 text-primary" /> sample-lab-report.pdf
                 </div>
@@ -259,42 +309,57 @@ export function LandingPage() {
                 <div className="glass mt-4 rounded-2xl p-3 text-[12px] leading-relaxed text-foreground/90 font-medium border border-border/80">
                   “Your cholesterol is slightly above the certified interval — worth discussing with your doctor, while blood count is healthy.”
                 </div>
-              </div>
+              </motion.div>
             </div>
           </GlassCard>
-        </Reveal>
+        </motion.div>
       </Section>
 
-      {/* ---------- Final CTA ---------- */}
+      {/* ---------- Final CTA with Click-to-Talk Companion ---------- */}
       <Section>
-        <Reveal>
-          <div className="relative overflow-hidden rounded-4xl px-6 py-16 text-center border border-border bg-white shadow-sm">
-            <div
-              className="absolute inset-0"
-              style={{
-                background:
-                  "radial-gradient(ellipse 70% 90% at 50% 110%, rgba(37,99,235,0.08), transparent 70%)",
-              }}
-            />
-            <div className="relative">
-              <div className="mx-auto w-fit">
-                <AiCharacter size={110} />
-              </div>
-              <h2 className="mt-6 text-3xl font-semibold tracking-tight text-foreground sm:text-4xl">
-                Ready to understand your report?
-              </h2>
-              <p className="mx-auto mt-2 max-w-md text-sm text-muted-foreground">
-                It takes about thirty seconds with zero hallucinations.
-              </p>
+        <motion.div
+          initial={{ opacity: 0, y: 35, scale: 0.97 }}
+          whileInView={{ opacity: 1, y: 0, scale: 1 }}
+          viewport={{ once: true, margin: "-60px" }}
+          transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
+          className="relative overflow-hidden rounded-4xl px-6 py-16 text-center border border-border bg-white shadow-sm"
+        >
+          <div
+            className="absolute inset-0"
+            style={{
+              background:
+                "radial-gradient(ellipse 70% 90% at 50% 110%, rgba(37,99,235,0.08), transparent 70%)",
+            }}
+          />
+          <div className="relative">
+            <div className="mx-auto w-fit cursor-pointer" onClick={() => setTalkOpen(true)}>
+              <AiCharacter size={115} onClick={() => setTalkOpen(true)} showTalkBadge={true} />
+            </div>
+            <h2 className="mt-6 text-3xl font-semibold tracking-tight text-foreground sm:text-4xl">
+              Ready to understand your report?
+            </h2>
+            <p className="mx-auto mt-2 max-w-md text-sm text-muted-foreground">
+              Talk directly with Hitho or upload your report in thirty seconds.
+            </p>
+            <div className="mt-6 flex flex-wrap items-center justify-center gap-3">
               <PressLink
                 to="/dashboard"
-                className="mt-6 inline-flex items-center gap-2 rounded-full bg-primary px-8 py-3.5 text-sm font-bold text-white shadow-[0_8px_30px_rgba(37,99,235,0.3)] transition-all hover:bg-bright hover:scale-105"
+                className="inline-flex items-center gap-2 rounded-full bg-primary px-8 py-3.5 text-sm font-bold text-white shadow-[0_8px_30px_rgba(37,99,235,0.3)] transition-all hover:bg-bright hover:scale-105"
               >
                 Get Started <ArrowRight className="h-4 w-4" />
               </PressLink>
+
+              <button
+                type="button"
+                onClick={() => setTalkOpen(true)}
+                className="inline-flex items-center gap-2 rounded-full border border-primary/25 bg-white px-6 py-3.5 text-sm font-bold text-primary shadow-sm hover:bg-paleblue hover:scale-105 transition-all"
+              >
+                <Mic className="h-4 w-4 text-primary animate-pulse" />
+                <span>Talk with Hitho</span>
+              </button>
             </div>
           </div>
-        </Reveal>
+        </motion.div>
       </Section>
 
       <DisclaimerFooter />
@@ -304,18 +369,31 @@ export function LandingPage() {
 
 function Section({ children, id }: { children: ReactNode; id?: string }) {
   return (
-    <section id={id} className="relative mx-auto max-w-5xl px-6 py-16">
+    <motion.section
+      id={id}
+      initial={{ opacity: 0, y: 30 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true, margin: "-60px" }}
+      transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
+      className="relative mx-auto max-w-5xl px-6 py-16"
+    >
       {children}
-    </section>
+    </motion.section>
   );
 }
 
 function SectionHeading({ eyebrow, title, subtitle }: { eyebrow: string; title: string; subtitle: string }) {
   return (
-    <Reveal className="mb-10 text-center">
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true }}
+      transition={{ duration: 0.6, ease: "easeOut" }}
+      className="mb-10 text-center"
+    >
       <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-primary">{eyebrow}</p>
       <h2 className="mt-2 text-3xl font-semibold tracking-tight text-foreground sm:text-4xl">{title}</h2>
       <p className="mx-auto mt-2 max-w-lg text-sm text-muted-foreground">{subtitle}</p>
-    </Reveal>
+    </motion.div>
   );
 }

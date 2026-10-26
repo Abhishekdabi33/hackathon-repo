@@ -1,22 +1,32 @@
 import { useEffect, useRef, useState } from "react";
 import { motion, useMotionValue, useSpring, useReducedMotion } from "motion/react";
+import { Mic } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-type CharacterState = "idle" | "thinking" | "happy";
+type CharacterState = "idle" | "thinking" | "happy" | "listening" | "speaking";
 
 type AiCharacterProps = {
   size?: number;
   state?: CharacterState;
   interactive?: boolean;
   className?: string;
+  onClick?: () => void;
+  showTalkBadge?: boolean;
 };
 
 /**
  * Hitho companion — a soft white sphere with two dark oval eyes.
  * Eyes track the cursor with spring physics, it blinks, floats, and
- * reacts to hover, click, thinking and success states.
+ * reacts to hover, click, thinking and voice talk states.
  */
-export function AiCharacter({ size = 180, state = "idle", interactive = true, className }: AiCharacterProps) {
+export function AiCharacter({
+  size = 180,
+  state = "idle",
+  interactive = true,
+  className,
+  onClick,
+  showTalkBadge = false,
+}: AiCharacterProps) {
   const ref = useRef<HTMLDivElement>(null);
   const reduced = useReducedMotion();
   const [hovered, setHovered] = useState(false);
@@ -69,11 +79,23 @@ export function AiCharacter({ size = 180, state = "idle", interactive = true, cl
   const thinking = state === "thinking";
 
   return (
-    <div ref={ref} className={cn("relative select-none", className)} style={{ width: size, height: size }}>
+    <div
+      ref={ref}
+      className={cn(
+        "relative select-none",
+        (interactive || onClick) && "cursor-pointer",
+        className
+      )}
+      style={{ width: size, height: size }}
+      onClick={() => {
+        setClicked((c) => c + 1);
+        if (onClick) onClick();
+      }}
+    >
       {/* Soft shadow beneath */}
       <motion.div
         aria-hidden
-        className="absolute left-1/2 -translate-x-1/2 rounded-full bg-bright/25 blur-md"
+        className="absolute left-1/2 -translate-x-1/2 rounded-full bg-bright/25 blur-md pointer-events-none"
         style={{ width: size * 0.62, height: size * 0.09, bottom: -size * 0.1 }}
         animate={reduced ? {} : { scaleX: [1, 0.88, 1], opacity: [0.4, 0.28, 0.4] }}
         transition={{ duration: 5, repeat: Infinity, ease: "easeInOut" }}
@@ -82,16 +104,28 @@ export function AiCharacter({ size = 180, state = "idle", interactive = true, cl
       {/* Under-glow on hover */}
       <motion.div
         aria-hidden
-        className="absolute left-1/2 -translate-x-1/2 rounded-full blur-xl"
+        className="absolute left-1/2 -translate-x-1/2 rounded-full blur-xl pointer-events-none"
         style={{
-          width: size * 0.8,
-          height: size * 0.3,
+          width: size * 0.85,
+          height: size * 0.35,
           bottom: -size * 0.06,
-          background: "radial-gradient(ellipse, rgba(37,99,235,0.28), transparent 70%)",
+          background: "radial-gradient(ellipse, rgba(37,99,235,0.32), transparent 70%)",
         }}
-        animate={{ opacity: hovered ? 0.9 : 0 }}
+        animate={{ opacity: hovered ? 0.95 : 0 }}
         transition={{ duration: 0.4 }}
       />
+
+      {/* Optional Pulsing Tap to Talk Badge */}
+      {showTalkBadge && (
+        <motion.div
+          initial={{ opacity: 0, y: -4 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="absolute -top-3 left-1/2 -translate-x-1/2 z-20 flex items-center gap-1.5 rounded-full bg-primary px-2.5 py-0.5 text-[10px] font-bold text-white shadow-[0_2px_10px_rgba(37,99,235,0.35)] whitespace-nowrap pointer-events-none"
+        >
+          <Mic className="h-2.5 w-2.5 animate-pulse" />
+          <span>Tap to Talk</span>
+        </motion.div>
+      )}
 
       <motion.div
         className="relative h-full w-full"
@@ -101,7 +135,6 @@ export function AiCharacter({ size = 180, state = "idle", interactive = true, cl
         {...(reduced ? {} : { whileHover: { scale: 1.05 }, whileTap: { scale: 0.94 } })}
         onHoverStart={() => setHovered(true)}
         onHoverEnd={() => setHovered(false)}
-        onClick={() => setClicked((c) => c + 1)}
       >
         {/* Click ripple */}
         {clicked > 0 && (
@@ -109,7 +142,7 @@ export function AiCharacter({ size = 180, state = "idle", interactive = true, cl
             key={clicked}
             aria-hidden
             className="pointer-events-none absolute inset-0 rounded-full border"
-            style={{ borderColor: "rgba(37,99,235,0.4)" }}
+            style={{ borderColor: "rgba(37,99,235,0.45)" }}
             initial={{ scale: 0.8, opacity: 0.8 }}
             animate={{ scale: 1.9, opacity: 0 }}
             transition={{ duration: 0.8, ease: "easeOut" }}
@@ -130,58 +163,60 @@ export function AiCharacter({ size = 180, state = "idle", interactive = true, cl
             reduced
               ? {}
               : state === "thinking"
-                ? { rotate: [0, 2.5, -2.5, 0] }
-                : { rotate: 0 }
+              ? { rotate: [0, 2.5, -2.5, 0] }
+              : { rotate: 0 }
           }
           transition={state === "thinking" ? { duration: 6, repeat: Infinity, ease: "easeInOut" } : { duration: 0.4 }}
         >
-              {/* subtle depth extrusion ring */}
-              <div
-                className="absolute inset-0 rounded-full"
+          {/* subtle depth extrusion ring */}
+          <div
+            className="absolute inset-0 rounded-full pointer-events-none"
+            style={{
+              boxShadow: "0 1px 0 rgba(255,255,255,0.95) inset",
+            }}
+          />
+
+          {/* Eyes */}
+          <div className="absolute inset-0 flex items-center justify-center gap-[18%] pointer-events-none">
+            {[0, 1].map((i) => (
+              <motion.div
+                key={i}
+                className="rounded-full"
                 style={{
-                  boxShadow: "0 1px 0 rgba(255,255,255,0.95) inset",
+                  width: size * 0.085,
+                  height: size * 0.19,
+                  x: eyeX,
+                  y: eyeY,
+                  background:
+                    "radial-gradient(circle at 35% 25%, #334155 0%, #1e293b 55%, #111827 100%)",
+                  boxShadow: "inset 0 1px 2px rgba(255,255,255,0.28)",
                 }}
+                animate={{ scaleY: eyeSquish }}
+                transition={{ duration: blink ? 0.12 : 0.25, ease: "easeInOut" }}
               />
-              {/* Eyes */}
-              <div className="absolute inset-0 flex items-center justify-center gap-[18%]">
-                {[0, 1].map((i) => (
-                  <motion.div
-                    key={i}
-                    className="rounded-full"
-                    style={{
-                      width: size * 0.085,
-                      height: size * 0.19,
-                      x: eyeX,
-                      y: eyeY,
-                      background:
-                        "radial-gradient(circle at 35% 25%, #334155 0%, #1e293b 55%, #111827 100%)",
-                      boxShadow: "inset 0 1px 2px rgba(255,255,255,0.28)",
-                    }}
-                    animate={{ scaleY: eyeSquish }}
-                    transition={{ duration: blink ? 0.12 : 0.25, ease: "easeInOut" }}
-                  />
-                ))}
-              </div>
-              {/* Thinking orbit particles */}
-              {thinking && !reduced && (
-                <div className="absolute inset-0">
-                  {[0, 1, 2].map((i) => (
-                    <span
-                      key={i}
-                      className="absolute left-1/2 top-1/2 rounded-full bg-ice/80"
-                      style={{
-                        width: size * 0.028,
-                        height: size * 0.028,
-                        marginTop: -size * 0.014,
-                        marginLeft: -size * 0.014,
-                        ["--orbit-r" as string]: `${size * 0.58}px`,
-                        animation: `float-orbit ${3 + i * 0.7}s linear ${-i * 1.2}s infinite`,
-                        opacity: 0.8 - i * 0.18,
-                      }}
-                    />
-                  ))}
-                </div>
-              )}
+            ))}
+          </div>
+
+          {/* Thinking orbit particles */}
+          {thinking && !reduced && (
+            <div className="absolute inset-0 pointer-events-none">
+              {[0, 1, 2].map((i) => (
+                <span
+                  key={i}
+                  className="absolute left-1/2 top-1/2 rounded-full bg-primary"
+                  style={{
+                    width: size * 0.028,
+                    height: size * 0.028,
+                    marginTop: -size * 0.014,
+                    marginLeft: -size * 0.014,
+                    ["--orbit-r" as string]: `${size * 0.58}px`,
+                    animation: `float-orbit ${3 + i * 0.7}s linear ${-i * 1.2}s infinite`,
+                    opacity: 0.8 - i * 0.18,
+                  }}
+                />
+              ))}
+            </div>
+          )}
         </motion.div>
       </motion.div>
     </div>
