@@ -3,6 +3,9 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { motion } from "motion/react";
 import { ArrowLeft, AlertTriangle } from "lucide-react";
 import { analyzeReport } from "@/lib/ai-functions";
+import { DemoReportsBar } from "@/components/medai/DemoReportsBar";
+import { fetchClinicalSamples } from "@/lib/ai-functions";
+import type { ClinicalSample } from "@/types/report";
 import { fileToReportInput, type ReportInput } from "@/lib/file-reader";
 import { SAMPLE_REPORT_NAME, SAMPLE_REPORT_TEXT } from "@/lib/sample-report";
 import { setCurrentReport } from "@/lib/current-report";
@@ -50,6 +53,7 @@ function AnalyzePage() {
   const [fileName, setFileName] = useState("");
   const [analysis, setAnalysis] = useState<Analysis | null>(null);
   const [error, setError] = useState("");
+  const [samples, setSamples] = useState<ClinicalSample[]>([]);
   const started = useRef(false);
 
   async function run(input: ReportInput, name: string) {
@@ -73,6 +77,12 @@ function AnalyzePage() {
       setPhase("error");
     }
   }
+
+  useEffect(() => {
+    fetchClinicalSamples().then((data) => {
+      if (data && data.length > 0) setSamples(data);
+    });
+  }, []);
 
   useEffect(() => {
     // A file handed over from the dashboard starts the flow immediately.
@@ -157,6 +167,14 @@ function AnalyzePage() {
             onSample={() => run({ reportText: SAMPLE_REPORT_TEXT }, SAMPLE_REPORT_NAME)}
             onTextSubmit={handleTextSubmit}
           />
+          {samples.length > 0 && (
+            <div className="mt-6">
+              <DemoReportsBar
+                samples={samples}
+                onSelect={(sample) => run({ reportText: sample.content }, sample.filename)}
+              />
+            </div>
+          )}
         </Reveal>
       )}
 

@@ -11,6 +11,7 @@ import { Reveal } from "@/components/medai/Reveal";
 import { PressLink } from "@/components/medai/PressLink";
 import { DisclaimerFooter } from "@/components/medai/DisclaimerFooter";
 import { TalkAgentDialog } from "@/components/medai/TalkAgentDialog";
+import { DemoReportsBar } from "@/components/medai/DemoReportsBar";
 import { fetchClinicalSamples } from "@/lib/ai-functions";
 import type { SavedReport, ClinicalSample } from "@/types/report";
 
@@ -93,31 +94,11 @@ function DashboardPage() {
 
       {/* Pre-Loaded Clinical Report Samples Bar */}
       {samples.length > 0 && (
-        <Reveal delay={0.03}>
-          <div className="mb-6 rounded-2xl border border-border bg-white p-4 shadow-sm">
-            <div className="mb-3 flex items-center justify-between">
-              <span className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-primary">
-                <Activity className="h-3.5 w-3.5" /> Demo Diagnostic Reports (1-Click Analysis)
-              </span>
-              <span className="font-mono text-[10px] text-muted-foreground">Pre-loaded EvidenceTrace™ Data</span>
-            </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2.5">
-              {samples.map((s) => (
-                <button
-                  key={s.id}
-                  type="button"
-                  onClick={() => handleSelectSample(s)}
-                  className="flex flex-col text-left rounded-xl border border-border/80 bg-paleblue/60 p-3 hover:bg-paleblue hover:border-primary/40 hover:shadow-sm transition-all group"
-                >
-                  <span className="text-xs font-semibold text-foreground group-hover:text-primary transition-colors flex items-center justify-between">
-                    <span className="truncate">{s.title}</span>
-                    <Sparkles className="h-3 w-3 text-primary opacity-0 group-hover:opacity-100 transition-opacity" />
-                  </span>
-                  <span className="text-[11px] text-muted-foreground mt-1 line-clamp-1">{s.description}</span>
-                </button>
-              ))}
-            </div>
-          </div>
+        <Reveal delay={0.03} className="mb-7">
+          <DemoReportsBar
+            samples={samples}
+            onSelect={handleSelectSample}
+          />
         </Reveal>
       )}
 

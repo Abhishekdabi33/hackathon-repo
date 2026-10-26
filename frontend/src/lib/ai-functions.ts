@@ -387,6 +387,62 @@ export async function streamChatWithHitho({
   return fullText;
 }
 
+export const DEFAULT_CLINICAL_SAMPLES: ClinicalSample[] = [
+  {
+    id: "sample-cbc",
+    title: "Complete Blood Count (CBC)",
+    type: "hematology",
+    filename: "sample_blood_report.txt",
+    description: "Low Hemoglobin (10.8 g/dL) & elevated WBC (12,800 /mcL)",
+    content: `COMPLETE BLOOD COUNT (CBC) - Certified Clinical Lab
+Patient: Demo Patient (45M)
+Hemoglobin: 10.8 g/dL (Normal Range: 13.8 - 17.2 g/dL) [LOW - Mild Anemia]
+RBC Count: 3.9 M/uL (Normal Range: 4.5 - 5.9 M/uL) [LOW]
+WBC Count: 12,800 /mcL (Normal Range: 4,000 - 11,000 /mcL) [HIGH - Mild Leukocytosis]
+Platelet Count: 195,000 /mcL (Normal Range: 150,000 - 450,000 /mcL) [NORMAL]
+Fasting Blood Sugar: 138 mg/dL (Normal Range: 70 - 99 mg/dL) [HIGH - Pre-diabetes/Diabetes Range]
+Evidence: Deterministic standard clinical interval verification applied.`,
+  },
+  {
+    id: "sample-lipid",
+    title: "Lipid Profile Panel",
+    type: "cardiovascular",
+    filename: "sample_lipid_panel.csv",
+    description: "Total Cholesterol 245 mg/dL & high LDL (163 mg/dL)",
+    content: `Test Name,Result,Reference Range,Unit,Flag
+Total Cholesterol,245,100-199,mg/dL,HIGH
+Triglycerides,218,50-149,mg/dL,HIGH
+HDL Cholesterol,38,>40,mg/dL,LOW
+LDL Cholesterol,163,50-99,mg/dL,HIGH
+Cholesterol/HDL Ratio,6.4,<5.0,ratio,HIGH`,
+  },
+  {
+    id: "sample-thyroid",
+    title: "Thyroid Function (TSH & T4)",
+    type: "endocrinology",
+    filename: "sample_thyroid_panel.txt",
+    description: "Elevated TSH (6.8 mIU/L) with borderline Free T4",
+    content: `THYROID HORMONES PANEL
+Thyroid Stimulating Hormone (TSH): 6.8 mIU/L (Reference: 0.4 - 4.0 mIU/L) [HIGH - Subclinical Hypothyroidism]
+Free T4 (Thyroxine): 0.85 ng/dL (Reference: 0.8 - 1.8 ng/dL) [BORDERLINE LOW]
+Free T3: 2.8 pg/mL (Reference: 2.3 - 4.2 pg/mL) [NORMAL]
+Anti-TPO Antibodies: 42 IU/mL (Reference: < 35 IU/mL) [ELEVATED]`,
+  },
+  {
+    id: "sample-prescription",
+    title: "Metabolic & Vitals Rx",
+    type: "prescription",
+    filename: "sample_prescription.txt",
+    description: "Atorvastatin 20mg, Metformin 500mg & clinical guidance",
+    content: `OUTPATIENT CLINICAL SUMMARY & PRESCRIPTION
+Patient: Demo Patient | Vitals: BP 138/88 mmHg, Pulse 76 bpm, BMI 27.4
+Rx:
+1. Tab Metformin 500mg - 1 tablet twice daily with meals
+2. Tab Atorvastatin 20mg - 1 tablet at bedtime
+Doctor Instructions: Maintain low glycemic index diet, perform 30 min daily aerobic exercise, retest fasting lipid & HbA1c in 90 days.`,
+  },
+];
+
 /**
  * Fetch pre-loaded certified sample clinical reports from backend.
  */
@@ -395,12 +451,14 @@ export async function fetchClinicalSamples(): Promise<ClinicalSample[]> {
     const res = await fetch("/api/clinical/samples");
     if (res.ok) {
       const data = await res.json();
-      return data.samples || [];
+      if (data.samples && data.samples.length > 0) {
+        return data.samples;
+      }
     }
   } catch (err) {
-    console.error("Error fetching clinical samples:", err);
+    console.warn("Backend clinical samples fetch fallback:", err);
   }
-  return [];
+  return DEFAULT_CLINICAL_SAMPLES;
 }
 
 /**
