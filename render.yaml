@@ -19,16 +19,11 @@ services:
         value: https://proxy-service-editor.ngrok-free.dev
 
   # React + Vite Frontend Static Site
-  - type: static
+  - type: web
     name: lablens-ai-frontend
-    region: oregon
-    plan: free
-    buildCommand: "cd frontend && pnpm install && pnpm run build"
+    runtime: static
+    buildCommand: "npm install -g pnpm && cd frontend && pnpm install && pnpm run build"
     staticPublishPath: "./frontend/dist"
-    headers:
-      - path: /*
-        name: Access-Control-Allow-Origin
-        value: "*"
     routes:
       - type: rewrite
         source: /*
