@@ -1,10 +1,10 @@
 import { useEffect, useRef, useState } from "react";
 import { motion, AnimatePresence } from "motion/react";
-import { SendHorizontal, Sparkles, MessageCircle, Bot, X } from "lucide-react";
+import { SendHorizontal, Sparkles, MessageCircle, Bot, X, Volume2, VolumeX } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { AiCharacter } from "./AiCharacter";
-import { chatWithHitho } from "@/lib/ai-functions";
+import { chatWithHitho, streamChatWithHitho } from "@/lib/ai-functions";
 import { getCurrentReport } from "@/lib/current-report";
 import { cn } from "@/lib/utils";
 
@@ -30,6 +30,7 @@ export function ChatWidget() {
   const [input, setInput] = useState("");
   const [pending, setPending] = useState(false);
   const [hasReport, setHasReport] = useState(false);
+  const [speakingIndex, setSpeakingIndex] = useState<number | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -43,6 +44,40 @@ export function ChatWidget() {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" });
   }, [messages, pending, open]);
 
+  // Audio Readout for Assistant Messages with Hindi/English Detection
+  const toggleSpeak = (idx: number, text: string) => {
+    if (!window.speechSynthesis) return;
+
+    if (speakingIndex === idx) {
+      window.speechSynthesis.cancel();
+      setSpeakingIndex(null);
+      return;
+    }
+
+    window.speechSynthesis.cancel();
+    const cleanText = text.replace(/[*#_`>|]/g, " ").replace(/\n+/g, ". ");
+    const utterance = new SpeechSynthesisUtterance(cleanText);
+    utterance.rate = 0.98;
+
+    try {
+      const voices = window.speechSynthesis.getVoices();
+      const isHindi = /kya|mera|meri|hai|dawa|dard|khoon|daktar|theek|parhez|kaisa|batao/i.test(cleanText);
+      if (isHindi) {
+        const hiVoice = voices.find((v) => v.lang.includes("hi") || v.name.includes("Hindi"));
+        if (hiVoice) {
+          utterance.voice = hiVoice;
+          utterance.lang = "hi-IN";
+        }
+      }
+    } catch {}
+
+    utterance.onstart = () => setSpeakingIndex(idx);
+    utterance.onend = () => setSpeakingIndex(null);
+    utterance.onerror = () => setSpeakingIndex(null);
+
+    window.speechSynthesis.speak(utterance);
+  };
+
   async function send(text: string) {
     const content = text.trim();
     if (!content || pending) return;
@@ -50,15 +85,53 @@ export function ChatWidget() {
     setMessages(history);
     setInput("");
     setPending(true);
+
+    const report = getCurrentReport();
+    const reportCtx = report ? JSON.stringify(report.analysis) : undefined;
+    const assistantIndex = history.length;
+    let accumulatedText = "";
+
+    // Insert assistant placeholder for real-time SSE streaming
+    setMessages([...history, { role: "assistant", content: "" }]);
+
     try {
-      const report = getCurrentReport();
-      const reply = await chatWithHitho({
-        data: { history: history.slice(-12), reportContext: report ? JSON.stringify(report.analysis) : undefined },
+      await streamChatWithHitho({
+        query: content,
+        reportContext: reportCtx,
+        onToken: (token: string) => {
+          accumulatedText += token;
+          setMessages((prev) => {
+            const next = [...prev];
+            if (next[assistantIndex]) {
+              next[assistantIndex] = { role: "assistant", content: accumulatedText };
+            }
+            return next;
+          });
+        },
       });
-      setMessages((m) => [...m, { role: "assistant", content: reply }]);
-    } catch (error) {
-      const message = error instanceof Error ? error.message : "Something went wrong. Please try again.";
-      setMessages((m) => [...m, { role: "assistant", content: `⚠️ ${message}` }]);
+    } catch (streamErr) {
+      console.warn("Real-time streaming failed, falling back to batch RAG chat:", streamErr);
+      try {
+        const reply = await chatWithHitho({
+          data: { history: history.slice(-12), reportContext: reportCtx },
+        });
+        setMessages((prev) => {
+          const next = [...prev];
+          if (next[assistantIndex]) {
+            next[assistantIndex] = { role: "assistant", content: reply };
+          }
+          return next;
+        });
+      } catch (error) {
+        const message = error instanceof Error ? error.message : "Something went wrong. Please try again.";
+        setMessages((prev) => {
+          const next = [...prev];
+          if (next[assistantIndex]) {
+            next[assistantIndex] = { role: "assistant", content: `⚠️ ${message}` };
+          }
+          return next;
+        });
+      }
     } finally {
       setPending(false);
     }
@@ -135,10 +208,83 @@ export function ChatWidget() {
                     )}
                   >
                     {m.role === "assistant" ? (
-                      <div className="prose prose-sm max-w-none text-foreground prose-headings:text-foreground prose-strong:text-foreground prose-strong:bg-white/60 prose-strong:px-1 prose-strong:rounded">
-                        <ReactMarkdown remarkPlugins={[remarkGfm]}>
-                          {m.content}
-                        </ReactMarkdown>
+                      <div>
+                        {m.content === "" && pending ? (
+                          <div className="flex items-center gap-1.5 py-1">
+                            {[0, 1, 2].map((dot) => (
+                              <motion.span
+                                key={dot}
+                                className="h-1.5 w-1.5 rounded-full bg-primary"
+                                animate={{ opacity: [0.25, 1, 0.25], y: [0, -2, 0] }}
+                                transition={{ duration: 0.9, repeat: Infinity, delay: dot * 0.15 }}
+                              />
+                            ))}
+                          </div>
+                        ) : (
+                          <div className="prose prose-sm max-w-none text-foreground leading-relaxed">
+                            <ReactMarkdown
+                              remarkPlugins={[remarkGfm]}
+                              components={{
+                                strong: ({ children }) => (
+                                  <strong className="rounded bg-white/80 px-1 py-0.5 font-semibold text-primary border border-primary/20">
+                                    {children}
+                                  </strong>
+                                ),
+                                h1: ({ children }) => (
+                                  <h3 className="mb-1.5 mt-2.5 font-bold uppercase tracking-wider text-primary text-xs border-b border-border/60 pb-1">
+                                    {children}
+                                  </h3>
+                                ),
+                                h2: ({ children }) => (
+                                  <h4 className="mb-1 mt-2 font-bold uppercase tracking-wide text-foreground text-xs">
+                                    {children}
+                                  </h4>
+                                ),
+                                p: ({ children }) => (
+                                  <p className="mb-2 last:mb-0 text-[13px] leading-relaxed text-foreground/90">
+                                    {children}
+                                  </p>
+                                ),
+                                ul: ({ children }) => (
+                                  <ul className="mb-2 space-y-1 pl-1">
+                                    {children}
+                                  </ul>
+                                ),
+                                li: ({ children }) => (
+                                  <li className="flex items-start gap-1.5 text-[12.5px] leading-relaxed">
+                                    <span className="mt-1.5 h-1 w-1 shrink-0 rounded-full bg-primary" />
+                                    <span>{children}</span>
+                                  </li>
+                                ),
+                              }}
+                            >
+                              {m.content}
+                            </ReactMarkdown>
+                          </div>
+                        )}
+                        {m.content.length > 10 && (
+                          <div className="mt-2 pt-1 border-t border-border/40 flex items-center justify-between">
+                            <button
+                              type="button"
+                              onClick={() => toggleSpeak(i, m.content)}
+                              className="flex items-center gap-1 text-[11px] font-medium text-muted-foreground hover:text-primary transition-colors"
+                              title={speakingIndex === i ? "Stop audio" : "Listen to response"}
+                            >
+                              {speakingIndex === i ? (
+                                <>
+                                  <VolumeX className="h-3 w-3 text-primary animate-pulse" />
+                                  <span className="text-primary font-semibold">Speaking…</span>
+                                </>
+                              ) : (
+                                <>
+                                  <Volume2 className="h-3 w-3 text-primary" />
+                                  <span>Listen</span>
+                                </>
+                              )}
+                            </button>
+                            <span className="text-[10px] text-muted-foreground font-mono">Gemma 4 12B</span>
+                          </div>
+                        )}
                       </div>
                     ) : (
                       m.content
