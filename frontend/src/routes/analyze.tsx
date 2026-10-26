@@ -51,8 +51,11 @@ function AnalyzePage() {
   const [analysis, setAnalysis] = useState<Analysis | null>(null);
   const [error, setError] = useState("");
   const started = useRef(false);
+  const isRunningRef = useRef(false);
 
   async function run(input: ReportInput, name: string) {
+    if (isRunningRef.current) return;
+    isRunningRef.current = true;
     setFileName(name);
     setPhase("analyzing");
     setError("");
@@ -71,6 +74,8 @@ function AnalyzePage() {
     } catch (err) {
       setError(err instanceof Error ? err.message : "Something went wrong while analyzing. Please try again.");
       setPhase("error");
+    } finally {
+      isRunningRef.current = false;
     }
   }
 
